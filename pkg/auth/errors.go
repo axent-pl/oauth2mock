@@ -5,6 +5,8 @@ import (
 )
 
 var (
+	ErrMissingCredUsername      = errors.New("missing username")
+	ErrMissingCredPassword      = errors.New("missing password")
 	ErrInvalidCreds             = errors.New("invalid username or password")
 	ErrMissingResponseType      = errors.New("missing response_type")
 	ErrInvalidResponseType      = errors.New("invalid response_type, allowed values [code]")

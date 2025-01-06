@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-const subjectsFile = "run/clients.json"
+const subjectsFile = "run/users.json"
 
 type User struct {
 	Username string
@@ -86,6 +86,12 @@ func NewSubjectSimpleStorer() *SubjectSimpleStorer {
 }
 
 func (s *SubjectSimpleStorer) Authenticate(credentials Credentials) (*Subject, error) {
+	if len(credentials.Username) == 0 {
+		return nil, ErrMissingCredUsername
+	}
+	if len(credentials.Password) == 0 {
+		return nil, ErrMissingCredPassword
+	}
 	for _, subject := range s.subjects {
 		if credentials.Username == subject.Credentials.Username && credentials.Password == subject.Credentials.Password {
 			return &subject, nil

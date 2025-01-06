@@ -15,17 +15,21 @@
         <form method="POST" action="{{ .FormAction }}" enctype="multipart/form-data" class="needs-validation" novalidate>
             <div class="mb-3">
                 <label for="username" class="form-label">Email address</label>
-                <input name="username" value="{{ .AuthorizationRequest.Subject.Credentials.Username }}" type="text" class="form-control {{if not .FormValid }}is-invalid{{end}}" id="username" aria-describedby="validationFeedbackUsername">
+                <input name="username" value="{{ .Credentials.Username }}" type="text" class="form-control {{ if .ValidationErrors.Username }}is-invalid{{ end }}" id="username" aria-describedby="validationFeedbackUsername">
+                {{ if .ValidationErrors.Username }}
                 <div id="validationFeedbackUsername" class="invalid-feedback">
-                    {{ .ValidationMessage }}
+                    {{ .ValidationErrors.Username.ErrorMessage }}
                 </div>
+                {{ end }}
             </div>
             <div class="mb-3">
                 <label for="password" class="form-label">Password</label>
-                <input name="password" type="password" class="form-control {{if not .FormValid }}is-invalid{{end}}" id="password" aria-describedby="validationFeedbackPassword">
+                <input name="password" type="password" class="form-control  {{ if .ValidationErrors.Password }}is-invalid{{ end }}" id="password" aria-describedby="validationFeedbackPassword">
+                {{ if .ValidationErrors.Password }}
                 <div id="validationFeedbackPassword" class="invalid-feedback">
-                    {{ .ValidationMessage }}
+                    {{ .ValidationErrors.Password.ErrorMessage }}
                 </div>
+                {{ end }}
             </div>
             
             <button type="submit" class="btn btn-primary">Submit</button>

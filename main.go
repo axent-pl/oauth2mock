@@ -19,6 +19,7 @@ func main() {
 	key := jwk.MustLoadOrGenerate()
 	authCodeDB := auth.NewAuthorizationCodeInMemoryStore()
 	clientDB := auth.NewClientSimpleStore()
+	subjectDB := auth.NewSubjectSimpleStorer()
 
 	http.HandleFunc("/done", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("DONE"))
@@ -31,80 +32,81 @@ func main() {
 	})
 
 	http.HandleFunc("/authorize", func(w http.ResponseWriter, r *http.Request) {
-		// Get client
-		client, err := clientDB.GetClient(r.URL.Query().Get("client_id"))
+		// authorization request DTO
+		authorizeRequestDTO := &AuthorizeRequestDTO{}
+		Hydrate(authorizeRequestDTO, r)
+		authorizeRequestValidator := NewValidator()
+		if !authorizeRequestValidator.Validate(authorizeRequestDTO) {
+			http.Error(w, "invalid request", http.StatusBadRequest)
+			return
+		}
+
+		// client
+		client, err := clientDB.GetClient(authorizeRequestDTO.ClientId)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		// Get subject
-		subject := auth.Subject{
-			Credentials: auth.Credentials{
-				Username: "",
-				Password: "",
-			},
-		}
-		if r.Method == http.MethodPost {
-			err := r.ParseMultipartForm(32 << 20)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			subject.Credentials.Username = r.PostFormValue("username")
-			subject.Credentials.Password = r.PostFormValue("password")
-		}
-
-		// Get authorizationRequest
+		// authorization request
 		authorizationRequest := auth.AuthorizationRequest{
-			ResponseType: r.URL.Query().Get("response_type"),
-			RedirectURI:  r.URL.Query().Get("redirect_uri"),
-			Scope:        r.URL.Query().Get("scope"),
-			State:        r.URL.Query().Get("state"),
+			ResponseType: authorizeRequestDTO.ResponseType,
+			RedirectURI:  authorizeRequestDTO.RedirectURI,
+			Scope:        authorizeRequestDTO.Scope,
+			State:        authorizeRequestDTO.State,
 			Client:       client,
-			Subject:      &subject,
 		}
-
-		// Validate authorizationRequest
 		err = authorizationRequest.Valid()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		// Init template data
-		templateData := struct {
-			FormValid            bool
-			FormAction           string
-			ValidationMessage    string
-			AuthorizationRequest *auth.AuthorizationRequest
-		}{
-			FormValid:            true,
-			FormAction:           r.URL.String(),
-			ValidationMessage:    "",
-			AuthorizationRequest: &authorizationRequest,
+		// credentials
+		credentialsDTO := &AuthorizeCredentialsDTO{}
+		credentialsValidator := NewValidator()
+		if r.Method == http.MethodPost {
+			err := r.ParseMultipartForm(32 << 20)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			Hydrate(credentialsDTO, r)
+			if credentialsValidator.Validate(credentialsDTO) {
+				credentials := auth.Credentials{
+					Username: credentialsDTO.Username,
+					Password: credentialsDTO.Password,
+				}
+				// authentication
+				subject, authenticationErr := subjectDB.Authenticate(credentials)
+				if authenticationErr == nil {
+					authorizationRequest.Subject = subject
+					code, err := authCodeDB.GenerateCode(&authorizationRequest, time.Hour)
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}
+					redirectURL, _ := url.Parse(authorizationRequest.RedirectURI)
+					redirectURLQuery := redirectURL.Query()
+					redirectURLQuery.Add("code", code)
+					redirectURL.RawQuery = redirectURLQuery.Encode()
+
+					http.Redirect(w, r, redirectURL.String(), http.StatusTemporaryRedirect)
+				}
+			}
 		}
 
-		if r.Method == http.MethodPost {
-			// Validate Subject Credentials
-			err = authorizationRequest.Subject.Credentials.Valid()
-
-			if err != nil {
-				templateData.FormValid = false
-				templateData.ValidationMessage = err.Error()
-			} else {
-				code, err := authCodeDB.GenerateCode(&authorizationRequest, time.Hour)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				redirectURL, _ := url.Parse(authorizationRequest.RedirectURI)
-				redirectURLQuery := redirectURL.Query()
-				redirectURLQuery.Add("code", code)
-				redirectURL.RawQuery = redirectURLQuery.Encode()
-
-				http.Redirect(w, r, redirectURL.String(), http.StatusTemporaryRedirect)
-			}
+		// Init template data
+		templateData := struct {
+			FormAction           string
+			ValidationErrors     map[string]ValidationError
+			Credentials          AuthorizeCredentialsDTO
+			AuthorizationRequest *auth.AuthorizationRequest
+		}{
+			FormAction:           r.URL.String(),
+			ValidationErrors:     credentialsValidator.Errors,
+			Credentials:          *credentialsDTO,
+			AuthorizationRequest: &authorizationRequest,
 		}
 
 		templateCodeBytes, err := os.ReadFile(loginTemplateFile)
