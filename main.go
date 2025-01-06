@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"net/url"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/axent-pl/oauth2mock/pkg/auth"
 	"github.com/axent-pl/oauth2mock/pkg/jwk"
-	"github.com/axent-pl/oauth2mock/pkg/token"
 )
 
 const loginTemplateFile = "tpl/login.go.tpl"
@@ -21,7 +21,7 @@ func main() {
 	clientDB := auth.NewClientSimpleStore()
 	subjectDB := auth.NewSubjectSimpleStorer()
 
-	http.HandleFunc("/done", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/.well-known/openid-configuration", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("DONE"))
 	})
 
@@ -34,10 +34,10 @@ func main() {
 	http.HandleFunc("/authorize", func(w http.ResponseWriter, r *http.Request) {
 		// authorization request DTO
 		authorizeRequestDTO := &AuthorizeRequestDTO{}
-		Hydrate(authorizeRequestDTO, r)
 		authorizeRequestValidator := NewValidator()
+		Hydrate(authorizeRequestDTO, r)
 		if !authorizeRequestValidator.Validate(authorizeRequestDTO) {
-			http.Error(w, "invalid request", http.StatusBadRequest)
+			http.Error(w, "bad request", http.StatusBadRequest)
 			return
 		}
 
@@ -123,35 +123,61 @@ func main() {
 	})
 
 	http.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
-		// client_id
-		// client_secret
-		// client_assertion_type
-		// client_assertion
-		// code
-		// redirect_uri
-		// grant_type
-
-		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		requstDTO := &AuthorizationCodeTokenRequestDTO{}
+		requestValidator := NewValidator()
+		Hydrate(requstDTO, r)
+		if !requestValidator.Validate(requstDTO) {
+			http.Error(w, "bad request", http.StatusBadRequest)
 			return
 		}
-		err := r.ParseMultipartForm(32 << 20)
+		if requstDTO.GrantType != "authorization_code" {
+			http.Error(w, "invalid grant type", http.StatusBadRequest)
+			return
+		}
+
+		// Authenticate client
+		credentials := auth.Credentials{
+			ClientId:     requstDTO.ClientId,
+			ClientSecret: requstDTO.ClientSecret,
+		}
+		client, err := clientDB.Authenticate(credentials)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		if !r.PostForm.Has("grant_type") {
-			http.Error(w, "missing grant_type", http.StatusBadRequest)
+
+		// Get authorization request data
+		authCodeData, ok := authCodeDB.GetCode(requstDTO.Code)
+		if !ok {
+			http.Error(w, "invalid code", http.StatusBadRequest)
 			return
 		}
 
-		tokenResponse, err := token.GetTokenResponse("username1", "clientA", key)
+		// Validate request DTO with authCodeData
+		if requstDTO.ClientId != authCodeData.Request.Client.Id {
+			http.Error(w, "invalid code", http.StatusBadRequest)
+			return
+		}
+		if requstDTO.RedirectURI != authCodeData.Request.RedirectURI {
+			http.Error(w, "invalid code", http.StatusBadRequest)
+			return
+		}
+
+		subject := authCodeData.Request.Subject
+		claims := make(map[string]interface{})
+
+		tokenResponse, err := auth.NewTokenReponse(*subject, *client, claims, key)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		tokenResponseBytes, err := json.Marshal(tokenResponse)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(tokenResponse)
+		w.Write(tokenResponseBytes)
 	})
 
 	log.Fatal(http.ListenAndServe(":8080", nil))

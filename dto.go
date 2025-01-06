@@ -21,6 +21,28 @@ type AuthorizeRequestDTO struct {
 	State        string `queryParam:"state"`
 }
 
+type TokenRequestDTO struct {
+	GrantType    string `formField:"grant_type" validate:"required"`
+	ClientId     string `formField:"client_id"`
+	ClientSecret string `formField:"client_secret"`
+	Code         string `formField:"code"`
+	RedirectURI  string `formField:"redirect_uri"`
+	Username     string `formField:"username"`
+	Password     string `formField:"password"`
+	RefreshToken string `formField:"refresh_token"`
+}
+
+type AuthorizationCodeTokenRequestDTO struct {
+	GrantType    string `formField:"grant_type" validate:"required"`
+	ClientId     string `formField:"client_id" validate:"required"`
+	ClientSecret string `formField:"client_secret" validate:"required"`
+	Code         string `formField:"code" validate:"required"`
+	RedirectURI  string `formField:"redirect_uri" validate:"required"`
+	Username     string `formField:"username"`
+	Password     string `formField:"password"`
+	RefreshToken string `formField:"refresh_token"`
+}
+
 // ------------------------------
 
 func Hydrate(s interface{}, r *http.Request) {

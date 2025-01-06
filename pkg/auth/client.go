@@ -6,11 +6,11 @@ import (
 	"os"
 )
 
-const clientsFile = "run/clients.json"
+const clientsFile = "run/users.json"
 
 type Client struct {
-	Secret      string `json:"client_secret"`
 	Id          string `json:"client_id"`
+	Secret      string `json:"client_secret"`
 	RedirectURI string `json:"redirect_uri"`
 }
 
@@ -18,6 +18,7 @@ type Client struct {
 
 type ClientStorer interface {
 	GetClient(client_id string) (*Client, error)
+	Authenticate(credentials Credentials) (*Client, error)
 }
 
 // ----------------------------------------------------------------------------
@@ -58,4 +59,13 @@ func (s *ClientSimpleStore) GetClient(client_id string) (*Client, error) {
 		return nil, ErrInvalidClientId
 	}
 	return &client, nil
+}
+
+func (s *ClientSimpleStore) Authenticate(credentials Credentials) (*Client, error) {
+	for _, client := range s.clients {
+		if credentials.ClientId == client.Id && credentials.ClientSecret == client.Secret {
+			return &client, nil
+		}
+	}
+	return nil, ErrInvalidCreds
 }
