@@ -59,6 +59,9 @@ func (db *AuthorizationCodeInMemoryStore) GetCode(code string) (AuthorizationCod
 	if !exists || time.Now().After(data.expiresAt) {
 		return AuthorizationCodeData{}, false
 	}
+
+	delete(db.codes, code)
+
 	return data, true
 }
 
