@@ -1,4 +1,4 @@
-package jwk
+package auth
 
 import (
 	"crypto/rand"

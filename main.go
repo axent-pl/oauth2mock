@@ -9,9 +9,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/axent-pl/oauth2mock/auth"
 	"github.com/axent-pl/oauth2mock/handler"
-	"github.com/axent-pl/oauth2mock/pkg/auth"
-	"github.com/axent-pl/oauth2mock/pkg/jwk"
 	"github.com/axent-pl/oauth2mock/routing"
 	"github.com/axent-pl/oauth2mock/server"
 	"github.com/axent-pl/oauth2mock/template"
@@ -30,7 +29,7 @@ var (
 	claimStore    auth.ClaimStorer
 	templateStore template.TemplateStorer
 
-	key        jwk.JWK
+	key        auth.JWK
 	router     routing.Router
 	httpServer server.Server
 )
@@ -53,7 +52,7 @@ func init() {
 
 // JWK
 func init() {
-	key = jwk.MustLoadOrGenerate(keyFile)
+	key = auth.MustLoadOrGenerate(keyFile)
 }
 
 // Configure HTTP router and server

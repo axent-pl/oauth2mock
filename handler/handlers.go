@@ -6,14 +6,13 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/axent-pl/oauth2mock/auth"
 	"github.com/axent-pl/oauth2mock/dto"
-	"github.com/axent-pl/oauth2mock/pkg/auth"
-	"github.com/axent-pl/oauth2mock/pkg/jwk"
 	"github.com/axent-pl/oauth2mock/routing"
 	"github.com/axent-pl/oauth2mock/template"
 )
 
-func JWKSGetHandler(key *jwk.JWK) routing.HandlerFunc {
+func JWKSGetHandler(key *auth.JWK) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		jwks, _ := key.GetJWKS()
 		w.Header().Set("Content-Type", "application/json")
@@ -140,7 +139,7 @@ func AuthorizePostHandler(templateDB template.TemplateStorer, clientDB auth.Clie
 	}
 }
 
-func TokenAuthorizationCodeHandler(clientDB auth.ClientStorer, authCodeDB auth.AuthorizationCodeStorer, claimsDB auth.ClaimStorer, key *jwk.JWK) routing.HandlerFunc {
+func TokenAuthorizationCodeHandler(clientDB auth.ClientStorer, authCodeDB auth.AuthorizationCodeStorer, claimsDB auth.ClaimStorer, key *auth.JWK) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requstDTO := &dto.AuthorizationCodeTokenRequestDTO{}
 		requestValidator := dto.NewValidator()

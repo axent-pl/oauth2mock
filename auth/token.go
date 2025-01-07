@@ -2,8 +2,6 @@ package auth
 
 import (
 	"time"
-
-	"github.com/axent-pl/oauth2mock/pkg/jwk"
 )
 
 type TokenResponse struct {
@@ -12,7 +10,7 @@ type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
 }
 
-func NewTokenReponse(subject Subject, client Client, claims map[string]interface{}, key jwk.JWK) (TokenResponse, error) {
+func NewTokenReponse(subject Subject, client Client, claims map[string]interface{}, key JWK) (TokenResponse, error) {
 	tokenResponse := TokenResponse{Type: "Bearer"}
 
 	access_token_claims := make(map[string]interface{})
