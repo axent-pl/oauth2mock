@@ -6,8 +6,6 @@ import (
 	"os"
 )
 
-const subjectsFile = "run/users.json"
-
 type User struct {
 	Username string
 	Password string
@@ -30,7 +28,7 @@ type SubjectSimpleStorer struct {
 	subjects map[string]Subject
 }
 
-func NewSubjectSimpleStorer() *SubjectSimpleStorer {
+func NewSubjectSimpleStorer(subjectsFile string) *SubjectSimpleStorer {
 	type jsonUserStruct struct {
 		Username string `json:"username"`
 		Password string `json:"password"`

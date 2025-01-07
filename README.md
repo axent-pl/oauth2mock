@@ -1,38 +1,4 @@
-# oauth2mock
+# OAuth2Mock
 
-## Calims
-
-```json
-{
-    "username1": {
-        "type": "user",
-        "base": {
-            "sub": "John",
-            "preffered_username": "John.Doe@acme.com",
-            "realm_roles": [
-                "SUPERADMIN"
-            ]
-        },
-        "override": {
-            "clientA": {
-                "client_roles": [
-                    "ADMIN"
-                ]
-            }
-        }
-    },
-    "clientB": {
-        "type": "client",
-        "base": {
-            "sub": "applicationB"
-        },
-        "override": {
-            "clientA": {
-                "client_roles": [
-                    "READER"
-                ]
-            }
-        }
-    }
-}
-```
+This project serves a purpose to replace Keycloak (or other resource hungry authorization servers) during local development.
+It is **NOT** meant for production applications.

@@ -1,0 +1,40 @@
+{
+    "users" : {
+        "username1" : {
+            "username": "username1",
+            "password": "secret-pass",
+            "claims" : {
+                "base": {
+                    "sub": "John",
+                    "preffered_username": "John.Doe@acme.com",
+                    "realm_roles": [
+                        "SUPERADMIN"
+                    ]
+                },
+                "override": {
+                    "ACME": {
+                        "client_roles": [
+                            "ADMIN"
+                        ]
+                    }
+                }
+            }
+        },
+        "username2" : {
+            "username": "username2",
+            "password": "secret-pass"
+        }
+    },
+    "clients" : {
+        "ACME" : {
+            "client_id": "ACME",
+            "client_secret": "secret-acme-pass",
+            "redirect_uri": "http://acme.com"
+        },
+        "ACME2" : {
+            "client_id": "ACME2",
+            "client_secret": "secret-acme-pass",
+            "redirect_uri": "http://localhost:8080/.well-known/jwks.json"
+        }
+    }
+}

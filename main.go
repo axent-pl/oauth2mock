@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/axent-pl/oauth2mock/handler"
 	"github.com/axent-pl/oauth2mock/pkg/auth"
 	"github.com/axent-pl/oauth2mock/pkg/jwk"
 	"github.com/axent-pl/oauth2mock/routing"
@@ -17,7 +18,11 @@ import (
 )
 
 var (
-	serverAddress string
+	serverAddress string = ":8080"
+
+	dataFile    string = "data/config.json"
+	keyFile     string = "data/key.pem"
+	templateDir string = "data"
 
 	authCodeStore auth.AuthorizationCodeStorer
 	clientStore   auth.ClientStorer
@@ -40,26 +45,39 @@ func init() {
 // Configure stores
 func init() {
 	authCodeStore = auth.NewAuthorizationCodeInMemoryStore()
-	clientStore = auth.NewClientSimpleStore("run/users.json")
-	subjectStore = auth.NewSubjectSimpleStorer()
-	claimStore = auth.NewClaimSimpleStorer("run/users.json")
-	templateStore = template.MustNewDefaultTemplateStore("tpl")
+	clientStore = auth.NewClientSimpleStore(dataFile)
+	subjectStore = auth.NewSubjectSimpleStorer(dataFile)
+	claimStore = auth.NewClaimSimpleStorer(dataFile)
+	templateStore = template.MustNewDefaultTemplateStore(templateDir)
 }
 
 // JWK
 func init() {
-	key = jwk.MustLoadOrGenerate()
+	key = jwk.MustLoadOrGenerate(keyFile)
 }
 
 // Configure HTTP router and server
 func init() {
-	serverAddress = ":8080"
-
 	router = routing.Router{}
-	router.RegisterHandler(JWKSGetHandler(&key), routing.WithMethod(http.MethodGet), routing.WithPath("/.well-known/jwks.json"))
-	router.RegisterHandler(AuthorizeGetHandler(templateStore, clientStore), routing.WithMethod(http.MethodGet), routing.WithPath("/authorize"), routing.ForQueryValue("response_type", "code"))
-	router.RegisterHandler(AuthorizePostHandler(templateStore, clientStore, subjectStore, authCodeStore), routing.WithMethod(http.MethodPost), routing.WithPath("/authorize"), routing.ForQueryValue("response_type", "code"))
-	router.RegisterHandler(TokenAuthorizationCodeHandler(clientStore, authCodeStore, claimStore, &key), routing.WithMethod(http.MethodPost), routing.WithPath("/token"), routing.ForPostFormValue("grant_type", "authorization_code"))
+	router.RegisterHandler(
+		handler.JWKSGetHandler(&key),
+		routing.WithMethod(http.MethodGet),
+		routing.WithPath("/.well-known/jwks.json"))
+	router.RegisterHandler(
+		handler.AuthorizeGetHandler(templateStore, clientStore),
+		routing.WithMethod(http.MethodGet),
+		routing.WithPath("/authorize"),
+		routing.ForQueryValue("response_type", "code"))
+	router.RegisterHandler(
+		handler.AuthorizePostHandler(templateStore, clientStore, subjectStore, authCodeStore),
+		routing.WithMethod(http.MethodPost),
+		routing.WithPath("/authorize"),
+		routing.ForQueryValue("response_type", "code"))
+	router.RegisterHandler(
+		handler.TokenAuthorizationCodeHandler(clientStore, authCodeStore, claimStore, &key),
+		routing.WithMethod(http.MethodPost),
+		routing.WithPath("/token"),
+		routing.ForPostFormValue("grant_type", "authorization_code"))
 
 	httpServer = server.Server{
 		Addr:   serverAddress,

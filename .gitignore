@@ -26,3 +26,9 @@ go.work.sum
 
 # debug state
 __debug*
+
+# VS Code
+.vscode
+
+# bin
+bin

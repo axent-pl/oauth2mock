@@ -15,8 +15,6 @@ import (
 	"github.com/square/go-jose/v3"
 )
 
-const keyFile = "run/private_key.pem"
-
 type JWK struct {
 	privateKey *rsa.PrivateKey
 }
@@ -93,7 +91,7 @@ func generatePrivateKey() (*rsa.PrivateKey, error) {
 	return rsa.GenerateKey(rand.Reader, 2048)
 }
 
-func MustLoad() JWK {
+func MustLoad(keyFile string) JWK {
 	key := JWK{}
 	privateKey, err := loadPrivateKeyFromFile(keyFile)
 	if err != nil {
@@ -103,7 +101,7 @@ func MustLoad() JWK {
 	return key
 }
 
-func MustLoadOrGenerate() JWK {
+func MustLoadOrGenerate(keyFile string) JWK {
 	key := JWK{}
 	privateKey, err := loadPrivateKeyFromFile(keyFile)
 	if err == nil {
