@@ -15,22 +15,7 @@ type User struct {
 
 type Subject struct {
 	Name        string
-	Credentials Credentials
-}
-
-type Credentials struct {
-	Username       string
-	Password       string
-	ClientId       string
-	ClientSecret   string
-	AssertionToken string
-}
-
-func (c *Credentials) Valid() error {
-	if c.Username == "bad" {
-		return ErrInvalidCreds
-	}
-	return nil
+	Credentials *Credentials
 }
 
 // ----------------------------------------------------------------------------
@@ -46,11 +31,22 @@ type SubjectSimpleStorer struct {
 }
 
 func NewSubjectSimpleStorer() *SubjectSimpleStorer {
-	type fileStructure struct {
-		Clients map[string]Client `json:"clients"`
-		Users   map[string]User   `json:"users"`
+	type jsonClientStruct struct {
+		Id          string `json:"client_id"`
+		Secret      string `json:"client_secret"`
+		RedirectURI string `json:"redirect_uri"`
 	}
-	f := fileStructure{}
+	type jsonUserStruct struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+	type jsonStoreStruct struct {
+		Clients map[string]jsonClientStruct `json:"clients"`
+		Users   map[string]jsonUserStruct   `json:"users"`
+	}
+
+	f := jsonStoreStruct{}
+
 	data, err := os.ReadFile(subjectsFile)
 	if err != nil {
 		panic(fmt.Errorf("failed to read subjects config file: %w", err))
@@ -63,22 +59,25 @@ func NewSubjectSimpleStorer() *SubjectSimpleStorer {
 	subjectStore := SubjectSimpleStorer{
 		subjects: make(map[string]Subject),
 	}
+
 	for username, userData := range f.Users {
+		credentials, err := NewCredentials(WithUsernameAndPassword(userData.Username, userData.Password))
+		if err != nil {
+			panic(fmt.Errorf("failed to parse user credentials from config file: %w", err))
+		}
 		subjectStore.subjects[username] = Subject{
-			Name: userData.Username,
-			Credentials: Credentials{
-				Username: userData.Username,
-				Password: userData.Password,
-			},
+			Name:        userData.Username,
+			Credentials: credentials,
 		}
 	}
 	for client_id, clientData := range f.Clients {
+		credentials, err := NewCredentials(WithClientIdAndSecret(clientData.Id, clientData.Secret))
+		if err != nil {
+			panic(fmt.Errorf("failed to parse client credentials from config file: %w", err))
+		}
 		subjectStore.subjects[client_id] = Subject{
-			Name: clientData.Id,
-			Credentials: Credentials{
-				ClientId:     clientData.Id,
-				ClientSecret: clientData.Secret,
-			},
+			Name:        clientData.Id,
+			Credentials: credentials,
 		}
 	}
 
@@ -93,7 +92,7 @@ func (s *SubjectSimpleStorer) Authenticate(credentials Credentials) (*Subject, e
 		return nil, ErrMissingCredPassword
 	}
 	for _, subject := range s.subjects {
-		if credentials.Username == subject.Credentials.Username && credentials.Password == subject.Credentials.Password {
+		if credentials.Match(subject.Credentials) {
 			return &subject, nil
 		}
 	}

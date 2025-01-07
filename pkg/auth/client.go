@@ -6,34 +6,33 @@ import (
 	"os"
 )
 
-const clientsFile = "run/users.json"
-
 type Client struct {
-	Id          string `json:"client_id"`
-	Secret      string `json:"client_secret"`
-	RedirectURI string `json:"redirect_uri"`
+	Id          string
+	RedirectURI string
+	Credentials *Credentials
 }
-
-// ----------------------------------------------------------------------------
 
 type ClientStorer interface {
 	GetClient(client_id string) (*Client, error)
 	Authenticate(credentials Credentials) (*Client, error)
 }
 
-// ----------------------------------------------------------------------------
-
 type ClientSimpleStore struct {
 	clients map[string]Client
 }
 
-func NewClientSimpleStore() *ClientSimpleStore {
-	type fileStructure struct {
-		Clients map[string]Client `json:"clients"`
+func NewClientSimpleStore(clientsJSONFilepath string) *ClientSimpleStore {
+	type jsonClientStruct struct {
+		Id          string `json:"client_id"`
+		Secret      string `json:"client_secret"`
+		RedirectURI string `json:"redirect_uri"`
 	}
-	f := fileStructure{}
+	type jsonStoreStruct struct {
+		Clients map[string]jsonClientStruct `json:"clients"`
+	}
+	f := jsonStoreStruct{}
 
-	data, err := os.ReadFile(clientsFile)
+	data, err := os.ReadFile(clientsJSONFilepath)
 	if err != nil {
 		panic(fmt.Errorf("failed to read clients config file: %w", err))
 	}
@@ -46,7 +45,15 @@ func NewClientSimpleStore() *ClientSimpleStore {
 		clients: make(map[string]Client),
 	}
 	for k, v := range f.Clients {
-		clientStore.clients[k] = v
+		credentials, err := NewCredentials(WithClientIdAndSecret(v.Id, v.Secret))
+		if err != nil {
+			panic(fmt.Errorf("failed to parse client credentials from config file: %w", err))
+		}
+		clientStore.clients[k] = Client{
+			Id:          v.Id,
+			Credentials: credentials,
+			RedirectURI: v.RedirectURI,
+		}
 		fmt.Println(v)
 	}
 
@@ -63,7 +70,7 @@ func (s *ClientSimpleStore) GetClient(client_id string) (*Client, error) {
 
 func (s *ClientSimpleStore) Authenticate(credentials Credentials) (*Client, error) {
 	for _, client := range s.clients {
-		if credentials.ClientId == client.Id && credentials.ClientSecret == client.Secret {
+		if credentials.Match(client.Credentials) {
 			return &client, nil
 		}
 	}

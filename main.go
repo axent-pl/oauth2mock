@@ -18,7 +18,7 @@ const loginTemplateFile = "tpl/login.go.tpl"
 func main() {
 	key := jwk.MustLoadOrGenerate()
 	authCodeDB := auth.NewAuthorizationCodeInMemoryStore()
-	clientDB := auth.NewClientSimpleStore()
+	clientDB := auth.NewClientSimpleStore("run/users.json")
 	subjectDB := auth.NewSubjectSimpleStorer()
 
 	http.HandleFunc("/.well-known/openid-configuration", func(w http.ResponseWriter, r *http.Request) {
@@ -73,12 +73,13 @@ func main() {
 			}
 			Hydrate(credentialsDTO, r)
 			if credentialsValidator.Validate(credentialsDTO) {
-				credentials := auth.Credentials{
-					Username: credentialsDTO.Username,
-					Password: credentialsDTO.Password,
+				credentials, err := auth.NewCredentials(auth.WithUsernameAndPassword(credentialsDTO.Username, credentialsDTO.Password))
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
 				}
 				// authentication
-				subject, authenticationErr := subjectDB.Authenticate(credentials)
+				subject, authenticationErr := subjectDB.Authenticate(*credentials)
 				if authenticationErr == nil {
 					authorizationRequest.Subject = subject
 					code, err := authCodeDB.GenerateCode(&authorizationRequest, time.Hour)
