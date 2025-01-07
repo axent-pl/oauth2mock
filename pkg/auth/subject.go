@@ -31,18 +31,12 @@ type SubjectSimpleStorer struct {
 }
 
 func NewSubjectSimpleStorer() *SubjectSimpleStorer {
-	type jsonClientStruct struct {
-		Id          string `json:"client_id"`
-		Secret      string `json:"client_secret"`
-		RedirectURI string `json:"redirect_uri"`
-	}
 	type jsonUserStruct struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}
 	type jsonStoreStruct struct {
-		Clients map[string]jsonClientStruct `json:"clients"`
-		Users   map[string]jsonUserStruct   `json:"users"`
+		Users map[string]jsonUserStruct `json:"users"`
 	}
 
 	f := jsonStoreStruct{}
@@ -70,27 +64,11 @@ func NewSubjectSimpleStorer() *SubjectSimpleStorer {
 			Credentials: credentials,
 		}
 	}
-	for client_id, clientData := range f.Clients {
-		credentials, err := NewCredentials(WithClientIdAndSecret(clientData.Id, clientData.Secret))
-		if err != nil {
-			panic(fmt.Errorf("failed to parse client credentials from config file: %w", err))
-		}
-		subjectStore.subjects[client_id] = Subject{
-			Name:        clientData.Id,
-			Credentials: credentials,
-		}
-	}
 
 	return &subjectStore
 }
 
 func (s *SubjectSimpleStorer) Authenticate(credentials Credentials) (*Subject, error) {
-	if len(credentials.Username) == 0 {
-		return nil, ErrMissingCredUsername
-	}
-	if len(credentials.Password) == 0 {
-		return nil, ErrMissingCredPassword
-	}
 	for _, subject := range s.subjects {
 		if credentials.Match(subject.Credentials) {
 			return &subject, nil

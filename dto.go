@@ -56,6 +56,8 @@ func Hydrate(s interface{}, r *http.Request) {
 
 	typ := val.Type()
 
+	r.ParseMultipartForm(32 << 20)
+
 	for i := 0; i < val.NumField(); i++ {
 		field := val.Field(i)
 		fieldType := typ.Field(i)
@@ -112,6 +114,7 @@ func (v *Validator) Validate(s interface{}) bool {
 			if isEmptyValue(field) {
 				isValid = false
 				v.Errors[fieldType.Name] = ValidationError{
+					FiledName:    fieldType.Name,
 					ErrorMessage: fmt.Sprintf("%s is required", fieldType.Name),
 				}
 			}

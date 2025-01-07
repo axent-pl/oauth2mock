@@ -20,6 +20,7 @@ func main() {
 	authCodeDB := auth.NewAuthorizationCodeInMemoryStore()
 	clientDB := auth.NewClientSimpleStore("run/users.json")
 	subjectDB := auth.NewSubjectSimpleStorer()
+	claimsDB := auth.NewClaimSimpleStorer("run/users.json")
 
 	http.HandleFunc("/.well-known/openid-configuration", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("DONE"))
@@ -63,14 +64,10 @@ func main() {
 		}
 
 		// credentials
+		authenticationErrorMessage := ""
 		credentialsDTO := &AuthorizeCredentialsDTO{}
 		credentialsValidator := NewValidator()
 		if r.Method == http.MethodPost {
-			err := r.ParseMultipartForm(32 << 20)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
 			Hydrate(credentialsDTO, r)
 			if credentialsValidator.Validate(credentialsDTO) {
 				credentials, err := auth.NewCredentials(auth.WithUsernameAndPassword(credentialsDTO.Username, credentialsDTO.Password))
@@ -93,6 +90,8 @@ func main() {
 					redirectURL.RawQuery = redirectURLQuery.Encode()
 
 					http.Redirect(w, r, redirectURL.String(), http.StatusTemporaryRedirect)
+				} else {
+					authenticationErrorMessage = authenticationErr.Error()
 				}
 			}
 		}
@@ -101,11 +100,13 @@ func main() {
 		templateData := struct {
 			FormAction           string
 			ValidationErrors     map[string]ValidationError
+			AuthenticationError  string
 			Credentials          AuthorizeCredentialsDTO
 			AuthorizationRequest *auth.AuthorizationRequest
 		}{
 			FormAction:           r.URL.String(),
 			ValidationErrors:     credentialsValidator.Errors,
+			AuthenticationError:  authenticationErrorMessage,
 			Credentials:          *credentialsDTO,
 			AuthorizationRequest: &authorizationRequest,
 		}
@@ -165,7 +166,11 @@ func main() {
 		}
 
 		subject := authCodeData.Request.Subject
-		claims := make(map[string]interface{})
+		claims, err := claimsDB.GetClaims(*subject, *client)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
 		tokenResponse, err := auth.NewTokenReponse(*subject, *client, claims, key)
 		if err != nil {

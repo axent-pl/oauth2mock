@@ -9,6 +9,13 @@ type AuthorizationRequest struct {
 	Subject      *Subject
 }
 
+func (req *AuthorizationRequest) GetRedirectURI() string {
+	if len(req.RedirectURI) == 0 {
+		return req.Client.RedirectURI
+	}
+	return req.RedirectURI
+}
+
 func (req *AuthorizationRequest) Valid() error {
 	// Validate required
 	if len(req.ResponseType) == 0 {

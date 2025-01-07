@@ -13,6 +13,11 @@
 <body>
     <main role="main" class="container">
         <form method="POST" action="{{ .FormAction }}" enctype="multipart/form-data" class="needs-validation" novalidate>
+            {{ if .AuthenticationError }}
+            <div class="alert alert-danger" role="alert">
+                {{ .AuthenticationError }}
+            </div>
+            {{ end }}
             <div class="mb-3">
                 <label for="username" class="form-label">Email address</label>
                 <input name="username" value="{{ .Credentials.Username }}" type="text" class="form-control {{ if .ValidationErrors.Username }}is-invalid{{ end }}" id="username" aria-describedby="validationFeedbackUsername">

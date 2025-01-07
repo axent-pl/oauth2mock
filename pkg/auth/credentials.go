@@ -66,5 +66,5 @@ func (c *Credentials) Match(credentials *Credentials) bool {
 	if len(credentials.ClientId) > 0 && len(c.ClientId) > 0 {
 		return c.ClientId == credentials.ClientId && c.ClientSecret == credentials.ClientSecret
 	}
-	return true
+	return false
 }
