@@ -4,16 +4,16 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"os"
-	"text/template"
 	"time"
 
+	"github.com/axent-pl/oauth2mock/dto"
 	"github.com/axent-pl/oauth2mock/pkg/auth"
 	"github.com/axent-pl/oauth2mock/pkg/jwk"
-	"github.com/axent-pl/oauth2mock/server"
+	"github.com/axent-pl/oauth2mock/routing"
+	"github.com/axent-pl/oauth2mock/template"
 )
 
-func JWKSGetHandler(key *jwk.JWK) server.HandlerFunc {
+func JWKSGetHandler(key *jwk.JWK) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		jwks, _ := key.GetJWKS()
 		w.Header().Set("Content-Type", "application/json")
@@ -21,12 +21,12 @@ func JWKSGetHandler(key *jwk.JWK) server.HandlerFunc {
 	}
 }
 
-func AuthorizeGetHandler(clientDB auth.ClientStorer) server.HandlerFunc {
+func AuthorizeGetHandler(templateDB template.TemplateStorer, clientDB auth.ClientStorer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// authorization request DTO
-		authorizeRequestDTO := &AuthorizeRequestDTO{}
-		authorizeRequestValidator := NewValidator()
-		Hydrate(authorizeRequestDTO, r)
+		authorizeRequestDTO := &dto.AuthorizeRequestDTO{}
+		authorizeRequestValidator := dto.NewValidator()
+		dto.Unmarshal(r, authorizeRequestDTO)
 		if !authorizeRequestValidator.Validate(authorizeRequestDTO) {
 			http.Error(w, "bad request", http.StatusBadRequest)
 			return
@@ -54,37 +54,21 @@ func AuthorizeGetHandler(clientDB auth.ClientStorer) server.HandlerFunc {
 		}
 
 		// Init template data
-		templateData := struct {
-			FormAction           string
-			ValidationErrors     map[string]ValidationError
-			AuthenticationError  string
-			Credentials          AuthorizeCredentialsDTO
-			AuthorizationRequest *auth.AuthorizationRequest
-		}{
+		templateData := template.AuthorizeTemplateData{
 			FormAction:           r.URL.String(),
 			AuthorizationRequest: &authorizationRequest,
 		}
 
-		templateCodeBytes, err := os.ReadFile(loginTemplateFile)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		tmpl, err := template.New("login").Parse(string(templateCodeBytes))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		tmpl.Execute(w, templateData)
+		templateDB.Render(w, "login", templateData)
 	}
 }
 
-func AuthorizePostHandler(clientDB auth.ClientStorer, subjectDB auth.SubjectStorerInterface, authCodeDB auth.AuthorizationCodeStorer) server.HandlerFunc {
+func AuthorizePostHandler(templateDB template.TemplateStorer, clientDB auth.ClientStorer, subjectDB auth.SubjectStorerInterface, authCodeDB auth.AuthorizationCodeStorer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// authorization request DTO
-		authorizeRequestDTO := &AuthorizeRequestDTO{}
-		authorizeRequestValidator := NewValidator()
-		Hydrate(authorizeRequestDTO, r)
+		authorizeRequestDTO := &dto.AuthorizeRequestDTO{}
+		authorizeRequestValidator := dto.NewValidator()
+		dto.Unmarshal(r, authorizeRequestDTO)
 		if !authorizeRequestValidator.Validate(authorizeRequestDTO) {
 			http.Error(w, "bad request", http.StatusBadRequest)
 			return
@@ -113,9 +97,9 @@ func AuthorizePostHandler(clientDB auth.ClientStorer, subjectDB auth.SubjectStor
 
 		// credentials
 		authenticationErrorMessage := ""
-		credentialsDTO := &AuthorizeCredentialsDTO{}
-		credentialsValidator := NewValidator()
-		Hydrate(credentialsDTO, r)
+		credentialsDTO := &dto.AuthorizeCredentialsDTO{}
+		credentialsValidator := dto.NewValidator()
+		dto.Unmarshal(r, credentialsDTO)
 
 		if credentialsValidator.Validate(credentialsDTO) {
 			credentials, err := auth.NewCredentials(auth.WithUsernameAndPassword(credentialsDTO.Username, credentialsDTO.Password))
@@ -144,13 +128,7 @@ func AuthorizePostHandler(clientDB auth.ClientStorer, subjectDB auth.SubjectStor
 		}
 
 		// Init template data
-		templateData := struct {
-			FormAction           string
-			ValidationErrors     map[string]ValidationError
-			AuthenticationError  string
-			Credentials          AuthorizeCredentialsDTO
-			AuthorizationRequest *auth.AuthorizationRequest
-		}{
+		templateData := template.AuthorizeTemplateData{
 			FormAction:           r.URL.String(),
 			ValidationErrors:     credentialsValidator.Errors,
 			AuthenticationError:  authenticationErrorMessage,
@@ -158,25 +136,15 @@ func AuthorizePostHandler(clientDB auth.ClientStorer, subjectDB auth.SubjectStor
 			AuthorizationRequest: &authorizationRequest,
 		}
 
-		templateCodeBytes, err := os.ReadFile(loginTemplateFile)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		tmpl, err := template.New("login").Parse(string(templateCodeBytes))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		tmpl.Execute(w, templateData)
+		templateDB.Render(w, "login", templateData)
 	}
 }
 
-func TokenAuthorizationCodeHandler(clientDB auth.ClientStorer, authCodeDB auth.AuthorizationCodeStorer, claimsDB auth.ClaimStorer, key *jwk.JWK) server.HandlerFunc {
+func TokenAuthorizationCodeHandler(clientDB auth.ClientStorer, authCodeDB auth.AuthorizationCodeStorer, claimsDB auth.ClaimStorer, key *jwk.JWK) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		requstDTO := &AuthorizationCodeTokenRequestDTO{}
-		requestValidator := NewValidator()
-		Hydrate(requstDTO, r)
+		requstDTO := &dto.AuthorizationCodeTokenRequestDTO{}
+		requestValidator := dto.NewValidator()
+		dto.Unmarshal(r, requstDTO)
 		if !requestValidator.Validate(requstDTO) {
 			http.Error(w, "bad request", http.StatusBadRequest)
 			return

@@ -4,11 +4,13 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+
+	"github.com/axent-pl/oauth2mock/routing"
 )
 
 type Server struct {
 	Addr   string
-	Router Router
+	Router routing.Router
 }
 
 func (s *Server) Start(ctx context.Context) error {

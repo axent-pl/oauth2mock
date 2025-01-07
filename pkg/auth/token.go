@@ -1,6 +1,10 @@
 package auth
 
-import "github.com/axent-pl/oauth2mock/pkg/jwk"
+import (
+	"time"
+
+	"github.com/axent-pl/oauth2mock/pkg/jwk"
+)
 
 type TokenResponse struct {
 	Type         string `json:"type"`
@@ -14,7 +18,9 @@ func NewTokenReponse(subject Subject, client Client, claims map[string]interface
 	access_token_claims := make(map[string]interface{})
 	access_token_claims["iss"] = "https://todo.issuer.uri"
 	access_token_claims["sub"] = subject.Name
-	access_token_claims["aud"] = client.Id
+	access_token_claims["azp"] = client.Id
+	access_token_claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
+	access_token_claims["iat"] = time.Now().Unix()
 	access_token_claims["typ"] = "Bearer"
 	for k, v := range claims {
 		access_token_claims[k] = v
@@ -27,7 +33,9 @@ func NewTokenReponse(subject Subject, client Client, claims map[string]interface
 
 	refresh_token_claims := make(map[string]interface{})
 	refresh_token_claims["sub"] = subject.Name
-	refresh_token_claims["aud"] = client.Id
+	refresh_token_claims["azp"] = client.Id
+	refresh_token_claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
+	refresh_token_claims["iat"] = time.Now().Unix()
 	refresh_token_claims["typ"] = "Refresh"
 	for k, v := range claims {
 		refresh_token_claims[k] = v

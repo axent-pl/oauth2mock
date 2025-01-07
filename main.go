@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -10,14 +11,23 @@ import (
 
 	"github.com/axent-pl/oauth2mock/pkg/auth"
 	"github.com/axent-pl/oauth2mock/pkg/jwk"
+	"github.com/axent-pl/oauth2mock/routing"
 	"github.com/axent-pl/oauth2mock/server"
+	"github.com/axent-pl/oauth2mock/template"
 )
 
-const loginTemplateFile = "tpl/login.go.tpl"
-
 var (
-	signalChannel chan os.Signal
 	serverAddress string
+
+	authCodeStore auth.AuthorizationCodeStorer
+	clientStore   auth.ClientStorer
+	subjectStore  auth.SubjectStorerInterface
+	claimStore    auth.ClaimStorer
+	templateStore template.TemplateStorer
+
+	key        jwk.JWK
+	router     routing.Router
+	httpServer server.Server
 )
 
 // Configure logger
@@ -27,33 +37,42 @@ func init() {
 	slog.SetDefault(jsonLogger)
 }
 
-// Configure server with signalChannel
+// Configure stores
+func init() {
+	authCodeStore = auth.NewAuthorizationCodeInMemoryStore()
+	clientStore = auth.NewClientSimpleStore("run/users.json")
+	subjectStore = auth.NewSubjectSimpleStorer()
+	claimStore = auth.NewClaimSimpleStorer("run/users.json")
+	templateStore = template.MustNewDefaultTemplateStore("tpl")
+}
+
+// JWK
+func init() {
+	key = jwk.MustLoadOrGenerate()
+}
+
+// Configure HTTP router and server
 func init() {
 	serverAddress = ":8080"
 
-	signalChannel = make(chan os.Signal)
-	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
-}
+	router = routing.Router{}
+	router.RegisterHandler(JWKSGetHandler(&key), routing.WithMethod(http.MethodGet), routing.WithPath("/.well-known/jwks.json"))
+	router.RegisterHandler(AuthorizeGetHandler(templateStore, clientStore), routing.WithMethod(http.MethodGet), routing.WithPath("/authorize"), routing.ForQueryValue("response_type", "code"))
+	router.RegisterHandler(AuthorizePostHandler(templateStore, clientStore, subjectStore, authCodeStore), routing.WithMethod(http.MethodPost), routing.WithPath("/authorize"), routing.ForQueryValue("response_type", "code"))
+	router.RegisterHandler(TokenAuthorizationCodeHandler(clientStore, authCodeStore, claimStore, &key), routing.WithMethod(http.MethodPost), routing.WithPath("/token"), routing.ForPostFormValue("grant_type", "authorization_code"))
 
-func main() {
-	key := jwk.MustLoadOrGenerate()
-	authCodeDB := auth.NewAuthorizationCodeInMemoryStore()
-	clientDB := auth.NewClientSimpleStore("run/users.json")
-	subjectDB := auth.NewSubjectSimpleStorer()
-	claimsDB := auth.NewClaimSimpleStorer("run/users.json")
-
-	router := server.Router{}
-	router.RegisterHandler(JWKSGetHandler(&key), server.WithMethod(http.MethodGet), server.WithPath("/.well-known/jwks.json"))
-	router.RegisterHandler(AuthorizeGetHandler(clientDB), server.WithMethod(http.MethodGet), server.WithPath("/authorize"), server.ForQueryValue("response_type", "code"))
-	router.RegisterHandler(AuthorizePostHandler(clientDB, subjectDB, authCodeDB), server.WithMethod(http.MethodPost), server.WithPath("/authorize"), server.ForQueryValue("response_type", "code"))
-	router.RegisterHandler(TokenAuthorizationCodeHandler(clientDB, authCodeDB, claimsDB, &key), server.WithMethod(http.MethodPost), server.WithPath("/token"), server.ForPostFormValue("grant_type", "authorization_code"))
-
-	httpServer := server.Server{
+	httpServer = server.Server{
 		Addr:   serverAddress,
 		Router: router,
 	}
+}
 
-	// Init cancellation context triggered by SIGINT or SIGTERM
+func main() {
+	fmt.Println(templateStore)
+
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM, syscall.SIGABRT)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		<-signalChannel
@@ -61,7 +80,6 @@ func main() {
 	}()
 	defer cancel()
 
-	// start the server
 	if err := httpServer.Start(ctx); err != nil {
 		os.Exit(1)
 	}

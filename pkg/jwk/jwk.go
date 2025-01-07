@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"time"
 
 	jwt_ext "github.com/golang-jwt/jwt/v5"
 	"github.com/square/go-jose/v3"
@@ -48,10 +47,7 @@ func (k *JWK) GetJWKS() ([]byte, error) {
 }
 
 func (k *JWK) SignJWT(payload map[string]interface{}) ([]byte, error) {
-	claims := jwt_ext.MapClaims{
-		"exp": time.Now().Add(time.Hour * 1).Unix(), // Token expiration
-		"iat": time.Now().Unix(),                    // Token issued at
-	}
+	claims := jwt_ext.MapClaims{}
 
 	for key, value := range payload {
 		claims[key] = value

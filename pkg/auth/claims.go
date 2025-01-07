@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 )
 
@@ -59,6 +60,7 @@ func NewClaimSimpleStorer(claimsJSONFilepath string) *ClaimSimpleStorer {
 }
 
 func (s *ClaimSimpleStorer) GetClaims(subject Subject, client Client) (map[string]interface{}, error) {
+	slog.Info(fmt.Sprintf("generating claims for subject %s, client %s", subject.Name, client.Id))
 	claims := make(map[string]interface{})
 
 	subjectClaims, ok := s.claims[subject.Name]

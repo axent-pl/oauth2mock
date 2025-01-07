@@ -1,4 +1,4 @@
-package server
+package routing
 
 import (
 	"log/slog"
