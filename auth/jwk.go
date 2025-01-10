@@ -91,17 +91,17 @@ func generatePrivateKey() (*rsa.PrivateKey, error) {
 	return rsa.GenerateKey(rand.Reader, 2048)
 }
 
-func MustLoad(keyFile string) JWK {
+func Load(keyFile string) (JWK, error) {
 	key := JWK{}
 	privateKey, err := loadPrivateKeyFromFile(keyFile)
 	if err != nil {
-		panic(err)
+		return JWK{}, err
 	}
 	key.privateKey = privateKey
-	return key
+	return key, nil
 }
 
-func MustLoadOrGenerate(keyFile string) JWK {
+func LoadOrGenerate(keyFile string) (JWK, error) {
 	key := JWK{}
 	privateKey, err := loadPrivateKeyFromFile(keyFile)
 	if err == nil {
@@ -109,12 +109,12 @@ func MustLoadOrGenerate(keyFile string) JWK {
 	} else if errors.Is(err, os.ErrNotExist) {
 		privateKey, err := generatePrivateKey()
 		if err != nil {
-			panic(err)
+			return JWK{}, err
 		}
 		key.privateKey = privateKey
 		savePrivateKeyToFile(keyFile, privateKey)
 	} else {
-		panic(err)
+		return JWK{}, err
 	}
-	return key
+	return key, nil
 }

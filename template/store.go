@@ -17,7 +17,7 @@ type DefaultTemplateStore struct {
 	templates map[string]templateEngine.Template
 }
 
-func MustNewDefaultTemplateStore(templatesPath string) *DefaultTemplateStore {
+func NewDefaultTemplateStore(templatesPath string) (*DefaultTemplateStore, error) {
 	ts := &DefaultTemplateStore{
 		templates: make(map[string]templateEngine.Template),
 	}
@@ -53,10 +53,10 @@ func MustNewDefaultTemplateStore(templatesPath string) *DefaultTemplateStore {
 	})
 
 	if err != nil {
-		panic(fmt.Errorf("can not read templates from %s: %w", templatesPath, err))
+		return nil, fmt.Errorf("can not read templates from %s: %w", templatesPath, err)
 	}
 
-	return ts
+	return ts, nil
 }
 
 func (ts *DefaultTemplateStore) Render(w io.Writer, templateName string, data any) error {

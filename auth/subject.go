@@ -18,7 +18,7 @@ type Subject struct {
 
 // ----------------------------------------------------------------------------
 
-type SubjectStorerInterface interface {
+type SubjectStorer interface {
 	Authenticate(credentials Credentials) (*Subject, error)
 }
 
@@ -28,7 +28,7 @@ type SubjectSimpleStorer struct {
 	subjects map[string]Subject
 }
 
-func NewSubjectSimpleStorer(subjectsFile string) *SubjectSimpleStorer {
+func NewSubjectSimpleStorer(subjectsFile string) (*SubjectSimpleStorer, error) {
 	type jsonUserStruct struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -41,11 +41,11 @@ func NewSubjectSimpleStorer(subjectsFile string) *SubjectSimpleStorer {
 
 	data, err := os.ReadFile(subjectsFile)
 	if err != nil {
-		panic(fmt.Errorf("failed to read subjects config file: %w", err))
+		return nil, fmt.Errorf("failed to read subjects config file: %w", err)
 	}
 
 	if err := json.Unmarshal(data, &f); err != nil {
-		panic(fmt.Errorf("failed to parse subjects config file: %w", err))
+		return nil, fmt.Errorf("failed to parse subjects config file: %w", err)
 	}
 
 	subjectStore := SubjectSimpleStorer{
@@ -63,7 +63,7 @@ func NewSubjectSimpleStorer(subjectsFile string) *SubjectSimpleStorer {
 		}
 	}
 
-	return &subjectStore
+	return &subjectStore, nil
 }
 
 func (s *SubjectSimpleStorer) Authenticate(credentials Credentials) (*Subject, error) {

@@ -3,6 +3,7 @@ package routing
 import (
 	"log/slog"
 	"net/http"
+	"net/http/httputil"
 	"time"
 )
 
@@ -69,6 +70,7 @@ func (r *route) matches(req *http.Request) bool {
 	if len(r.method) > 0 && r.method != req.Method {
 		return false
 	}
+
 	if len(r.path) > 0 && r.path != req.URL.Path {
 		return false
 	}
@@ -81,12 +83,8 @@ func (r *route) matches(req *http.Request) bool {
 	}
 
 	if len(r.postFormValue) > 0 {
-		if err := req.ParseMultipartForm(32 << 20); err != nil {
-			return false
-		}
 		for key, val := range r.postFormValue {
-			if req.FormValue(key) != val {
-				slog.Info("ooops :(")
+			if req.PostFormValue(key) != val {
 				return false
 			}
 		}
@@ -96,15 +94,18 @@ func (r *route) matches(req *http.Request) bool {
 }
 
 func (h *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	dump, _ := httputil.DumpRequest(r, true)
+	slog.Info(string(dump))
 	for _, route := range h.routes {
 		if route.matches(r) {
-			slog.Info("Request started", "RemoteAddr", r.RemoteAddr, "Method", r.Method, "Path", r.URL.Path)
+			slog.Info("Request started", "RemoteAddr", r.RemoteAddr, "Method", r.Method, "Path", r.URL.Path, "Query", r.URL.RawQuery)
 			start := time.Now()
 			route.handler(w, r)
 			took := time.Since(start)
-			slog.Info("Request finished", "RemoteAddr", r.RemoteAddr, "Method", r.Method, "Path", r.URL.Path, "tookMS", took)
+			slog.Info("Request finished", "RemoteAddr", r.RemoteAddr, "Method", r.Method, "Path", r.URL.Path, "Query", r.URL.RawQuery, "tookMS", took)
 			return
 		}
 	}
+	slog.Warn("No route for", "RemoteAddr", r.RemoteAddr, "Method", r.Method, "Path", r.URL.Path, "Query", r.URL.RawQuery, "RawPostData", r.Body)
 	http.NotFound(w, r)
 }

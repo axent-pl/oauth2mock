@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -17,6 +18,27 @@ func JWKSGetHandler(key *auth.JWK) routing.HandlerFunc {
 		jwks, _ := key.GetJWKS()
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(jwks)
+	}
+}
+
+func WellKnownHandler(openidConfig auth.OpenIDConfiguration) routing.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		openidConfigCopy := openidConfig
+		hostWithPort := r.Host
+		scheme := "http"
+		if r.TLS != nil {
+			scheme = "https"
+		}
+		origin := fmt.Sprintf("%s://%s", scheme, hostWithPort)
+		openidConfigCopy.SetIssuer(origin)
+		resp, err := json.Marshal(openidConfigCopy)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(resp)
+
 	}
 }
 
@@ -62,7 +84,7 @@ func AuthorizeGetHandler(templateDB template.TemplateStorer, clientDB auth.Clien
 	}
 }
 
-func AuthorizePostHandler(templateDB template.TemplateStorer, clientDB auth.ClientStorer, subjectDB auth.SubjectStorerInterface, authCodeDB auth.AuthorizationCodeStorer) routing.HandlerFunc {
+func AuthorizePostHandler(templateDB template.TemplateStorer, clientDB auth.ClientStorer, subjectDB auth.SubjectStorer, authCodeDB auth.AuthorizationCodeStorer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// authorization request DTO
 		authorizeRequestDTO := &dto.AuthorizeRequestDTO{}
@@ -99,7 +121,6 @@ func AuthorizePostHandler(templateDB template.TemplateStorer, clientDB auth.Clie
 		credentialsDTO := &dto.AuthorizeCredentialsDTO{}
 		credentialsValidator := dto.NewValidator()
 		dto.Unmarshal(r, credentialsDTO)
-
 		if credentialsValidator.Validate(credentialsDTO) {
 			credentials, err := auth.NewCredentials(auth.WithUsernameAndPassword(credentialsDTO.Username, credentialsDTO.Password))
 			if err != nil {
@@ -120,7 +141,7 @@ func AuthorizePostHandler(templateDB template.TemplateStorer, clientDB auth.Clie
 				redirectURLQuery.Add("code", code)
 				redirectURL.RawQuery = redirectURLQuery.Encode()
 
-				http.Redirect(w, r, redirectURL.String(), http.StatusTemporaryRedirect)
+				http.Redirect(w, r, redirectURL.String(), http.StatusSeeOther)
 			} else {
 				authenticationErrorMessage = authenticationErr.Error()
 			}

@@ -21,7 +21,7 @@ type ClientSimpleStore struct {
 	clients map[string]Client
 }
 
-func NewClientSimpleStore(clientsJSONFilepath string) *ClientSimpleStore {
+func NewClientSimpleStore(clientsJSONFilepath string) (*ClientSimpleStore, error) {
 	type jsonClientStruct struct {
 		Id          string `json:"client_id"`
 		Secret      string `json:"client_secret"`
@@ -34,11 +34,11 @@ func NewClientSimpleStore(clientsJSONFilepath string) *ClientSimpleStore {
 
 	data, err := os.ReadFile(clientsJSONFilepath)
 	if err != nil {
-		panic(fmt.Errorf("failed to read clients config file: %w", err))
+		return nil, fmt.Errorf("failed to read clients config file: %w", err)
 	}
 
 	if err := json.Unmarshal(data, &f); err != nil {
-		panic(fmt.Errorf("failed to parse clients config file: %w", err))
+		return nil, fmt.Errorf("failed to parse clients config file: %w", err)
 	}
 
 	clientStore := ClientSimpleStore{
@@ -57,7 +57,7 @@ func NewClientSimpleStore(clientsJSONFilepath string) *ClientSimpleStore {
 		fmt.Println(v)
 	}
 
-	return &clientStore
+	return &clientStore, nil
 }
 
 func (s *ClientSimpleStore) GetClient(client_id string) (*Client, error) {

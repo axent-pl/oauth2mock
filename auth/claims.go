@@ -20,7 +20,7 @@ type ClaimSimpleStorer struct {
 	claims map[string]ClaimSimpleStorerClaims
 }
 
-func NewClaimSimpleStorer(claimsJSONFilepath string) *ClaimSimpleStorer {
+func NewClaimSimpleStorer(claimsJSONFilepath string) (*ClaimSimpleStorer, error) {
 	type jsonUserClaimsStruct struct {
 		Base      map[string]interface{}            `json:"base"`
 		Overrides map[string]map[string]interface{} `json:"override"`
@@ -38,11 +38,11 @@ func NewClaimSimpleStorer(claimsJSONFilepath string) *ClaimSimpleStorer {
 
 	data, err := os.ReadFile(claimsJSONFilepath)
 	if err != nil {
-		panic(fmt.Errorf("failed to read claims config file: %w", err))
+		return nil, fmt.Errorf("failed to read claims config file: %w", err)
 	}
 
 	if err := json.Unmarshal(data, &f); err != nil {
-		panic(fmt.Errorf("failed to parse claims config file: %w", err))
+		return nil, fmt.Errorf("failed to parse claims config file: %w", err)
 	}
 
 	cs := ClaimSimpleStorer{
@@ -56,7 +56,7 @@ func NewClaimSimpleStorer(claimsJSONFilepath string) *ClaimSimpleStorer {
 		}
 	}
 
-	return &cs
+	return &cs, nil
 }
 
 func (s *ClaimSimpleStorer) GetClaims(subject Subject, client Client) (map[string]interface{}, error) {

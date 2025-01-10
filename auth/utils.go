@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/url"
+	"regexp"
+	"strings"
 )
 
 func GenerateRandomCode(length int) (string, error) {
@@ -40,4 +42,14 @@ func AddQueryParams(baseURL string, params url.Values) (string, error) {
 	parsedURL.RawQuery = query.Encode()
 
 	return parsedURL.String(), nil
+}
+
+func MatchesWildcard(redirectURI, clientRedirectURI string) bool {
+	escapedPattern := regexp.QuoteMeta(clientRedirectURI)
+	regexPattern := strings.ReplaceAll(escapedPattern, "\\*", ".*")
+	regex, err := regexp.Compile("^" + regexPattern + "$")
+	if err != nil {
+		return false
+	}
+	return regex.MatchString(redirectURI)
 }

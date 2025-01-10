@@ -24,23 +24,23 @@ type AuthorizationCodeData struct {
 	Request   *AuthorizationRequest
 }
 
-// AuthorizationCodeInMemoryStore is a thread-safe store for authorization codes
-type AuthorizationCodeInMemoryStore struct {
+// AuthorizationCodeSimpleStore is a thread-safe store for authorization codes
+type AuthorizationCodeSimpleStore struct {
 	codes   map[string]AuthorizationCodeData
 	codesMU sync.RWMutex
 }
 
-// NewAuthorizationCodeInMemoryStore creates a new instance of AuthorizationCodeDatabase
-func NewAuthorizationCodeInMemoryStore() *AuthorizationCodeInMemoryStore {
-	db := &AuthorizationCodeInMemoryStore{
+// NewAuthorizationCodeSimpleStore creates a new instance of AuthorizationCodeDatabase
+func NewAuthorizationCodeSimpleStore() (*AuthorizationCodeSimpleStore, error) {
+	db := &AuthorizationCodeSimpleStore{
 		codes: make(map[string]AuthorizationCodeData),
 	}
 	go db.cleanupExpiredCodes() // Background task to clean up expired codes
-	return db
+	return db, nil
 }
 
 // GenerateCode generates and stores an authorization code with a TTL
-func (db *AuthorizationCodeInMemoryStore) GenerateCode(request *AuthorizationRequest, ttl time.Duration) (string, error) {
+func (db *AuthorizationCodeSimpleStore) GenerateCode(request *AuthorizationRequest, ttl time.Duration) (string, error) {
 	db.codesMU.Lock()
 	defer db.codesMU.Unlock()
 
@@ -63,7 +63,7 @@ func (db *AuthorizationCodeInMemoryStore) GenerateCode(request *AuthorizationReq
 }
 
 // GetCode retrieves an authorization code if it exists and has not expired
-func (db *AuthorizationCodeInMemoryStore) GetCode(code string) (AuthorizationCodeData, bool) {
+func (db *AuthorizationCodeSimpleStore) GetCode(code string) (AuthorizationCodeData, bool) {
 	db.codesMU.RLock()
 	defer db.codesMU.RUnlock()
 
@@ -78,14 +78,14 @@ func (db *AuthorizationCodeInMemoryStore) GetCode(code string) (AuthorizationCod
 }
 
 // RevokeCode removes an authorization code from the database
-func (db *AuthorizationCodeInMemoryStore) RevokeCode(code string) {
+func (db *AuthorizationCodeSimpleStore) RevokeCode(code string) {
 	db.codesMU.Lock()
 	defer db.codesMU.Unlock()
 	delete(db.codes, code)
 }
 
 // cleanupExpiredCodes removes expired authorization codes periodically
-func (db *AuthorizationCodeInMemoryStore) cleanupExpiredCodes() {
+func (db *AuthorizationCodeSimpleStore) cleanupExpiredCodes() {
 	ticker := time.NewTicker(1 * time.Minute) // Adjust interval as needed
 	defer ticker.Stop()
 

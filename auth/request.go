@@ -28,9 +28,7 @@ func (req *AuthorizationRequest) Valid() error {
 	}
 
 	// Validate RedirectURI
-	if len(req.RedirectURI) == 0 {
-		req.RedirectURI = req.Client.RedirectURI
-	} else if req.RedirectURI != req.Client.RedirectURI {
+	if len(req.RedirectURI) > 0 && !MatchesWildcard(req.RedirectURI, req.Client.RedirectURI) {
 		return ErrInvalidClientRedirectURI
 	}
 

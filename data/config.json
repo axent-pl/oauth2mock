@@ -29,12 +29,12 @@
         "ACME" : {
             "client_id": "ACME",
             "client_secret": "secret-acme-pass",
-            "redirect_uri": "http://acme.com"
+            "redirect_uri": "*"
         },
         "ACME2" : {
             "client_id": "ACME2",
             "client_secret": "secret-acme-pass",
-            "redirect_uri": "http://localhost:8080/.well-known/jwks.json"
+            "redirect_uri": "*"
         }
     }
 }

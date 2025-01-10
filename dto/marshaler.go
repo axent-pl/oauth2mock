@@ -16,9 +16,6 @@ func Unmarshal(r *http.Request, s interface{}) error {
 	val = val.Elem()
 	typ := val.Type()
 
-	// Parse form data (up to 32 MB)
-	r.ParseMultipartForm(32 << 20)
-
 	// Populate struct fields
 	for i := 0; i < val.NumField(); i++ {
 		field := val.Field(i)
