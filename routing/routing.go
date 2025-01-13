@@ -1,10 +1,13 @@
 package routing
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"net/http/httputil"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type route struct {
@@ -94,18 +97,28 @@ func (r *route) matches(req *http.Request) bool {
 }
 
 func (h *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	dump, _ := httputil.DumpRequest(r, true)
-	slog.Info(string(dump))
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, "RequestID", uuid.New().String())
+	routedRequest := r.WithContext(ctx)
+
+	dump, _ := httputil.DumpRequest(routedRequest, true)
+	slog.Debug(string(dump))
+
+	slog.Info("Routing routing", "RequestID", routedRequest.Context().Value("RequestID"), "RemoteAddr", routedRequest.RemoteAddr, "Method", routedRequest.Method, "Path", routedRequest.URL.Path, "Query", routedRequest.URL.RawQuery)
 	for _, route := range h.routes {
 		if route.matches(r) {
-			slog.Info("Request started", "RemoteAddr", r.RemoteAddr, "Method", r.Method, "Path", r.URL.Path, "Query", r.URL.RawQuery)
+			slog.Info("Routing routing done", "RequestID", routedRequest.Context().Value("RequestID"))
+
+			slog.Info("Routing calling handler", "RequestID", routedRequest.Context().Value("RequestID"))
 			start := time.Now()
-			route.handler(w, r)
+			route.handler(w, routedRequest)
 			took := time.Since(start)
-			slog.Info("Request finished", "RemoteAddr", r.RemoteAddr, "Method", r.Method, "Path", r.URL.Path, "Query", r.URL.RawQuery, "tookMS", took)
+			slog.Info("Routing calling handler done", "RequestID", routedRequest.Context().Value("RequestID"), "tookMS", took)
+
 			return
 		}
 	}
-	slog.Warn("No route for", "RemoteAddr", r.RemoteAddr, "Method", r.Method, "Path", r.URL.Path, "Query", r.URL.RawQuery, "RawPostData", r.Body)
+	slog.Warn("Routing routing failed", "RequestID", routedRequest.Context().Value("RequestID"))
+
 	http.NotFound(w, r)
 }

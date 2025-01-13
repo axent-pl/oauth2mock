@@ -1,40 +1,50 @@
 {
     "users" : {
-        "username1" : {
-            "username": "username1",
-            "password": "secret-pass",
+        "demo" : {
+            "username": "demo",
+            "password": "demo",
             "claims" : {
                 "base": {
-                    "sub": "John",
-                    "preffered_username": "John.Doe@acme.com",
+                    "sub": "Demo",
+                    "preferred_username": "John.Demo@acme.com",
                     "realm_roles": [
-                        "SUPERADMIN"
+                        "DEMO"
+                    ]
+                }
+            }
+        },
+        "admin" : {
+            "username": "admin",
+            "password": "admin",
+            "claims" : {
+                "base": {
+                    "sub": "Demo",
+                    "preferred_username": "John.Demo@acme.com",
+                    "realm_roles": [
+                        "ADMIN"
                     ]
                 },
                 "override": {
                     "ACME": {
                         "client_roles": [
+                            "DEMO",
                             "ADMIN"
                         ]
                     }
                 }
             }
-        },
-        "username2" : {
-            "username": "username2",
-            "password": "secret-pass"
         }
     },
     "clients" : {
         "ACME" : {
             "client_id": "ACME",
-            "client_secret": "secret-acme-pass",
-            "redirect_uri": "*"
+            "client_secret": "acme-secret",
+            "redirect_uri": "http*//localhost*"
         },
         "ACME2" : {
             "client_id": "ACME2",
             "client_secret": "secret-acme-pass",
-            "redirect_uri": "*"
+            "redirect_uri": "http*//localhost*"
         }
     }
 }

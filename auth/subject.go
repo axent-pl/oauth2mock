@@ -13,13 +13,13 @@ type User struct {
 
 type Subject struct {
 	Name        string
-	Credentials *Credentials
+	Credentials CredentialsService
 }
 
 // ----------------------------------------------------------------------------
 
 type SubjectStorer interface {
-	Authenticate(credentials Credentials) (*Subject, error)
+	Authenticate(credentials CredentialsService) (*Subject, error)
 }
 
 // ----------------------------------------------------------------------------
@@ -66,7 +66,7 @@ func NewSubjectSimpleStorer(subjectsFile string) (*SubjectSimpleStorer, error) {
 	return &subjectStore, nil
 }
 
-func (s *SubjectSimpleStorer) Authenticate(credentials Credentials) (*Subject, error) {
+func (s *SubjectSimpleStorer) Authenticate(credentials CredentialsService) (*Subject, error) {
 	for _, subject := range s.subjects {
 		if credentials.Match(subject.Credentials) {
 			return &subject, nil

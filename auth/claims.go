@@ -3,64 +3,58 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
+	"io"
 	"os"
 )
 
-type ClaimStorer interface {
+type ClaimServicer interface {
 	GetClaims(subject Subject, client Client) (map[string]interface{}, error)
 }
 
-type ClaimSimpleStorerClaims struct {
+type claimDetails struct {
 	Base      map[string]interface{}
 	Overrides map[string]map[string]interface{}
 }
 
-type ClaimSimpleStorer struct {
-	claims map[string]ClaimSimpleStorerClaims
+type claimService struct {
+	claims map[string]claimDetails
 }
 
-func NewClaimSimpleStorer(claimsJSONFilepath string) (*ClaimSimpleStorer, error) {
-	type jsonUserClaimsStruct struct {
-		Base      map[string]interface{}            `json:"base"`
-		Overrides map[string]map[string]interface{} `json:"override"`
-	}
-	type jsonUserStruct struct {
-		Username string               `json:"username"`
-		Password string               `json:"password"`
-		Claims   jsonUserClaimsStruct `json:"claims"`
-	}
-	type jsonStoreStruct struct {
-		Users map[string]jsonUserStruct `json:"users"`
-	}
-
-	f := jsonStoreStruct{}
-
-	data, err := os.ReadFile(claimsJSONFilepath)
+func NewClaimService(claimsJSONFilepath string) (ClaimServicer, error) {
+	file, err := os.Open(claimsJSONFilepath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read claims config file: %w", err)
+		return nil, fmt.Errorf("failed to open claims config file: %w", err)
+	}
+	defer file.Close()
+	return newClaimSimpleStorerFromReader(file)
+}
+
+func newClaimSimpleStorerFromReader(reader io.Reader) (*claimService, error) {
+	var rawData struct {
+		Users map[string]struct {
+			Claims struct {
+				Base      map[string]interface{}            `json:"base"`
+				Overrides map[string]map[string]interface{} `json:"override"`
+			} `json:"claims"`
+		} `json:"users"`
 	}
 
-	if err := json.Unmarshal(data, &f); err != nil {
+	if err := json.NewDecoder(reader).Decode(&rawData); err != nil {
 		return nil, fmt.Errorf("failed to parse claims config file: %w", err)
 	}
 
-	cs := ClaimSimpleStorer{
-		claims: make(map[string]ClaimSimpleStorerClaims),
-	}
-
-	for key, user := range f.Users {
-		cs.claims[key] = ClaimSimpleStorerClaims{
+	claims := make(map[string]claimDetails)
+	for username, user := range rawData.Users {
+		claims[username] = claimDetails{
 			Base:      user.Claims.Base,
 			Overrides: user.Claims.Overrides,
 		}
 	}
 
-	return &cs, nil
+	return &claimService{claims: claims}, nil
 }
 
-func (s *ClaimSimpleStorer) GetClaims(subject Subject, client Client) (map[string]interface{}, error) {
-	slog.Info(fmt.Sprintf("generating claims for subject %s, client %s", subject.Name, client.Id))
+func (s *claimService) GetClaims(subject Subject, client Client) (map[string]interface{}, error) {
 	claims := make(map[string]interface{})
 
 	subjectClaims, ok := s.claims[subject.Name]

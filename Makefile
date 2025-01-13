@@ -1,4 +1,6 @@
 TAG=nightly
+run:
+	go run cmd/server.go
 build:
 	go build -o bin/server cmd/server.go
 container-build:

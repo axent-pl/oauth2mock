@@ -9,19 +9,19 @@ import (
 type Client struct {
 	Id          string
 	RedirectURI string
-	Credentials *Credentials
+	Credentials CredentialsService
 }
 
 type ClientStorer interface {
 	GetClient(client_id string) (*Client, error)
-	Authenticate(credentials Credentials) (*Client, error)
+	Authenticate(credentials CredentialsService) (*Client, error)
 }
 
-type ClientSimpleStore struct {
+type clientSimpleStore struct {
 	clients map[string]Client
 }
 
-func NewClientSimpleStore(clientsJSONFilepath string) (*ClientSimpleStore, error) {
+func NewClientSimpleStore(clientsJSONFilepath string) (ClientStorer, error) {
 	type jsonClientStruct struct {
 		Id          string `json:"client_id"`
 		Secret      string `json:"client_secret"`
@@ -41,7 +41,7 @@ func NewClientSimpleStore(clientsJSONFilepath string) (*ClientSimpleStore, error
 		return nil, fmt.Errorf("failed to parse clients config file: %w", err)
 	}
 
-	clientStore := ClientSimpleStore{
+	clientStore := clientSimpleStore{
 		clients: make(map[string]Client),
 	}
 	for k, v := range f.Clients {
@@ -60,7 +60,7 @@ func NewClientSimpleStore(clientsJSONFilepath string) (*ClientSimpleStore, error
 	return &clientStore, nil
 }
 
-func (s *ClientSimpleStore) GetClient(client_id string) (*Client, error) {
+func (s *clientSimpleStore) GetClient(client_id string) (*Client, error) {
 	client, ok := s.clients[client_id]
 	if !ok {
 		return nil, ErrInvalidClientId
@@ -68,7 +68,7 @@ func (s *ClientSimpleStore) GetClient(client_id string) (*Client, error) {
 	return &client, nil
 }
 
-func (s *ClientSimpleStore) Authenticate(credentials Credentials) (*Client, error) {
+func (s *clientSimpleStore) Authenticate(credentials CredentialsService) (*Client, error) {
 	for _, client := range s.clients {
 		if credentials.Match(client.Credentials) {
 			return &client, nil

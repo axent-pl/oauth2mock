@@ -25,7 +25,7 @@ var (
 	authCodeStore auth.AuthorizationCodeStorer
 	clientStore   auth.ClientStorer
 	subjectStore  auth.SubjectStorer
-	claimStore    auth.ClaimStorer
+	claimStore    auth.ClaimServicer
 	templateStore template.TemplateStorer
 
 	key        auth.JWK
@@ -73,7 +73,7 @@ func init() {
 	}
 	slog.Info("subject store initialized")
 
-	claimStore, err = auth.NewClaimSimpleStorer(dataFile)
+	claimStore, err = auth.NewClaimService(dataFile)
 	if err != nil {
 		slog.Error("failed to initialize claim store", "error", err)
 		os.Exit(1)

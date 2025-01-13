@@ -1,8 +1,10 @@
 package auth
 
-import "errors"
+import (
+	"errors"
+)
 
-type Credentials struct {
+type credentials struct {
 	Username      string
 	Password      string
 	ClientId      string
@@ -11,10 +13,16 @@ type Credentials struct {
 	AssertionType string
 }
 
-type CredentialsOption func(*Credentials) error
+type CredentialsService interface {
+	Match(inputCredentials CredentialsService) bool
+	UsernamePasswordHash() string
+	ClientIdSecretHash() string
+}
 
-func NewCredentials(options ...CredentialsOption) (*Credentials, error) {
-	credentials := &Credentials{}
+type CredentialsOption func(*credentials) error
+
+func NewCredentials(options ...CredentialsOption) (CredentialsService, error) {
+	credentials := &credentials{}
 	for _, opt := range options {
 		if err := opt(credentials); err != nil {
 			return nil, err
@@ -24,7 +32,7 @@ func NewCredentials(options ...CredentialsOption) (*Credentials, error) {
 }
 
 func WithClientIdAndSecret(clientId, clientSecret string) CredentialsOption {
-	return func(c *Credentials) error {
+	return func(c *credentials) error {
 		if clientId == "" || clientSecret == "" {
 			return errors.New("clientId and clientSecret must not be empty")
 		}
@@ -35,7 +43,7 @@ func WithClientIdAndSecret(clientId, clientSecret string) CredentialsOption {
 }
 
 func WithUsernameAndPassword(username, password string) CredentialsOption {
-	return func(c *Credentials) error {
+	return func(c *credentials) error {
 		if username == "" || password == "" {
 			return errors.New("username and password must not be empty")
 		}
@@ -46,7 +54,7 @@ func WithUsernameAndPassword(username, password string) CredentialsOption {
 }
 
 func WithClientAssertion(assertionType, assertion string) CredentialsOption {
-	return func(c *Credentials) error {
+	return func(c *credentials) error {
 		if assertionType == "" || assertion == "" {
 			return errors.New("assertionType and assertion must not be empty")
 		}
@@ -59,12 +67,20 @@ func WithClientAssertion(assertionType, assertion string) CredentialsOption {
 	}
 }
 
-func (c *Credentials) Match(credentials *Credentials) bool {
-	if len(credentials.Username) > 0 && len(c.Username) > 0 {
-		return c.Username == credentials.Username && c.Password == credentials.Password
+func (c *credentials) UsernamePasswordHash() string {
+	return c.Username + ":" + c.Password
+}
+
+func (c *credentials) ClientIdSecretHash() string {
+	return c.ClientId + ":" + c.ClientSecret
+}
+
+func (c *credentials) Match(inputCredentials CredentialsService) bool {
+	if len(c.Username) > 0 {
+		return c.UsernamePasswordHash() == inputCredentials.UsernamePasswordHash()
 	}
-	if len(credentials.ClientId) > 0 && len(c.ClientId) > 0 {
-		return c.ClientId == credentials.ClientId && c.ClientSecret == credentials.ClientSecret
+	if len(c.ClientId) > 0 {
+		return c.ClientIdSecretHash() == inputCredentials.ClientIdSecretHash()
 	}
 	return false
 }
