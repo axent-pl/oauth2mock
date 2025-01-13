@@ -85,7 +85,7 @@ func AuthorizeGetHandler(templateDB template.TemplateStorer, clientDB auth.Clien
 	}
 }
 
-func AuthorizePostHandler(templateDB template.TemplateStorer, clientDB auth.ClientStorer, subjectDB auth.SubjectStorer, authCodeDB auth.AuthorizationCodeStorer) routing.HandlerFunc {
+func AuthorizePostHandler(templateDB template.TemplateStorer, clientDB auth.ClientStorer, subjectDB auth.SubjectServicer, authCodeDB auth.AuthorizationCodeStorer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// authorization request DTO
 		authorizeRequestDTO := &dto.AuthorizeRequestDTO{}
@@ -214,13 +214,13 @@ func TokenAuthorizationCodeHandler(clientDB auth.ClientStorer, authCodeDB auth.A
 		}
 
 		subject := authCodeData.Request.Subject
-		claims, err := claimsDB.GetClaims(*subject, *client)
+		claims, err := claimsDB.GetClaims(subject, *client)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		tokenResponse, err := auth.NewTokenReponse(*subject, *client, claims, *key)
+		tokenResponse, err := auth.NewTokenReponse(subject, *client, claims, *key)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

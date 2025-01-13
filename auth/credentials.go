@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"log/slog"
 )
 
 type credentials struct {
@@ -13,15 +14,16 @@ type credentials struct {
 	AssertionType string
 }
 
-type CredentialsService interface {
-	Match(inputCredentials CredentialsService) bool
+type CredentialsHandler interface {
+	Match(inputCredentials CredentialsHandler) bool
 	UsernamePasswordHash() string
 	ClientIdSecretHash() string
+	Impl() interface{}
 }
 
 type CredentialsOption func(*credentials) error
 
-func NewCredentials(options ...CredentialsOption) (CredentialsService, error) {
+func NewCredentials(options ...CredentialsOption) (CredentialsHandler, error) {
 	credentials := &credentials{}
 	for _, opt := range options {
 		if err := opt(credentials); err != nil {
@@ -75,12 +77,20 @@ func (c *credentials) ClientIdSecretHash() string {
 	return c.ClientId + ":" + c.ClientSecret
 }
 
-func (c *credentials) Match(inputCredentials CredentialsService) bool {
-	if len(c.Username) > 0 {
+func (c *credentials) Match(inputCredentials CredentialsHandler) bool {
+	inputCredentialsImpl, ok := inputCredentials.Impl().(credentials)
+	if !ok {
+		slog.Error("could not cast CredentialsHandler to credentials")
+	}
+	if len(inputCredentialsImpl.Username) > 0 && len(inputCredentialsImpl.Password) > 0 {
 		return c.UsernamePasswordHash() == inputCredentials.UsernamePasswordHash()
 	}
-	if len(c.ClientId) > 0 {
+	if len(inputCredentialsImpl.ClientId) > 0 && len(inputCredentialsImpl.ClientSecret) > 0 {
 		return c.ClientIdSecretHash() == inputCredentials.ClientIdSecretHash()
 	}
 	return false
+}
+
+func (c *credentials) Impl() interface{} {
+	return *c
 }

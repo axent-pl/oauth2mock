@@ -9,12 +9,12 @@ import (
 type Client struct {
 	Id          string
 	RedirectURI string
-	Credentials CredentialsService
+	Credentials CredentialsHandler
 }
 
 type ClientStorer interface {
 	GetClient(client_id string) (*Client, error)
-	Authenticate(credentials CredentialsService) (*Client, error)
+	Authenticate(credentials CredentialsHandler) (*Client, error)
 }
 
 type clientSimpleStore struct {
@@ -68,7 +68,7 @@ func (s *clientSimpleStore) GetClient(client_id string) (*Client, error) {
 	return &client, nil
 }
 
-func (s *clientSimpleStore) Authenticate(credentials CredentialsService) (*Client, error) {
+func (s *clientSimpleStore) Authenticate(credentials CredentialsHandler) (*Client, error) {
 	for _, client := range s.clients {
 		if credentials.Match(client.Credentials) {
 			return &client, nil
