@@ -24,12 +24,17 @@
                         "ADMIN"
                     ]
                 },
-                "override": {
+                "clientOverrides": {
                     "ACME": {
                         "client_roles": [
                             "DEMO",
                             "ADMIN"
                         ]
+                    }
+                },
+                "scopeOverrides": {
+                    "email": {
+                        "email": "John.Demo@acme.com"
                     }
                 }
             }

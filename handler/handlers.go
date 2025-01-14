@@ -129,7 +129,7 @@ func AuthorizePostHandler(templateDB template.TemplateStorer, clientDB auth.Clie
 		dto.Unmarshal(r, credentialsDTO)
 		slog.Info("AuthorizePostHandler subject credentials", "RequestID", r.Context().Value("RequestID"), "credentialsDTO", credentialsDTO)
 		if credentialsValidator.Validate(credentialsDTO) {
-			credentials, err := auth.NewCredentials(auth.WithUsernameAndPassword(credentialsDTO.Username, credentialsDTO.Password))
+			credentials, err := auth.NewAuthenticationCredentials(auth.FromUsernameAndPassword(credentialsDTO.Username, credentialsDTO.Password))
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				slog.Error("AuthorizePostHandler subject credentials initialization failed", "RequestID", r.Context().Value("RequestID"), "error", err)
@@ -185,7 +185,7 @@ func TokenAuthorizationCodeHandler(clientDB auth.ClientStorer, authCodeDB auth.A
 		}
 
 		// Authenticate client
-		credentials, err := auth.NewCredentials(auth.WithClientIdAndSecret(requstDTO.ClientId, requstDTO.ClientSecret))
+		credentials, err := auth.NewAuthenticationCredentials(auth.FromCliendIdAndSecret(requstDTO.ClientId, requstDTO.ClientSecret))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -214,7 +214,8 @@ func TokenAuthorizationCodeHandler(clientDB auth.ClientStorer, authCodeDB auth.A
 		}
 
 		subject := authCodeData.Request.Subject
-		claims, err := claimsDB.GetClaims(subject, *client)
+		scope := make([]string, 0)
+		claims, err := claimsDB.GetClaims(subject, *client, scope)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

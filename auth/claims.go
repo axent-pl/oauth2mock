@@ -12,13 +12,14 @@ import (
 
 // ClaimServicer interface defines a method to retrieve claims for a subject and client.
 type ClaimServicer interface {
-	GetClaims(subject SubjectHandler, client Client) (map[string]interface{}, error)
+	GetClaims(subject SubjectHandler, client Client, scope []string) (map[string]interface{}, error)
 }
 
 // claimDetails holds the base claims and client-specific overrides.
 type claimDetails struct {
-	Base      map[string]interface{}
-	Overrides map[string]map[string]interface{}
+	Base            map[string]interface{}
+	ClientOverrides map[string]map[string]interface{}
+	ScopeOverrides  map[string]map[string]interface{}
 }
 
 // claimService implements the ClaimServicer interface and manages claim data.
@@ -61,8 +62,9 @@ func unmarshalClaimsFromReader(reader io.Reader) (map[string]claimDetails, error
 	var rawData struct {
 		Users map[string]struct {
 			Claims struct {
-				Base      map[string]interface{}            `json:"base"`
-				Overrides map[string]map[string]interface{} `json:"override"`
+				Base            map[string]interface{}            `json:"base"`
+				ClientOverrides map[string]map[string]interface{} `json:"clientOverrides"`
+				ScopeOverrides  map[string]map[string]interface{} `json:"scopeOverrides"`
 			} `json:"claims"`
 		} `json:"users"`
 	}
@@ -74,8 +76,9 @@ func unmarshalClaimsFromReader(reader io.Reader) (map[string]claimDetails, error
 	claims := make(map[string]claimDetails)
 	for username, user := range rawData.Users {
 		claims[username] = claimDetails{
-			Base:      user.Claims.Base,
-			Overrides: user.Claims.Overrides,
+			Base:            user.Claims.Base,
+			ClientOverrides: user.Claims.ClientOverrides,
+			ScopeOverrides:  user.Claims.ScopeOverrides,
 		}
 	}
 
@@ -129,7 +132,7 @@ func (s *claimService) reloadClaims() {
 }
 
 // GetClaims retrieves claims for a given subject and client.
-func (s *claimService) GetClaims(subject SubjectHandler, client Client) (map[string]interface{}, error) {
+func (s *claimService) GetClaims(subject SubjectHandler, client Client, scope []string) (map[string]interface{}, error) {
 	s.claimsMU.RLock()
 	defer s.claimsMU.RUnlock()
 
@@ -146,10 +149,19 @@ func (s *claimService) GetClaims(subject SubjectHandler, client Client) (map[str
 	}
 
 	// Override claims with client-specific values, if available.
-	clientOverrides, ok := subjectClaims.Overrides[client.Id]
+	clientOverrides, ok := subjectClaims.ClientOverrides[client.Id]
 	if ok {
 		for c, v := range clientOverrides {
 			claims[c] = v
+		}
+	}
+
+	for _, scopeItem := range scope {
+		scopeOverrides, ok := subjectClaims.ScopeOverrides[scopeItem]
+		if ok {
+			for c, v := range scopeOverrides {
+				claims[c] = v
+			}
 		}
 	}
 

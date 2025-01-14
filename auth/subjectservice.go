@@ -8,7 +8,7 @@ import (
 )
 
 type SubjectServicer interface {
-	Authenticate(credentials CredentialsHandler) (SubjectHandler, error)
+	Authenticate(credentials AuthenticationCredentialsHandler) (SubjectHandler, error)
 }
 
 type subjectService struct {
@@ -38,27 +38,39 @@ func NewSubjectService(subjectsFile string) (SubjectServicer, error) {
 	}
 
 	for username, userData := range rawData.Users {
-		credentials, err := NewCredentials(WithUsernameAndPassword(userData.Username, userData.Password))
+		credentials, err := NewAuthenticationScheme(WithUsernameAndPassword(userData.Username, userData.Password))
 		if err != nil {
 			panic(fmt.Errorf("failed to parse user credentials from config file: %w", err))
 		}
 		subjectStore.subjects[username] = subject{
-			name:        userData.Username,
-			credentials: credentials,
+			name:       userData.Username,
+			authScheme: credentials,
 		}
 	}
 
 	return &subjectStore, nil
 }
 
-func (s *subjectService) Authenticate(credentials CredentialsHandler) (SubjectHandler, error) {
+func (s *subjectService) Authenticate(inputCredentials AuthenticationCredentialsHandler) (SubjectHandler, error) {
 	s.subjectsMU.RLock()
 	defer s.subjectsMU.RUnlock()
 
-	for _, subject := range s.subjects {
-		if credentials.Match(subject.credentials) {
-			return &subject, nil
-		}
+	// get subject name from input credentials
+	subjectName, err := inputCredentials.IdentityName()
+	if err != nil {
+		return nil, err
 	}
+
+	// find subject
+	subject, ok := s.subjects[subjectName]
+	if !ok {
+		return nil, ErrInvalidCreds
+	}
+
+	// check if credentials match
+	if subject.authScheme.IsValid(inputCredentials) {
+		return &subject, nil
+	}
+
 	return nil, ErrInvalidCreds
 }
