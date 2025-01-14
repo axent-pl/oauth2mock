@@ -48,7 +48,6 @@ func NewClientSimpleStore(jsonFilepath string) (ClientStorer, error) {
 			authScheme:  credentials,
 			RedirectURI: v.RedirectURI,
 		}
-		fmt.Println(v)
 	}
 
 	return &clientStore, nil

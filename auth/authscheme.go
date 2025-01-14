@@ -54,7 +54,7 @@ func WithUsernameAndPassword(username, password string) AuthenticationSchemeOpti
 	}
 }
 
-func WithClientAssertion(assertionType, assertion string) AuthenticationSchemeOption {
+func WithClientAssertion(assertionType, assertionClaim string, assertionJWKS string) AuthenticationSchemeOption {
 	return func(s *authenticationScheme) error {
 		if assertionType == "" {
 			return errors.New("assertionType must not be empty")
@@ -63,7 +63,9 @@ func WithClientAssertion(assertionType, assertion string) AuthenticationSchemeOp
 			return errors.New("unsupported assertionType, allowed values [`urn:ietf:params:oauth:client-assertion-type:jwt-bearer`]")
 		}
 		s.AssertionType = assertionType
-		return nil
+		s.AssertionClaim = assertionClaim
+		s.AssertionJWKS = assertionJWKS
+		return errors.New("unsupported")
 	}
 }
 

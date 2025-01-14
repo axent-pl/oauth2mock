@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -13,35 +11,6 @@ import (
 	"github.com/axent-pl/oauth2mock/routing"
 	"github.com/axent-pl/oauth2mock/template"
 )
-
-func JWKSGetHandler(key *auth.JWK) routing.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		jwks, _ := key.GetJWKS()
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(jwks)
-	}
-}
-
-func WellKnownHandler(openidConfig auth.OpenIDConfiguration) routing.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		openidConfigCopy := openidConfig
-		hostWithPort := r.Host
-		scheme := "http"
-		if r.TLS != nil {
-			scheme = "https"
-		}
-		origin := fmt.Sprintf("%s://%s", scheme, hostWithPort)
-		openidConfigCopy.SetIssuer(origin)
-		resp, err := json.Marshal(openidConfigCopy)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(resp)
-
-	}
-}
 
 func AuthorizeGetHandler(templateDB template.TemplateStorer, clientDB auth.ClientStorer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -167,71 +136,5 @@ func AuthorizePostHandler(templateDB template.TemplateStorer, clientDB auth.Clie
 		}
 
 		templateDB.Render(w, "login", templateData)
-	}
-}
-
-func TokenAuthorizationCodeHandler(clientDB auth.ClientStorer, authCodeDB auth.AuthorizationCodeStorer, claimsDB auth.ClaimServicer, key *auth.JWK) routing.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		requstDTO := &dto.AuthorizationCodeTokenRequestDTO{}
-		requestValidator := dto.NewValidator()
-		dto.Unmarshal(r, requstDTO)
-		if !requestValidator.Validate(requstDTO) {
-			http.Error(w, "bad request", http.StatusBadRequest)
-			return
-		}
-		if requstDTO.GrantType != "authorization_code" {
-			http.Error(w, "invalid grant type", http.StatusBadRequest)
-			return
-		}
-
-		// Authenticate client
-		credentials, err := auth.NewAuthenticationCredentials(auth.FromCliendIdAndSecret(requstDTO.ClientId, requstDTO.ClientSecret))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		client, err := clientDB.Authenticate(credentials)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		// Get authorization request data
-		authCodeData, ok := authCodeDB.GetCode(requstDTO.Code)
-		if !ok {
-			http.Error(w, "invalid code", http.StatusBadRequest)
-			return
-		}
-
-		// Validate request DTO with authCodeData
-		if requstDTO.ClientId != authCodeData.Request.Client.Id {
-			http.Error(w, "invalid code", http.StatusBadRequest)
-			return
-		}
-		if requstDTO.RedirectURI != authCodeData.Request.RedirectURI {
-			http.Error(w, "invalid code", http.StatusBadRequest)
-			return
-		}
-
-		subject := authCodeData.Request.Subject
-		scope := make([]string, 0)
-		claims, err := claimsDB.GetClaims(subject, *client, scope)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		tokenResponse, err := auth.NewTokenReponse(subject, *client, claims, *key)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		tokenResponseBytes, err := json.Marshal(tokenResponse)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(tokenResponseBytes)
 	}
 }

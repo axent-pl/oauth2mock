@@ -130,8 +130,8 @@ func init() {
 	router.RegisterHandler(
 		handler.TokenAuthorizationCodeHandler(clientStore, authCodeStore, claimStore, &key),
 		routing.WithMethod(http.MethodPost),
-		routing.WithPath(openidConfiguration.TokenEndpoint))
-	// ,routing.ForPostFormValue("grant_type", "authorization_code")
+		routing.WithPath(openidConfiguration.TokenEndpoint),
+		routing.ForPostFormValue("grant_type", "authorization_code"))
 
 	httpServer = server.Server{
 		Addr:   serverAddress,

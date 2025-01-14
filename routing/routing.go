@@ -106,7 +106,7 @@ func (h *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	slog.Info("Routing routing", "RequestID", routedRequest.Context().Value("RequestID"), "RemoteAddr", routedRequest.RemoteAddr, "Method", routedRequest.Method, "Path", routedRequest.URL.Path, "Query", routedRequest.URL.RawQuery)
 	for _, route := range h.routes {
-		if route.matches(r) {
+		if route.matches(routedRequest) {
 			slog.Info("Routing routing done", "RequestID", routedRequest.Context().Value("RequestID"))
 
 			slog.Info("Routing calling handler", "RequestID", routedRequest.Context().Value("RequestID"))
