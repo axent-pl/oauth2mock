@@ -67,6 +67,13 @@ func unmarshalClaimsFromReader(reader io.Reader) (map[string]claimDetails, error
 				ScopeOverrides  map[string]map[string]interface{} `json:"scopeOverrides"`
 			} `json:"claims"`
 		} `json:"users"`
+		Clients map[string]struct {
+			Claims struct {
+				Base            map[string]interface{}            `json:"base"`
+				ClientOverrides map[string]map[string]interface{} `json:"clientOverrides"`
+				ScopeOverrides  map[string]map[string]interface{} `json:"scopeOverrides"`
+			} `json:"claims"`
+		} `json:"clients"`
 	}
 
 	if err := json.NewDecoder(reader).Decode(&rawData); err != nil {
@@ -79,6 +86,13 @@ func unmarshalClaimsFromReader(reader io.Reader) (map[string]claimDetails, error
 			Base:            user.Claims.Base,
 			ClientOverrides: user.Claims.ClientOverrides,
 			ScopeOverrides:  user.Claims.ScopeOverrides,
+		}
+	}
+	for clientId, client := range rawData.Clients {
+		claims[clientId] = claimDetails{
+			Base:            client.Claims.Base,
+			ClientOverrides: client.Claims.ClientOverrides,
+			ScopeOverrides:  client.Claims.ScopeOverrides,
 		}
 	}
 

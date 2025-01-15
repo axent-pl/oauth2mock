@@ -12,7 +12,7 @@ import (
 	"github.com/axent-pl/oauth2mock/template"
 )
 
-func AuthorizeGetHandler(templateDB template.TemplateStorer, clientDB auth.ClientStorer) routing.HandlerFunc {
+func AuthorizeGetHandler(templateDB template.TemplateStorer, clientDB auth.ClientServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// authorization request DTO
 		authorizeRequestDTO := &dto.AuthorizeRequestDTO{}
@@ -54,7 +54,7 @@ func AuthorizeGetHandler(templateDB template.TemplateStorer, clientDB auth.Clien
 	}
 }
 
-func AuthorizePostHandler(templateDB template.TemplateStorer, clientDB auth.ClientStorer, subjectDB auth.SubjectServicer, authCodeDB auth.AuthorizationCodeStorer) routing.HandlerFunc {
+func AuthorizePostHandler(templateDB template.TemplateStorer, clientDB auth.ClientServicer, subjectDB auth.SubjectServicer, authCodeDB auth.AuthorizationCodeService) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// authorization request DTO
 		authorizeRequestDTO := &dto.AuthorizeRequestDTO{}

@@ -9,7 +9,7 @@ import (
 	"github.com/axent-pl/oauth2mock/routing"
 )
 
-func TokenAuthorizationCodeHandler(clientDB auth.ClientStorer, authCodeDB auth.AuthorizationCodeStorer, claimsDB auth.ClaimServicer, key *auth.JWK) routing.HandlerFunc {
+func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, authCodeDB auth.AuthorizationCodeService, claimsDB auth.ClaimServicer, key *auth.JWK) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requstDTO := &dto.AuthorizationCodeTokenRequestDTO{}
 		requestValidator := dto.NewValidator()
@@ -60,7 +60,65 @@ func TokenAuthorizationCodeHandler(clientDB auth.ClientStorer, authCodeDB auth.A
 			return
 		}
 
-		tokenResponse, err := auth.NewTokenReponse(subject, *client, claims, *key)
+		issuer := openidConfig.Issuer
+		if openidConfig.UseOrigin {
+			issuer = getOriginFromRequest(r)
+		}
+
+		tokenResponse, err := auth.NewTokenReponse(issuer, subject, *client, claims, *key)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		tokenResponseBytes, err := json.Marshal(tokenResponse)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(tokenResponseBytes)
+	}
+}
+
+func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, claimsDB auth.ClaimServicer, key *auth.JWK) routing.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		requstDTO := &dto.ClientCredentialsTokenRequestDTO{}
+		requestValidator := dto.NewValidator()
+		dto.Unmarshal(r, requstDTO)
+		if !requestValidator.Validate(requstDTO) {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+		if requstDTO.GrantType != "client_credentials" {
+			http.Error(w, "invalid grant type", http.StatusBadRequest)
+			return
+		}
+
+		// Authenticate client
+		credentials, err := auth.NewAuthenticationCredentials(auth.FromCliendIdAndSecret(requstDTO.ClientId, requstDTO.ClientSecret))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		client, err := clientDB.Authenticate(credentials)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		scope := make([]string, 0)
+		claims, err := claimsDB.GetClaims(client, *client, scope)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		issuer := openidConfig.Issuer
+		if openidConfig.UseOrigin {
+			issuer = getOriginFromRequest(r)
+		}
+
+		tokenResponse, err := auth.NewTokenReponse(issuer, client, *client, claims, *key)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

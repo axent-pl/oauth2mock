@@ -75,6 +75,7 @@ import "net/url"
 // 	OPTIONAL. URL that the OpenID Provider provides to the person registering the Client to read about the OpenID Provider's terms of service. The registration process SHOULD display this URL to the person registering the Client if it is given.
 
 type OpenIDConfiguration struct {
+	UseOrigin                        bool   // flag to set Issuer from request Origin
 	Issuer                           string `json:"issuer"`
 	WellKnownEndpoint                string
 	AuthorizationEndpoint            string   `json:"authorization_endpoint"`

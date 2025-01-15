@@ -44,12 +44,18 @@
         "ACME" : {
             "client_id": "ACME",
             "client_secret": "acme-secret",
-            "redirect_uri": "http*//localhost*"
+            "redirect_uri": "http*//localhost*",
+            "claims": {
+                "azp": "ACME"
+            }
         },
         "ACME2" : {
             "client_id": "ACME2",
             "client_secret": "secret-acme-pass",
-            "redirect_uri": "http*//localhost*"
+            "redirect_uri": "http*//localhost*",
+            "claims": {
+                "azp": "ACME2"
+            }
         }
     }
 }

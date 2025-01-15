@@ -34,3 +34,14 @@ type AuthorizationCodeTokenRequestDTO struct {
 	Password     string `formField:"password"`
 	RefreshToken string `formField:"refresh_token"`
 }
+
+type ClientCredentialsTokenRequestDTO struct {
+	GrantType    string `formField:"grant_type" validate:"required"`
+	ClientId     string `formField:"client_id" validate:"required"`
+	ClientSecret string `formField:"client_secret" validate:"required"`
+	Code         string `formField:"code"`
+	RedirectURI  string `formField:"redirect_uri"`
+	Username     string `formField:"username"`
+	Password     string `formField:"password"`
+	RefreshToken string `formField:"refresh_token"`
+}

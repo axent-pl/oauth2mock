@@ -2,7 +2,7 @@ package auth
 
 type SubjectHandler interface {
 	Name() string
-	Credentials() AuthenticationSchemeHandler
+	AuthScheme() AuthenticationSchemeHandler
 }
 
 type subject struct {
@@ -14,6 +14,6 @@ func (s *subject) Name() string {
 	return s.name
 }
 
-func (s *subject) Credentials() AuthenticationSchemeHandler {
+func (s *subject) AuthScheme() AuthenticationSchemeHandler {
 	return s.authScheme
 }

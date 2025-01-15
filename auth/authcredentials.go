@@ -4,10 +4,10 @@ import "errors"
 
 type AuthenticationCredentialsHandler interface {
 	IdentityName() (string, error)
-	Impl() interface{}
+	Implementation() interface{}
 }
 
-// authenticationCredentials represent the provided credentials.
+// authenticationCredentials represent the credentials provided either by client or user.
 type authenticationCredentials struct {
 	Username      string
 	Password      string
@@ -60,6 +60,6 @@ func (c *authenticationCredentials) IdentityName() (string, error) {
 	return "", errors.New("credentials do not contain identity name")
 }
 
-func (c *authenticationCredentials) Impl() interface{} {
+func (c *authenticationCredentials) Implementation() interface{} {
 	return *c
 }

@@ -16,17 +16,24 @@ import (
 	"github.com/axent-pl/oauth2mock/utils"
 )
 
-var (
-	keyFile       string
-	dataFile      string
-	serverAddress string
-	templateDir   string
+type Settings struct {
+	KeyFile       string
+	DataFile      string
+	ServerAddress string
+	TemplateDir   string
 
-	authCodeStore auth.AuthorizationCodeStorer
-	clientStore   auth.ClientStorer
-	subjectStore  auth.SubjectServicer
-	claimStore    auth.ClaimServicer
-	templateStore template.TemplateStorer
+	UseOrigin bool
+	Issuer    string
+}
+
+var (
+	settings Settings
+
+	authCodeService auth.AuthorizationCodeService
+	clientService   auth.ClientServicer
+	subjectService  auth.SubjectServicer
+	claimService    auth.ClaimServicer
+	templateService template.TemplateStorer
 
 	key        auth.JWK
 	router     routing.Router
@@ -35,10 +42,13 @@ var (
 
 // Load envs
 func init() {
-	keyFile = utils.GetEnv("KEY_PATH", "data/key.pem")
-	dataFile = utils.GetEnv("DATAFILE_PATH", "data/config.json")
-	serverAddress = utils.GetEnv("SERVER_ADDRESS", ":8080")
-	templateDir = utils.GetEnv("TEMPLATES_PATH", "data")
+	settings.KeyFile = utils.GetEnv("KEY_PATH", "data/key.pem")
+	settings.DataFile = utils.GetEnv("DATAFILE_PATH", "data/config.json")
+	settings.ServerAddress = utils.GetEnv("SERVER_ADDRESS", ":8080")
+	settings.TemplateDir = utils.GetEnv("TEMPLATES_PATH", "data")
+
+	settings.Issuer = utils.GetEnv("OAUTH2_ISSUER", "")
+	settings.UseOrigin = utils.GetEnv("OAUTH2_ISSUER_FROM_ORIGIN", "TRUE") == "TRUE"
 }
 
 // Configure logger
@@ -52,42 +62,42 @@ func init() {
 func init() {
 	var err error
 
-	authCodeStore, err = auth.NewAuthorizationCodeSimpleStore()
+	authCodeService, err = auth.NewAuthorizationCodeSimpleService()
 	if err != nil {
 		slog.Error("failed to initialize authorization code store", "error", err)
 		os.Exit(1)
 	}
 	slog.Info("authorization code store initialized")
 
-	clientStore, err = auth.NewClientSimpleStore(dataFile)
+	clientService, err = auth.NewClientService(settings.DataFile)
 	if err != nil {
 		slog.Error("failed to initialize client store", "error", err)
 		os.Exit(1)
 	}
 	slog.Info("client store initialized")
 
-	subjectStore, err = auth.NewSubjectService(dataFile)
+	subjectService, err = auth.NewSubjectService(settings.DataFile)
 	if err != nil {
 		slog.Error("failed to initialize subject store", "error", err)
 		os.Exit(1)
 	}
 	slog.Info("subject store initialized")
 
-	claimStore, err = auth.NewClaimService(dataFile)
+	claimService, err = auth.NewClaimService(settings.DataFile)
 	if err != nil {
 		slog.Error("failed to initialize claim store", "error", err)
 		os.Exit(1)
 	}
 	slog.Info("claim store initialized")
 
-	templateStore, err = template.NewDefaultTemplateStore(templateDir)
+	templateService, err = template.NewDefaultTemplateStore(settings.TemplateDir)
 	if err != nil {
 		slog.Error("failed to initialize template store", "error", err)
 		os.Exit(1)
 	}
 	slog.Info("template store initialized")
 
-	key, err = auth.LoadOrGenerate(keyFile)
+	key, err = auth.LoadOrGenerate(settings.KeyFile)
 	if err != nil {
 		slog.Error("failed to load or generate JWK", "error", err)
 		os.Exit(1)
@@ -98,6 +108,7 @@ func init() {
 // Configure HTTP router and server
 func init() {
 	openidConfiguration := auth.OpenIDConfiguration{
+		UseOrigin:                        settings.UseOrigin,
 		WellKnownEndpoint:                "/.well-known/openid-configuration",
 		AuthorizationEndpoint:            "/authorize",
 		TokenEndpoint:                    "/token",
@@ -109,32 +120,43 @@ func init() {
 	}
 
 	router = routing.Router{}
+
 	router.RegisterHandler(
 		handler.WellKnownHandler(openidConfiguration),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath(openidConfiguration.WellKnownEndpoint))
+
 	router.RegisterHandler(
 		handler.JWKSGetHandler(&key),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath(openidConfiguration.JWKSEndpoint))
+
 	router.RegisterHandler(
-		handler.AuthorizeGetHandler(templateStore, clientStore),
+		handler.AuthorizeGetHandler(templateService, clientService),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath(openidConfiguration.AuthorizationEndpoint),
 		routing.ForQueryValue("response_type", "code"))
+
 	router.RegisterHandler(
-		handler.AuthorizePostHandler(templateStore, clientStore, subjectStore, authCodeStore),
+		handler.AuthorizePostHandler(templateService, clientService, subjectService, authCodeService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.AuthorizationEndpoint),
 		routing.ForQueryValue("response_type", "code"))
+
 	router.RegisterHandler(
-		handler.TokenAuthorizationCodeHandler(clientStore, authCodeStore, claimStore, &key),
+		handler.TokenAuthorizationCodeHandler(openidConfiguration, clientService, authCodeService, claimService, &key),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "authorization_code"))
 
+	router.RegisterHandler(
+		handler.TokenClientCredentialsHandler(openidConfiguration, clientService, claimService, &key),
+		routing.WithMethod(http.MethodPost),
+		routing.WithPath(openidConfiguration.TokenEndpoint),
+		routing.ForPostFormValue("grant_type", "client_credentials"))
+
 	httpServer = server.Server{
-		Addr:   serverAddress,
+		Addr:   settings.ServerAddress,
 		Router: router,
 	}
 }

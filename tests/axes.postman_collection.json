@@ -49,18 +49,18 @@
 						},
 						{
 							"key": "username",
-							"value": "username1",
+							"value": "demo",
 							"type": "text"
 						},
 						{
 							"key": "password",
-							"value": "secret-pass",
+							"value": "demo",
 							"type": "text"
 						}
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8080/authorize?response_type=code&client_id=ACME&redirect_uri=http://acme.com&scope=profile shopping",
+					"raw": "http://localhost:8080/authorize?response_type=code&client_id=ACME&redirect_uri={{REDIRECT_URL}}&scope=profile shopping",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -80,7 +80,7 @@
 						},
 						{
 							"key": "redirect_uri",
-							"value": "http://acme.com"
+							"value": "{{REDIRECT_URL}}"
 						},
 						{
 							"key": "scope",
@@ -147,7 +147,7 @@
 						},
 						{
 							"key": "client_secret",
-							"value": "secret-acme-pass",
+							"value": "acme-secret",
 							"type": "text"
 						},
 						{
@@ -157,7 +157,7 @@
 						},
 						{
 							"key": "redirect_uri",
-							"value": "http://acme.com",
+							"value": "{{REDIRECT_URL}}",
 							"type": "text"
 						}
 					]
@@ -177,10 +177,37 @@
 			"response": []
 		}
 	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
 	"variable": [
 		{
 			"key": "AUTHORIZATION_CODE",
 			"value": ""
+		},
+		{
+			"key": "REDIRECT_URL",
+			"value": "http://localhost:8888",
+			"type": "string"
 		}
 	]
 }

@@ -6,16 +6,16 @@ import (
 	"os"
 )
 
-type ClientStorer interface {
+type ClientServicer interface {
 	GetClient(client_id string) (*Client, error)
 	Authenticate(credentials AuthenticationCredentialsHandler) (*Client, error)
 }
 
-type clientSimpleStore struct {
+type clientService struct {
 	clients map[string]Client
 }
 
-func NewClientSimpleStore(jsonFilepath string) (ClientStorer, error) {
+func NewClientService(jsonFilepath string) (ClientServicer, error) {
 	type jsonStruct struct {
 		Id          string `json:"client_id"`
 		Secret      string `json:"client_secret"`
@@ -35,7 +35,7 @@ func NewClientSimpleStore(jsonFilepath string) (ClientStorer, error) {
 		return nil, fmt.Errorf("failed to parse clients config file: %w", err)
 	}
 
-	clientStore := clientSimpleStore{
+	clientStore := clientService{
 		clients: make(map[string]Client),
 	}
 	for k, v := range f.Clients {
@@ -53,7 +53,7 @@ func NewClientSimpleStore(jsonFilepath string) (ClientStorer, error) {
 	return &clientStore, nil
 }
 
-func (s *clientSimpleStore) GetClient(client_id string) (*Client, error) {
+func (s *clientService) GetClient(client_id string) (*Client, error) {
 	client, ok := s.clients[client_id]
 	if !ok {
 		return nil, ErrInvalidClientId
@@ -61,7 +61,7 @@ func (s *clientSimpleStore) GetClient(client_id string) (*Client, error) {
 	return &client, nil
 }
 
-func (s *clientSimpleStore) Authenticate(credentials AuthenticationCredentialsHandler) (*Client, error) {
+func (s *clientService) Authenticate(credentials AuthenticationCredentialsHandler) (*Client, error) {
 	clientId, err := credentials.IdentityName()
 	if err != nil {
 		return nil, ErrInvalidCreds

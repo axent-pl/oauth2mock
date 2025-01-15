@@ -10,11 +10,11 @@ type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
 }
 
-func NewTokenReponse(subject SubjectHandler, client Client, claims map[string]interface{}, key JWK) (TokenResponse, error) {
+func NewTokenReponse(issuer string, subject SubjectHandler, client Client, claims map[string]interface{}, key JWK) (TokenResponse, error) {
 	tokenResponse := TokenResponse{Type: "Bearer"}
 
 	access_token_claims := make(map[string]interface{})
-	access_token_claims["iss"] = "https://todo.issuer.uri"
+	access_token_claims["iss"] = issuer
 	access_token_claims["sub"] = subject.Name()
 	access_token_claims["azp"] = client.Id
 	access_token_claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
@@ -30,6 +30,7 @@ func NewTokenReponse(subject SubjectHandler, client Client, claims map[string]in
 	tokenResponse.AccessToken = string(access_token)
 
 	refresh_token_claims := make(map[string]interface{})
+	refresh_token_claims["iss"] = issuer
 	refresh_token_claims["sub"] = subject.Name()
 	refresh_token_claims["azp"] = client.Id
 	refresh_token_claims["exp"] = time.Now().Add(time.Hour * 1).Unix()

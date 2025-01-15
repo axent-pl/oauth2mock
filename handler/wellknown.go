@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/axent-pl/oauth2mock/auth"
@@ -12,13 +11,12 @@ import (
 func WellKnownHandler(openidConfig auth.OpenIDConfiguration) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		openidConfigCopy := openidConfig
-		hostWithPort := r.Host
-		scheme := "http"
-		if r.TLS != nil {
-			scheme = "https"
+
+		if openidConfig.UseOrigin {
+			origin := getOriginFromRequest(r)
+			openidConfigCopy.SetIssuer(origin)
 		}
-		origin := fmt.Sprintf("%s://%s", scheme, hostWithPort)
-		openidConfigCopy.SetIssuer(origin)
+
 		resp, err := json.Marshal(openidConfigCopy)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
