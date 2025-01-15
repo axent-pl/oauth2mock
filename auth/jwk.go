@@ -15,9 +15,20 @@ import (
 	"github.com/square/go-jose/v3"
 )
 
+// https://datatracker.ietf.org/doc/html/rfc7518#section-3
+
 type JWK struct {
 	privateKey *rsa.PrivateKey
 }
+
+var (
+	RS256 *jwt_ext.SigningMethodRSA    = jwt_ext.SigningMethodRS256
+	RS384 *jwt_ext.SigningMethodRSA    = jwt_ext.SigningMethodRS384
+	RS512 *jwt_ext.SigningMethodRSA    = jwt_ext.SigningMethodRS512
+	PS256 *jwt_ext.SigningMethodRSAPSS = jwt_ext.SigningMethodPS256
+	PS384 *jwt_ext.SigningMethodRSAPSS = jwt_ext.SigningMethodPS384
+	PS512 *jwt_ext.SigningMethodRSAPSS = jwt_ext.SigningMethodPS512
+)
 
 func (k *JWK) GetJWKS() ([]byte, error) {
 	pubKeyBytes, err := x509.MarshalPKIXPublicKey(&k.privateKey.PublicKey)
@@ -44,7 +55,7 @@ func (k *JWK) GetJWKS() ([]byte, error) {
 	return json.Marshal(jwks)
 }
 
-func (k *JWK) SignJWT(payload map[string]interface{}) ([]byte, error) {
+func (k *JWK) SignJWT(payload map[string]interface{}, method *jwt_ext.SigningMethodRSA) ([]byte, error) {
 	claims := jwt_ext.MapClaims{}
 
 	for key, value := range payload {

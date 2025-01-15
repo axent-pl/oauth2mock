@@ -113,7 +113,7 @@ func init() {
 		AuthorizationEndpoint:            "/authorize",
 		TokenEndpoint:                    "/token",
 		JWKSEndpoint:                     "/.well-known/jwks.json",
-		GrantTypesSupported:              []string{"authorization_code"},
+		GrantTypesSupported:              []string{"authorization_code", "client_credentials"},
 		ResponseTypesSupported:           []string{"code"},
 		SubjectTypesSupported:            []string{"public"},
 		IdTokenSigningAlgValuesSupported: []string{"RS256"},

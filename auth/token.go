@@ -23,7 +23,7 @@ func NewTokenReponse(issuer string, subject SubjectHandler, client Client, claim
 	for k, v := range claims {
 		access_token_claims[k] = v
 	}
-	access_token, err := key.SignJWT(access_token_claims)
+	access_token, err := key.SignJWT(access_token_claims, RS256)
 	if err != nil {
 		return TokenResponse{}, err
 	}
@@ -39,7 +39,7 @@ func NewTokenReponse(issuer string, subject SubjectHandler, client Client, claim
 	for k, v := range claims {
 		refresh_token_claims[k] = v
 	}
-	refresh_token, err := key.SignJWT(refresh_token_claims)
+	refresh_token, err := key.SignJWT(refresh_token_claims, RS256)
 	if err != nil {
 		return TokenResponse{}, err
 	}

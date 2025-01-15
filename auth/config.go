@@ -2,6 +2,43 @@ package auth
 
 import "net/url"
 
+type OpenIDConfiguration struct {
+	UseOrigin                        bool     `json:"-"` // flag to set Issuer from request Origin (both for well-known and token)
+	Issuer                           string   `json:"issuer"`
+	WellKnownEndpoint                string   `json:"-"`
+	AuthorizationEndpoint            string   `json:"authorization_endpoint"`
+	TokenEndpoint                    string   `json:"token_endpoint"`
+	JWKSEndpoint                     string   `json:"jwks_uri"`
+	GrantTypesSupported              []string `json:"grant_types_supported"`
+	ResponseTypesSupported           []string `json:"response_types_supported"`
+	SubjectTypesSupported            []string `json:"subject_types_supported"`
+	IdTokenSigningAlgValuesSupported []string `json:"id_token_signing_alg_values_supported"`
+
+	UserInfoEndpoint       string   `json:"userinfo_endpoint"`
+	ResponseModesSupported []string `json:"response_modes_supported"`
+}
+
+func (oidc *OpenIDConfiguration) SetIssuer(issuer string) {
+	oidc.Issuer = issuer
+	oidc.AuthorizationEndpoint = issuer + removeOrigin(oidc.AuthorizationEndpoint)
+	oidc.TokenEndpoint = issuer + removeOrigin(oidc.TokenEndpoint)
+	oidc.JWKSEndpoint = issuer + removeOrigin(oidc.JWKSEndpoint)
+}
+
+func removeOrigin(rawURL string) string {
+	parsedURL, err := url.Parse(rawURL)
+	if err != nil {
+		return rawURL
+	}
+
+	result := parsedURL.Path
+	if parsedURL.RawQuery != "" {
+		result += "?" + parsedURL.RawQuery
+	}
+
+	return result
+}
+
 // Source https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata
 // issuer
 // 	REQUIRED. URL using the https scheme with no query or fragment components that the OP asserts as its Issuer Identifier. If Issuer discovery is supported (see Section 2), this value MUST be identical to the issuer value returned by WebFinger. This also MUST be identical to the iss Claim value in ID Tokens issued from this Issuer.
@@ -73,40 +110,3 @@ import "net/url"
 // 	OPTIONAL. URL that the OpenID Provider provides to the person registering the Client to read about the OP's requirements on how the Relying Party can use the data provided by the OP. The registration process SHOULD display this URL to the person registering the Client if it is given.
 // op_tos_uri
 // 	OPTIONAL. URL that the OpenID Provider provides to the person registering the Client to read about the OpenID Provider's terms of service. The registration process SHOULD display this URL to the person registering the Client if it is given.
-
-type OpenIDConfiguration struct {
-	UseOrigin                        bool   // flag to set Issuer from request Origin
-	Issuer                           string `json:"issuer"`
-	WellKnownEndpoint                string
-	AuthorizationEndpoint            string   `json:"authorization_endpoint"`
-	TokenEndpoint                    string   `json:"token_endpoint"`
-	JWKSEndpoint                     string   `json:"jwks_uri"`
-	GrantTypesSupported              []string `json:"grant_types_supported"`
-	ResponseTypesSupported           []string `json:"response_types_supported"`
-	SubjectTypesSupported            []string `json:"subject_types_supported"`
-	IdTokenSigningAlgValuesSupported []string `json:"id_token_signing_alg_values_supported"`
-
-	UserInfoEndpoint       string   `json:"userinfo_endpoint"`
-	ResponseModesSupported []string `json:"response_modes_supported"`
-}
-
-func (oidc *OpenIDConfiguration) SetIssuer(issuer string) {
-	oidc.Issuer = issuer
-	oidc.AuthorizationEndpoint = issuer + removeOrigin(oidc.AuthorizationEndpoint)
-	oidc.TokenEndpoint = issuer + removeOrigin(oidc.TokenEndpoint)
-	oidc.JWKSEndpoint = issuer + removeOrigin(oidc.JWKSEndpoint)
-}
-
-func removeOrigin(rawURL string) string {
-	parsedURL, err := url.Parse(rawURL)
-	if err != nil {
-		return rawURL
-	}
-
-	result := parsedURL.Path
-	if parsedURL.RawQuery != "" {
-		result += "?" + parsedURL.RawQuery
-	}
-
-	return result
-}
