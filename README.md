@@ -3,6 +3,17 @@
 This project serves a purpose to replace Keycloak (or other resource hungry authorization servers) during local development.
 It is **NOT** meant for production applications.
 
+## How to run
+
+Plain go run from sources
+```sh
+make run
+```
+
+Container from a dockerhub image
+```sh
+docker run -p 8080:8080 prond/axes:nightly
+```
 
 ## Axes vs Keycloak
 
