@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/axent-pl/oauth2mock/auth"
@@ -34,7 +35,7 @@ func AuthorizeGetHandler(templateDB template.TemplateStorer, clientDB auth.Clien
 		authorizationRequest := auth.AuthorizationRequest{
 			ResponseType: authorizeRequestDTO.ResponseType,
 			RedirectURI:  authorizeRequestDTO.RedirectURI,
-			Scope:        authorizeRequestDTO.Scope,
+			Scope:        strings.Split(authorizeRequestDTO.Scope, " "),
 			State:        authorizeRequestDTO.State,
 			Client:       client,
 		}
@@ -80,7 +81,7 @@ func AuthorizePostHandler(templateDB template.TemplateStorer, clientDB auth.Clie
 		authorizationRequest := auth.AuthorizationRequest{
 			ResponseType: authorizeRequestDTO.ResponseType,
 			RedirectURI:  authorizeRequestDTO.RedirectURI,
-			Scope:        authorizeRequestDTO.Scope,
+			Scope:        strings.Split(authorizeRequestDTO.Scope, " "),
 			State:        authorizeRequestDTO.State,
 			Client:       client,
 		}

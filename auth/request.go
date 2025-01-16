@@ -3,7 +3,7 @@ package auth
 type AuthorizationRequest struct {
 	ResponseType string
 	RedirectURI  string
-	Scope        string
+	Scope        []string
 	State        string
 	Client       *Client
 	Subject      SubjectHandler

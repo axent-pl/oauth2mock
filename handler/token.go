@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/axent-pl/oauth2mock/auth"
 	"github.com/axent-pl/oauth2mock/dto"
@@ -53,7 +54,7 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 		}
 
 		subject := authCodeData.Request.Subject
-		scope := make([]string, 0)
+		scope := authCodeData.Request.Scope
 		claims, err := claimsDB.GetClaims(subject, *client, scope)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -107,6 +108,9 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 		}
 
 		scope := make([]string, 0)
+		if len(requstDTO.Scope) > 0 {
+			scope = strings.Split(requstDTO.Scope, " ")
+		}
 		claims, err := claimsDB.GetClaims(client, *client, scope)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
