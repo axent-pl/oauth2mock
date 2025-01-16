@@ -124,6 +124,11 @@ func init() {
 	router.RegisterHandler(
 		handler.WellKnownHandler(openidConfiguration),
 		routing.WithMethod(http.MethodGet),
+		routing.WithPath("/"))
+
+	router.RegisterHandler(
+		handler.WellKnownHandler(openidConfiguration),
+		routing.WithMethod(http.MethodGet),
 		routing.WithPath(openidConfiguration.WellKnownEndpoint))
 
 	router.RegisterHandler(
