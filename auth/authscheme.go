@@ -70,7 +70,7 @@ func WithClientAssertion(assertionType, assertionClaim string, assertionJWKS str
 }
 
 func (s *authenticationScheme) IsValid(inputCredentials AuthenticationCredentialsHandler) bool {
-	// Hacky way to access the implementation details... maybe methods using AuthScheme and AuthCredentials should be Generics (not using interfaces)?
+	// Hacky way to access the implementation details...
 	inputCredentialsImpl, ok := inputCredentials.Implementation().(authenticationCredentials)
 	if !ok {
 		slog.Error("could not cast CredentialsHandler to credentials")

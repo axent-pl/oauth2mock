@@ -12,7 +12,7 @@ import (
 
 func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, authCodeDB auth.AuthorizationCodeService, claimsDB auth.ClaimServicer, key *auth.JWK) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		requstDTO := &dto.AuthorizationCodeTokenRequestDTO{}
+		requstDTO := &dto.TokenAuthorizationCodeRequestDTO{}
 		requestValidator := dto.NewValidator()
 		dto.Unmarshal(r, requstDTO)
 		if !requestValidator.Validate(requstDTO) {
@@ -44,7 +44,7 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 		}
 
 		// Validate request DTO with authCodeData
-		if requstDTO.ClientId != authCodeData.Request.Client.Id {
+		if requstDTO.ClientId != authCodeData.Request.Client.Id() {
 			http.Error(w, "invalid code", http.StatusBadRequest)
 			return
 		}
@@ -55,7 +55,7 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 
 		subject := authCodeData.Request.Subject
 		scope := authCodeData.Request.Scope
-		claims, err := claimsDB.GetClaims(subject, *client, scope)
+		claims, err := claimsDB.GetClaims(subject, client, scope)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -66,7 +66,7 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 			issuer = getOriginFromRequest(r)
 		}
 
-		tokenResponse, err := auth.NewTokenReponse(issuer, subject, *client, claims, *key)
+		tokenResponse, err := auth.NewTokenReponse(issuer, subject, client, claims, *key)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -83,7 +83,7 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 
 func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, claimsDB auth.ClaimServicer, key *auth.JWK) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		requstDTO := &dto.ClientCredentialsTokenRequestDTO{}
+		requstDTO := &dto.TokenClientCredentialsHandlerRequestDTO{}
 		requestValidator := dto.NewValidator()
 		dto.Unmarshal(r, requstDTO)
 		if !requestValidator.Validate(requstDTO) {
@@ -111,7 +111,7 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 		if len(requstDTO.Scope) > 0 {
 			scope = strings.Split(requstDTO.Scope, " ")
 		}
-		claims, err := claimsDB.GetClaims(client, *client, scope)
+		claims, err := claimsDB.GetClaims(client, client, scope)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -122,7 +122,75 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 			issuer = getOriginFromRequest(r)
 		}
 
-		tokenResponse, err := auth.NewTokenReponse(issuer, client, *client, claims, *key)
+		tokenResponse, err := auth.NewTokenReponse(issuer, client, client, claims, *key)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		tokenResponseBytes, err := json.Marshal(tokenResponse)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(tokenResponseBytes)
+	}
+}
+
+func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, userDB auth.UserServicer, claimsDB auth.ClaimServicer, key *auth.JWK) routing.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		requstDTO := &dto.TokenPasswrodRequestDTO{}
+		requestValidator := dto.NewValidator()
+		dto.Unmarshal(r, requstDTO)
+		if !requestValidator.Validate(requstDTO) {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+		if requstDTO.GrantType != "password" {
+			http.Error(w, "invalid grant type", http.StatusBadRequest)
+			return
+		}
+
+		// Authenticate client
+		clientCredentials, err := auth.NewAuthenticationCredentials(auth.FromCliendIdAndSecret(requstDTO.ClientId, requstDTO.ClientSecret))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		client, err := clientDB.Authenticate(clientCredentials)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		// Authenticate user
+		userCredenmtials, err := auth.NewAuthenticationCredentials(auth.FromUsernameAndPassword(requstDTO.Username, requstDTO.Password))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		user, err := userDB.Authenticate(userCredenmtials)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		scope := make([]string, 0)
+		if len(requstDTO.Scope) > 0 {
+			scope = strings.Split(requstDTO.Scope, " ")
+		}
+		claims, err := claimsDB.GetClaims(user, client, scope)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		issuer := openidConfig.Issuer
+		if openidConfig.UseOrigin {
+			issuer = getOriginFromRequest(r)
+		}
+
+		tokenResponse, err := auth.NewTokenReponse(issuer, client, client, claims, *key)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

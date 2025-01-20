@@ -45,19 +45,10 @@ If `OAUTH2_ISSUER=http://localhost:8080` or `OAUTH2_ISSUER_FROM_ORIGIN=TRUE` is 
     "authorization_endpoint": "http://localhost:8080/authorize",
     "token_endpoint": "http://localhost:8080/token",
     "jwks_uri": "http://localhost:8080/.well-known/jwks.json",
-    "grant_types_supported": [
-        "authorization_code",
-        "client_credentials"
-    ],
-    "response_types_supported": [
-        "code"
-    ],
-    "subject_types_supported": [
-        "public"
-    ],
-    "id_token_signing_alg_values_supported": [
-        "RS256"
-    ],
+    "grant_types_supported": ["authorization_code", "client_credentials", "password"],
+    "response_types_supported": ["code"],
+    "subject_types_supported": ["public"],
+    "id_token_signing_alg_values_supported": ["RS256"],
     "userinfo_endpoint": "",
     "response_modes_supported": null
 }

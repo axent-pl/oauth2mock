@@ -12,7 +12,7 @@ import (
 
 // ClaimServicer interface defines a method to retrieve claims for a subject and client.
 type ClaimServicer interface {
-	GetClaims(subject SubjectHandler, client Client, scope []string) (map[string]interface{}, error)
+	GetClaims(subject SubjectHandler, client ClientHandler, scope []string) (map[string]interface{}, error)
 }
 
 // claimDetails holds the base claims and client-specific overrides.
@@ -146,7 +146,7 @@ func (s *claimService) reloadClaims() {
 }
 
 // GetClaims retrieves claims for a given subject and client.
-func (s *claimService) GetClaims(subject SubjectHandler, client Client, scope []string) (map[string]interface{}, error) {
+func (s *claimService) GetClaims(subject SubjectHandler, client ClientHandler, scope []string) (map[string]interface{}, error) {
 	s.claimsMU.RLock()
 	defer s.claimsMU.RUnlock()
 
@@ -163,7 +163,7 @@ func (s *claimService) GetClaims(subject SubjectHandler, client Client, scope []
 	}
 
 	// Override claims with client-specific values, if available.
-	clientOverrides, ok := subjectClaims.ClientOverrides[client.Id]
+	clientOverrides, ok := subjectClaims.ClientOverrides[client.Id()]
 	if ok {
 		for c, v := range clientOverrides {
 			claims[c] = v

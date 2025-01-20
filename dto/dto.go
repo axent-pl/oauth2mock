@@ -25,7 +25,7 @@ type TokenRequestDTO struct {
 	Scope        string `formField:"scope"`
 }
 
-type AuthorizationCodeTokenRequestDTO struct {
+type TokenAuthorizationCodeRequestDTO struct {
 	GrantType    string `formField:"grant_type" validate:"required"`
 	ClientId     string `formField:"client_id" validate:"required"`
 	ClientSecret string `formField:"client_secret" validate:"required"`
@@ -33,10 +33,20 @@ type AuthorizationCodeTokenRequestDTO struct {
 	RedirectURI  string `formField:"redirect_uri" validate:"required"`
 }
 
-type ClientCredentialsTokenRequestDTO struct {
+type TokenClientCredentialsHandlerRequestDTO struct {
 	GrantType    string `formField:"grant_type" validate:"required"`
 	ClientId     string `formField:"client_id" validate:"required"`
 	ClientSecret string `formField:"client_secret" validate:"required"`
 	RedirectURI  string `formField:"redirect_uri"`
+	Scope        string `formField:"scope"`
+}
+
+type TokenPasswrodRequestDTO struct {
+	GrantType    string `formField:"grant_type" validate:"required"`
+	ClientId     string `formField:"client_id" validate:"required"`
+	ClientSecret string `formField:"client_secret" validate:"required"`
+	RedirectURI  string `formField:"redirect_uri"`
+	Username     string `formField:"username"`
+	Password     string `formField:"password"`
 	Scope        string `formField:"scope"`
 }

@@ -7,12 +7,12 @@ import (
 )
 
 type ClientServicer interface {
-	GetClient(client_id string) (*Client, error)
-	Authenticate(credentials AuthenticationCredentialsHandler) (*Client, error)
+	GetClient(client_id string) (ClientHandler, error)
+	Authenticate(credentials AuthenticationCredentialsHandler) (ClientHandler, error)
 }
 
 type clientService struct {
-	clients map[string]Client
+	clients map[string]client
 }
 
 func NewClientService(jsonFilepath string) (ClientServicer, error) {
@@ -36,24 +36,24 @@ func NewClientService(jsonFilepath string) (ClientServicer, error) {
 	}
 
 	clientStore := clientService{
-		clients: make(map[string]Client),
+		clients: make(map[string]client),
 	}
 	for k, v := range f.Clients {
 		credentials, err := NewAuthenticationScheme(WithClientIdAndSecret(v.Id, v.Secret))
 		if err != nil {
 			panic(fmt.Errorf("failed to parse client credentials from config file: %w", err))
 		}
-		clientStore.clients[k] = Client{
-			Id:          v.Id,
+		clientStore.clients[k] = client{
+			id:          v.Id,
 			authScheme:  credentials,
-			RedirectURI: v.RedirectURI,
+			redirectURI: v.RedirectURI,
 		}
 	}
 
 	return &clientStore, nil
 }
 
-func (s *clientService) GetClient(client_id string) (*Client, error) {
+func (s *clientService) GetClient(client_id string) (ClientHandler, error) {
 	client, ok := s.clients[client_id]
 	if !ok {
 		return nil, ErrInvalidClientId
@@ -61,7 +61,7 @@ func (s *clientService) GetClient(client_id string) (*Client, error) {
 	return &client, nil
 }
 
-func (s *clientService) Authenticate(credentials AuthenticationCredentialsHandler) (*Client, error) {
+func (s *clientService) Authenticate(credentials AuthenticationCredentialsHandler) (ClientHandler, error) {
 	clientId, err := credentials.IdentityName()
 	if err != nil {
 		return nil, ErrInvalidCreds

@@ -31,7 +31,7 @@ var (
 
 	authCodeService auth.AuthorizationCodeService
 	clientService   auth.ClientServicer
-	subjectService  auth.SubjectServicer
+	subjectService  auth.UserServicer
 	claimService    auth.ClaimServicer
 	templateService template.TemplateStorer
 
@@ -76,7 +76,7 @@ func init() {
 	}
 	slog.Info("client store initialized")
 
-	subjectService, err = auth.NewSubjectService(settings.DataFile)
+	subjectService, err = auth.NewUserService(settings.DataFile)
 	if err != nil {
 		slog.Error("failed to initialize subject store", "error", err)
 		os.Exit(1)
@@ -113,7 +113,7 @@ func init() {
 		AuthorizationEndpoint:            "/authorize",
 		TokenEndpoint:                    "/token",
 		JWKSEndpoint:                     "/.well-known/jwks.json",
-		GrantTypesSupported:              []string{"authorization_code", "client_credentials"},
+		GrantTypesSupported:              []string{"authorization_code", "client_credentials", "password"},
 		ResponseTypesSupported:           []string{"code"},
 		SubjectTypesSupported:            []string{"public"},
 		IdTokenSigningAlgValuesSupported: []string{"RS256"},
@@ -159,6 +159,12 @@ func init() {
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "client_credentials"))
+
+	router.RegisterHandler(
+		handler.TokenPasswordHandler(openidConfiguration, clientService, subjectService, claimService, &key),
+		routing.WithMethod(http.MethodPost),
+		routing.WithPath(openidConfiguration.TokenEndpoint),
+		routing.ForPostFormValue("grant_type", "password"))
 
 	httpServer = server.Server{
 		Addr:   settings.ServerAddress,
