@@ -108,6 +108,7 @@ func init() {
 // Configure HTTP router and server
 func init() {
 	openidConfiguration := auth.OpenIDConfiguration{
+		Issuer:                           settings.Issuer,
 		UseOrigin:                        settings.UseOrigin,
 		WellKnownEndpoint:                "/.well-known/openid-configuration",
 		AuthorizationEndpoint:            "/authorize",

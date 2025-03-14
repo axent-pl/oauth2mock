@@ -44,9 +44,9 @@ func NewClientService(jsonFilepath string) (ClientServicer, error) {
 			panic(fmt.Errorf("failed to parse client credentials from config file: %w", err))
 		}
 		clientStore.clients[k] = client{
-			id:          v.Id,
-			authScheme:  credentials,
-			redirectURI: v.RedirectURI,
+			id:                 v.Id,
+			authScheme:         credentials,
+			redirectURIPattern: v.RedirectURI,
 		}
 	}
 

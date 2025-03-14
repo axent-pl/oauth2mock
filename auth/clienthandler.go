@@ -3,14 +3,15 @@ package auth
 type ClientHandler interface {
 	Id() string
 	Name() string
-	RedirectURI() string
-	AuthScheme() AuthenticationSchemeHandler
+	RedirectURIPattern() string
+	AuthenticationScheme() AuthenticationSchemeHandler
+	ValidateRedirectURI(redirectURI string) bool
 }
 
 type client struct {
-	id          string
-	redirectURI string
-	authScheme  AuthenticationSchemeHandler
+	id                 string
+	redirectURIPattern string
+	authScheme         AuthenticationSchemeHandler
 }
 
 func (c *client) Id() string {
@@ -21,10 +22,15 @@ func (c *client) Name() string {
 	return c.id
 }
 
-func (c *client) RedirectURI() string {
-	return c.redirectURI
+func (c *client) RedirectURIPattern() string {
+	return c.redirectURIPattern
 }
 
-func (c *client) AuthScheme() AuthenticationSchemeHandler {
+// Validates the given redirectURI against client's configuration
+func (c *client) ValidateRedirectURI(redirectURI string) bool {
+	return (len(redirectURI) > 0) && MatchesWildcard(redirectURI, c.redirectURIPattern)
+}
+
+func (c *client) AuthenticationScheme() AuthenticationSchemeHandler {
 	return c.authScheme
 }

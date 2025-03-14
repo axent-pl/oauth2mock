@@ -9,6 +9,6 @@ func (s *subject) Name() string {
 	return s.name
 }
 
-func (s *subject) AuthScheme() AuthenticationSchemeHandler {
+func (s *subject) AuthenticationScheme() AuthenticationSchemeHandler {
 	return s.authScheme
 }
