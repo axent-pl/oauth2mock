@@ -22,8 +22,11 @@ type AuthenticationCredentialsOption func(*authenticationCredentials) error
 
 func FromUsernameAndPassword(username string, password string) AuthenticationCredentialsOption {
 	return func(c *authenticationCredentials) error {
-		if username == "" || password == "" {
-			return ErrMissingCredUsernameOrPassword
+		if username == "" {
+			return ErrUserCredsMissingUsername
+		}
+		if password == "" {
+			return ErrUserCredsMissingPassword
 		}
 		c.Username = username
 		c.Password = password
@@ -33,8 +36,11 @@ func FromUsernameAndPassword(username string, password string) AuthenticationCre
 
 func FromCliendIdAndSecret(clientId string, clientSecret string) AuthenticationCredentialsOption {
 	return func(c *authenticationCredentials) error {
-		if clientId == "" || clientSecret == "" {
-			return ErrMissingCredClientIdOrSecret
+		if clientId == "" {
+			return ErrClientCredsMissingClientId
+		}
+		if clientSecret == "" {
+			return ErrClientCredsMissingClientSecret
 		}
 		c.ClientId = clientId
 		c.ClientSecret = clientSecret

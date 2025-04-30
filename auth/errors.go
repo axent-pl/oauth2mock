@@ -22,14 +22,16 @@ func (e *PkgError) Is(target error) bool {
 }
 
 var (
-	ErrInvalidCreds                  = errors.New("invalid credentials")
-	ErrMissingCredUsernameOrPassword = &PkgError{"missing username or password", ErrInvalidCreds}
-	ErrMissingCredUsername           = &PkgError{"missing username", ErrMissingCredUsernameOrPassword}
-	ErrMissingCredPassword           = &PkgError{"missing password", ErrMissingCredUsernameOrPassword}
+	ErrUserCredsInvalid                   = errors.New("invalid user credentials")
+	ErrUserCredsMissingUsernameOrPassword = &PkgError{"missing username or password", ErrUserCredsInvalid}
+	ErrUserCredsMissingUsername           = &PkgError{"missing username", ErrUserCredsMissingUsernameOrPassword}
+	ErrUserCredsMissingPassword           = &PkgError{"missing password", ErrUserCredsMissingUsernameOrPassword}
 
-	ErrMissingCredClientId         = errors.New("missing client_id")
-	ErrMissingCredClientSecret     = errors.New("missing client_secret")
-	ErrMissingCredClientIdOrSecret = errors.New("missing client_id or client_secret")
+	ErrClientCredsMissingClientIdOrSecret     = errors.New("missing client_id or client_secret")
+	ErrClientCredsMissingClientId             = &PkgError{"missing client_id", ErrClientCredsMissingClientIdOrSecret}
+	ErrClientCredsMissingClientSecret         = &PkgError{"missing client_secret", ErrClientCredsMissingClientIdOrSecret}
+	ErrClientCredsMissingMissingAssertionType = errors.New("assertionType must not be empty")
+	ErrClientCredsMissingInvalidAssertionType = errors.New("unsupported assertionType, allowed values [`urn:ietf:params:oauth:client-assertion-type:jwt-bearer`]")
 
 	ErrMissingResponseType      = errors.New("missing response_type")
 	ErrInvalidResponseType      = errors.New("invalid response_type, allowed values [code]")

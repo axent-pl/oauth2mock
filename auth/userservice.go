@@ -64,7 +64,7 @@ func (s *userService) Authenticate(inputCredentials AuthenticationCredentialsHan
 	// find user
 	user, ok := s.users[username]
 	if !ok {
-		return nil, ErrInvalidCreds
+		return nil, ErrUserCredsInvalid
 	}
 
 	// check if credentials match
@@ -72,5 +72,5 @@ func (s *userService) Authenticate(inputCredentials AuthenticationCredentialsHan
 		return &user, nil
 	}
 
-	return nil, ErrInvalidCreds
+	return nil, ErrUserCredsInvalid
 }

@@ -34,8 +34,11 @@ func NewAuthenticationScheme(options ...AuthenticationSchemeOption) (Authenticat
 
 func WithClientIdAndSecret(clientId, clientSecret string) AuthenticationSchemeOption {
 	return func(s *authenticationScheme) error {
-		if clientId == "" || clientSecret == "" {
-			return errors.New("clientId and clientSecret must not be empty")
+		if clientId == "" {
+			return ErrClientCredsMissingClientId
+		}
+		if clientSecret == "" {
+			return ErrClientCredsMissingClientSecret
 		}
 		s.ClientId = clientId
 		s.ClientSecret = clientSecret
@@ -45,8 +48,11 @@ func WithClientIdAndSecret(clientId, clientSecret string) AuthenticationSchemeOp
 
 func WithUsernameAndPassword(username, password string) AuthenticationSchemeOption {
 	return func(s *authenticationScheme) error {
-		if username == "" || password == "" {
-			return errors.New("username and password must not be empty")
+		if username == "" {
+			return ErrUserCredsMissingUsername
+		}
+		if password == "" {
+			return ErrUserCredsMissingPassword
 		}
 		s.Username = username
 		s.Password = password
@@ -57,10 +63,10 @@ func WithUsernameAndPassword(username, password string) AuthenticationSchemeOpti
 func WithClientAssertion(assertionType, assertionClaim string, assertionJWKS string) AuthenticationSchemeOption {
 	return func(s *authenticationScheme) error {
 		if assertionType == "" {
-			return errors.New("assertionType must not be empty")
+			return ErrClientCredsMissingMissingAssertionType
 		}
 		if assertionType != "urn:ietf:params:oauth:client-assertion-type:jwt-bearer" {
-			return errors.New("unsupported assertionType, allowed values [`urn:ietf:params:oauth:client-assertion-type:jwt-bearer`]")
+			return ErrClientCredsMissingInvalidAssertionType
 		}
 		s.AssertionType = assertionType
 		s.AssertionClaim = assertionClaim

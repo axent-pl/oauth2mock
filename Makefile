@@ -18,3 +18,5 @@ container-push:
 	docker push prond/axes:$(TAG)
 newman-test:
 	newman run tests/axes.postman_collection.json
+documentation:
+	docker run -it --rm -p 8080:8080 -v ./docs:/usr/local/structurizr structurizr/lite:2025.03.28

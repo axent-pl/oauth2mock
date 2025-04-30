@@ -32,3 +32,6 @@ __debug*
 
 # bin
 bin
+
+# structurizr
+.structurizr

@@ -64,17 +64,17 @@ func (s *clientService) GetClient(client_id string) (ClientHandler, error) {
 func (s *clientService) Authenticate(credentials AuthenticationCredentialsHandler) (ClientHandler, error) {
 	clientId, err := credentials.IdentityName()
 	if err != nil {
-		return nil, ErrInvalidCreds
+		return nil, ErrUserCredsInvalid
 	}
 
 	client, ok := s.clients[clientId]
 	if !ok {
-		return nil, ErrInvalidCreds
+		return nil, ErrUserCredsInvalid
 	}
 
 	authenticated := client.authScheme.IsValid(credentials)
 	if !authenticated {
-		return nil, ErrInvalidCreds
+		return nil, ErrUserCredsInvalid
 	}
 
 	return &client, nil
