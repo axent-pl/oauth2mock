@@ -7,7 +7,7 @@ import (
 
 	"github.com/axent-pl/oauth2mock/auth"
 	"github.com/axent-pl/oauth2mock/dto"
-	"github.com/axent-pl/oauth2mock/routing"
+	routing "github.com/axent-pl/oauth2mock/pkg/http/router"
 )
 
 func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, authCodeDB auth.AuthorizationCodeService, claimsDB auth.ClaimServicer, key *auth.JWK) routing.HandlerFunc {

@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/axent-pl/oauth2mock/routing"
+	routing "github.com/axent-pl/oauth2mock/pkg/http/router"
 )
 
 type Serverer interface {
@@ -31,11 +31,12 @@ func (s *server) Start(ctx context.Context) error {
 		Handler: &s.Router,
 	}
 
-	done := make(chan error)
+	done := make(chan error, 1)
 
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			done <- err
+			return
 		}
 		done <- nil
 	}()

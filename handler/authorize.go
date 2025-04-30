@@ -9,7 +9,7 @@ import (
 
 	"github.com/axent-pl/oauth2mock/auth"
 	"github.com/axent-pl/oauth2mock/dto"
-	"github.com/axent-pl/oauth2mock/routing"
+	routing "github.com/axent-pl/oauth2mock/pkg/http/router"
 	"github.com/axent-pl/oauth2mock/template"
 )
 

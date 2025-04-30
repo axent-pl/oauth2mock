@@ -11,8 +11,8 @@ import (
 	"github.com/axent-pl/oauth2mock/auth"
 	"github.com/axent-pl/oauth2mock/handler"
 	"github.com/axent-pl/oauth2mock/pkg/config"
-	"github.com/axent-pl/oauth2mock/routing"
-	"github.com/axent-pl/oauth2mock/server"
+	routing "github.com/axent-pl/oauth2mock/pkg/http/router"
+	"github.com/axent-pl/oauth2mock/pkg/http/server"
 	"github.com/axent-pl/oauth2mock/template"
 )
 

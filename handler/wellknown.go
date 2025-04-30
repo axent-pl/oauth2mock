@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/axent-pl/oauth2mock/auth"
-	"github.com/axent-pl/oauth2mock/routing"
+	routing "github.com/axent-pl/oauth2mock/pkg/http/router"
 )
 
 func WellKnownHandler(openidConfig auth.OpenIDConfiguration) routing.HandlerFunc {
