@@ -10,20 +10,20 @@ import (
 
 	"github.com/axent-pl/oauth2mock/auth"
 	"github.com/axent-pl/oauth2mock/handler"
+	"github.com/axent-pl/oauth2mock/pkg/config"
 	"github.com/axent-pl/oauth2mock/routing"
 	"github.com/axent-pl/oauth2mock/server"
 	"github.com/axent-pl/oauth2mock/template"
-	"github.com/axent-pl/oauth2mock/utils"
 )
 
 type Settings struct {
-	KeyFile       string
-	DataFile      string
-	ServerAddress string
-	TemplateDir   string
+	KeyFile       string `env:"KEY_PATH" default:"data/key.pem"`
+	DataFile      string `env:"DATAFILE_PATH" default:"data/config.json"`
+	ServerAddress string `env:"SERVER_ADDRESS" default:":8080"`
+	TemplateDir   string `env:"TEMPLATES_PATH" default:"data"`
 
-	UseOrigin bool
-	Issuer    string
+	UseOrigin bool   `env:"OAUTH2_ISSUER_FROM_ORIGIN" default:"true"`
+	Issuer    string `env:"OAUTH2_ISSUER"`
 }
 
 var (
@@ -42,13 +42,12 @@ var (
 
 // Load envs
 func init() {
-	settings.KeyFile = utils.GetEnv("KEY_PATH", "data/key.pem")
-	settings.DataFile = utils.GetEnv("DATAFILE_PATH", "data/config.json")
-	settings.ServerAddress = utils.GetEnv("SERVER_ADDRESS", ":8080")
-	settings.TemplateDir = utils.GetEnv("TEMPLATES_PATH", "data")
-
-	settings.Issuer = utils.GetEnv("OAUTH2_ISSUER", "")
-	settings.UseOrigin = utils.GetEnv("OAUTH2_ISSUER_FROM_ORIGIN", "TRUE") == "TRUE"
+	err := config.Load(&settings)
+	if err != nil {
+		slog.Error("failed to load config settings", "error", err)
+		os.Exit(1)
+	}
+	slog.Info("config settings initialized")
 }
 
 // Configure logger
