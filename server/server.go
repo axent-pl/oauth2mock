@@ -8,12 +8,24 @@ import (
 	"github.com/axent-pl/oauth2mock/routing"
 )
 
-type Server struct {
+type Serverer interface {
+	Start(ctx context.Context) error
+}
+
+type server struct {
 	Addr   string
 	Router routing.Router
 }
 
-func (s *Server) Start(ctx context.Context) error {
+func NewServer(address string, router routing.Router) (Serverer, error) {
+	s := &server{
+		Addr:   address,
+		Router: router,
+	}
+	return s, nil
+}
+
+func (s *server) Start(ctx context.Context) error {
 	httpServer := &http.Server{
 		Addr:    s.Addr,
 		Handler: &s.Router,

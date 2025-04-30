@@ -37,7 +37,7 @@ var (
 
 	key        auth.JWK
 	router     routing.Router
-	httpServer server.Server
+	httpServer server.Serverer
 )
 
 // Load envs
@@ -166,10 +166,7 @@ func init() {
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "password"))
 
-	httpServer = server.Server{
-		Addr:   settings.ServerAddress,
-		Router: router,
-	}
+	httpServer, _ = server.NewServer(settings.ServerAddress, router)
 }
 
 func main() {
