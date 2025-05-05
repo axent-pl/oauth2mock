@@ -34,7 +34,7 @@ var (
 	clientService   auth.ClientServicer
 	subjectService  auth.UserServicer
 	claimService    auth.ClaimServicer
-	templateService template.TemplateStorer
+	templateService template.TemplateServicer
 	keyHandler      signing.SigningKeyHandler
 	keyService      signing.SigningServicer
 
@@ -91,7 +91,7 @@ func init() {
 	}
 	slog.Info("claim service initialized")
 
-	templateService, err = template.NewDefaultTemplateStore(settings.TemplateDir)
+	templateService, err = template.NewDefaultTemplateService(settings.TemplateDir)
 	if err != nil {
 		slog.Error("failed to initialize template service", "error", err)
 		os.Exit(1)

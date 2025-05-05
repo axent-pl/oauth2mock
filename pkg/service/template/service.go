@@ -9,16 +9,12 @@ import (
 	templateEngine "text/template"
 )
 
-type TemplateStorer interface {
-	Render(w io.Writer, templateName string, data any) error
-}
-
-type DefaultTemplateStore struct {
+type DefaultTemplateService struct {
 	templates map[string]templateEngine.Template
 }
 
-func NewDefaultTemplateStore(templatesPath string) (*DefaultTemplateStore, error) {
-	ts := &DefaultTemplateStore{
+func NewDefaultTemplateService(templatesPath string) (TemplateServicer, error) {
+	ts := &DefaultTemplateService{
 		templates: make(map[string]templateEngine.Template),
 	}
 
@@ -59,7 +55,7 @@ func NewDefaultTemplateStore(templatesPath string) (*DefaultTemplateStore, error
 	return ts, nil
 }
 
-func (ts *DefaultTemplateStore) Render(w io.Writer, templateName string, data any) error {
+func (ts *DefaultTemplateService) Render(w io.Writer, templateName string, data any) error {
 	tmpl, ok := ts.templates[templateName]
 	if !ok {
 		return fmt.Errorf("template %s not found", templateName)
