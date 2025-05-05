@@ -8,6 +8,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 )
 
@@ -26,14 +27,16 @@ func NewRSASigningKeyFromFile(path string) (SigningKeyHandler, error) {
 	}
 	// decode
 	block, _ := pem.Decode(data)
-	if err != nil {
-		return nil, err
+	if block == nil {
+		return nil, errors.New("failed to decode PEM block containing private key")
 	}
-	if block == nil || block.Type != "RSA PRIVATE KEY" {
+
+	if block.Type != "RSA PRIVATE KEY" {
 		return nil, errors.New("invalid private key file")
 	}
 	// parse
 	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+
 	if err != nil {
 		return nil, err
 	}
@@ -76,13 +79,14 @@ func NewRSASigningKeyFromRandom(signingMethod SigningMethod) (SigningKeyHandler,
 
 func (kh *rsaSigningKey) init() error {
 	// Calculate signing method
-	switch kh.privateKey.Size() {
-	case 256:
-		kh.signingMethod = RS256
-	case 384:
-		kh.signingMethod = RS384
-	case 512:
+	slog.Info("Initializing key", "N.BitLen", kh.privateKey.N.BitLen(), "Size", kh.privateKey.Size(), "D.BitLen", kh.privateKey.D.BitLen())
+	switch kh.privateKey.N.BitLen() {
+	case 4096:
 		kh.signingMethod = RS512
+	case 3072:
+		kh.signingMethod = RS384
+	case 2048:
+		kh.signingMethod = RS256
 	default:
 		return fmt.Errorf("unsupported key size %d", kh.privateKey.Size())
 	}
@@ -115,6 +119,7 @@ func (kh *rsaSigningKey) Save(path string) error {
 		Type:  "RSA PRIVATE KEY",
 		Bytes: privateKeyBytes,
 	}
+
 	file, err := os.Create(path)
 	if err != nil {
 		return err

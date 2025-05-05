@@ -18,7 +18,7 @@ import (
 )
 
 type Settings struct {
-	KeyFile       string `env:"KEY_PATH" default:"data/key.pem"`
+	KeyFile       string `env:"KEY_PATH" default:"assets/key.pem"`
 	DataFile      string `env:"DATAFILE_PATH" default:"data/config.json"`
 	ServerAddress string `env:"SERVER_ADDRESS" default:":8080"`
 	TemplateDir   string `env:"TEMPLATES_PATH" default:"data"`
@@ -98,7 +98,7 @@ func init() {
 	}
 	slog.Info("template service initialized")
 
-	keyHandler, err = signing.NewRSASigningKeyFromRandom(signing.RS512)
+	keyHandler, err = signing.NewRSASigningKeyFromFile(settings.KeyFile)
 	if err != nil {
 		slog.Error("failed to load JWK", "error", err)
 		os.Exit(1)

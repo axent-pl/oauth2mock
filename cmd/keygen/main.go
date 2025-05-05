@@ -4,8 +4,24 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/axent-pl/oauth2mock/pkg/config"
 	"github.com/axent-pl/oauth2mock/pkg/service/signing"
 )
+
+type Settings struct {
+	KeyType signing.SigningMethod `env:"KEY_TYPE" default:"RS512"`
+	KeyFile string                `env:"KEY_PATH" default:"assets/key.pem"`
+}
+
+var settings Settings
+
+func init() {
+	err := config.Load(&settings)
+	if err != nil {
+		slog.Error("failed to load config settings", "error", err)
+		os.Exit(1)
+	}
+}
 
 func init() {
 	jsonHandler := slog.NewJSONHandler(os.Stdout, nil)
@@ -14,13 +30,14 @@ func init() {
 }
 
 func main() {
-	path := "assets/key.pem"
-	key, err := signing.NewRSASigningKeyFromRandom(signing.RS512)
+	key, err := signing.NewRSASigningKeyFromRandom(settings.KeyType)
 	if err != nil {
 		slog.Error("failed to generate signing key", "error", err)
 		os.Exit(1)
 	}
-	err = key.Save(path)
+	slog.Info("genrated RSA private key", "signingMehtod", key.GetSigningMethod())
+
+	err = key.Save(settings.KeyFile)
 	if err != nil {
 		slog.Error("failed to save signing key to file", "error", err)
 		os.Exit(1)
