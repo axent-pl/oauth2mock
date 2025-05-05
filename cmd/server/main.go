@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/axent-pl/oauth2mock/auth"
+	"github.com/axent-pl/oauth2mock/pkg/auth"
 	"github.com/axent-pl/oauth2mock/pkg/config"
 	authorizeHandler "github.com/axent-pl/oauth2mock/pkg/handler/authorize"
 	jwksHandler "github.com/axent-pl/oauth2mock/pkg/handler/jwks"

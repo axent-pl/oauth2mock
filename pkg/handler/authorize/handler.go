@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/axent-pl/oauth2mock/auth"
+	"github.com/axent-pl/oauth2mock/pkg/auth"
 	"github.com/axent-pl/oauth2mock/pkg/handler/authorize/dto"
 	"github.com/axent-pl/oauth2mock/pkg/handler/authorize/tpl"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
