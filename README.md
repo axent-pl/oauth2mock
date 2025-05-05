@@ -43,7 +43,8 @@ Spot the difference? That's right - Axes is like a tiny espresso shot compared t
 
 | ENV | Default | What's this? |
 |-----|---------|-------------|
-| `KEY_PATH` | data/key.pem | Where to find your RSA private key |
+| `KEY_PATH` | data/key.pem | Where to find your RSA/ECDSA private key |
+| `KEY_TYPE` | `RS256` | Signing key type, allowed values: `RS256`, `RS384`, `RS512`, `ES256`, `ES384`, `ES521` |
 | `DATAFILE_PATH` | data/config.json | Your configuration JSON file |
 | `SERVER_ADDRESS` | :8080 | Where the magic happens |
 | `TEMPLATES_PATH` | data | HTML templates location |
