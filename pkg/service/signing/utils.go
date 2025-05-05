@@ -13,7 +13,7 @@ func toJWTSigningMethod(method SigningMethod) (jwt.SigningMethod, error) {
 		RS512: jwt.SigningMethodRS512,
 		ES256: jwt.SigningMethodES256,
 		ES384: jwt.SigningMethodES384,
-		ES512: jwt.SigningMethodES512,
+		ES521: jwt.SigningMethodES512,
 	}
 
 	if alg, ok := mapping[method]; ok {

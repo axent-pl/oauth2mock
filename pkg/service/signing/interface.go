@@ -9,7 +9,7 @@ const (
 
 	ES256 SigningMethod = "ES256"
 	ES384 SigningMethod = "ES384"
-	ES512 SigningMethod = "ES512"
+	ES521 SigningMethod = "ES521"
 )
 
 type SigningKeyHandler interface {

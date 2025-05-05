@@ -9,7 +9,7 @@ import (
 )
 
 type Settings struct {
-	KeyType signing.SigningMethod `env:"KEY_TYPE" default:"RS512"`
+	KeyType signing.SigningMethod `env:"KEY_TYPE" default:"ES521"`
 	KeyFile string                `env:"KEY_PATH" default:"assets/key.pem"`
 }
 
@@ -30,7 +30,7 @@ func init() {
 }
 
 func main() {
-	key, err := signing.NewRSASigningKeyFromRandom(settings.KeyType)
+	key, err := signing.NewSigningKeyFromRandom(settings.KeyType)
 	if err != nil {
 		slog.Error("failed to generate signing key", "error", err)
 		os.Exit(1)

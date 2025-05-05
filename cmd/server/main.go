@@ -98,7 +98,7 @@ func init() {
 	}
 	slog.Info("template service initialized")
 
-	keyHandler, err = signing.NewRSASigningKeyFromFile(settings.KeyFile)
+	keyHandler, err = signing.NewSigningKeyFromFile(settings.KeyFile)
 	if err != nil {
 		slog.Error("failed to load JWK", "error", err)
 		os.Exit(1)
