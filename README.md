@@ -1,44 +1,59 @@
-# OAuth2Mock
+# OAuth2Mock (Axes) 🔐
 
-OAuth2Mock (code name Axes) is a lightweight OAuth2 authorization server designed to replace resource-intensive servers like Keycloak during local development. This tool is **not intended for production environments**.
+> "Because sometimes Keycloak is just too much for your morning coffee development session."
 
-## Features
-* Lightweight and minimal resource usage.
-* Provides OpenID Connect (OIDC) endpoints for local development.
-* Configurable via environment variables and JSON files.
-* Runs as a Go application or a Docker container.
+OAuth2Mock (codename Axes) is your friendly neighborhood OAuth2 authorization server. It's designed to replace heavyweight authentication servers during local development, without the memory footprint that makes your laptop sound like a rocket ship.
 
-## How to run
+**🚨 Important:** This is a development tool. Please don't use it in production unless you enjoy exciting security incidents!
 
-### From Source
-Run the server using the make command:
+## ✨ Why Axes?
+
+* **Feather-light:** Uses less memory than your average cat GIF
+* **Lightning-fast:** Starts faster than you can say "Keycloak initialization"
+* **Zero-click config:** JSON files and env vars - because life's too short for web GUIs
+* **Dev-friendly:** Run it as a Go app or containerize it - we don't judge
+
+## 🚀 Quick Start
+
+### For Go Developers
 ```sh
-make run
+make run    # That's it. Really.
 ```
 
-### Using Docker
-Run the prebuilt Docker image from Docker Hub:
+### For Docker Enthusiasts
 ```sh
-docker run -p 8080:8080 prond/axes:nightly
+docker run -p 8080:8080 prond/axes:nightly    # Easy peasy! 🐳
 ```
 
-## Axes vs Keycloak: resource consuption
+## 📊 The Numbers Don't Lie
 
-Below is a comparison of resource usage between Axes and Keycloak, captured after Keycloak completed initialization (memory peaked over 1 GiB and CPU usage reached 199%).
+Check out this David vs. Goliath comparison (Axes vs Keycloak):
 
 ```console
-> docker stats
-
 CONTAINER ID   NAME         CPU %     MEM USAGE / LIMIT     MEM %     NET I/O          BLOCK I/O        PIDS
 294f9c29f74f   axes-1       0.00%     5.246MiB / 7.654GiB   0.07%     10kB / 12.4kB    0B / 0B          8
 07a88b8c0903   keycloak-1   1.55%     621.4MiB / 7.654GiB   7.93%     21.9kB / 921kB   78.4MB / 181MB   53
 ```
 
-Axes is significantly more resource-efficient, making it an ideal choice for local development environments.
+Spot the difference? That's right - Axes is like a tiny espresso shot compared to Keycloak's grande frappuccino! 
 
-## OpenID Configuration
+## 🔧 Configuration
 
-If `OAUTH2_ISSUER=http://localhost:8080` or `OAUTH2_ISSUER_FROM_ORIGIN=TRUE` is set, and the server is listening on port 8080 on localhost, the OpenID configuration will look like this:
+### Environment Variables
+
+| ENV | Default | What's this? |
+|-----|---------|-------------|
+| `KEY_PATH` | data/key.pem | Where to find your RSA private key |
+| `DATAFILE_PATH` | data/config.json | Your configuration JSON file |
+| `SERVER_ADDRESS` | :8080 | Where the magic happens |
+| `TEMPLATES_PATH` | data | HTML templates location |
+| `OAUTH2_ISSUER` | empty | Your issuer URL (optional) |
+| `OAUTH2_ISSUER_FROM_ORIGIN` | TRUE | Auto-magic issuer detection |
+
+### OpenID Connect Configuration
+
+When running locally (with `OAUTH2_ISSUER=http://localhost:8080` or `OAUTH2_ISSUER_FROM_ORIGIN=TRUE`), you'll get this tasty OIDC config:
+
 ```json
 {
     "issuer": "http://localhost:8080",
@@ -54,56 +69,27 @@ If `OAUTH2_ISSUER=http://localhost:8080` or `OAUTH2_ISSUER_FROM_ORIGIN=TRUE` is 
 }
 ```
 
-## Settings
-| ENV | Default | Description |
-|-----|---------|-------------|
-| **KEY_PATH** | data/key.pem | Path to the RSA private key file. |
-| **DATAFILE_PATH** | data/config.json | Path to the JSON configuration file. |
-| **SERVER_ADDRESS** | :8080 | The address on which the server will listen |
-| **TEMPLATES_PATH** | data | Path to the directory containing HTML templates. |
-| **OAUTH2_ISSUER** |   | URL of the issuer. If not set and OAUTH2_ISSUER_FROM_ORIGIN=TRUE, it will be populated dynamically. |
-| **OAUTH2_ISSUER_FROM_ORIGIN** | TRUE | If TRUE, the issuer will be populated dynamically based on the request origin. |
+### JSON Configuration
 
-## Configuration
-Below is an example JSON configuration file which needs to be in `DATAFILE_PATH`.
+Place this in your `DATAFILE_PATH` to define users and clients:
+
 ```json
 {
-    "users" : {
-        "demo" : {
+    "users": {
+        "demo": {
             "username": "demo",
             "password": "demo",
-            "claims" : {
+            "claims": {
                 "base": {
                     "sub": "Demo",
                     "preferred_username": "John.Demo@acme.com",
                     "realm_roles": ["DEMO"]
                 }
             }
-        },
-        "admin" : {
-            "username": "admin",
-            "password": "admin",
-            "claims" : {
-                "base": {
-                    "sub": "Demo",
-                    "preferred_username": "John.Demo@acme.com",
-                    "realm_roles": ["ADMIN"]
-                },
-                "clientOverrides": {
-                    "ACME": {
-                        "client_roles": ["DEMO","ADMIN"]
-                    }
-                },
-                "scopeOverrides": {
-                    "email": {
-                        "email": "John.Demo@acme.com"
-                    }
-                }
-            }
         }
     },
-    "clients" : {
-        "ACME" : {
+    "clients": {
+        "ACME": {
             "client_id": "ACME",
             "client_secret": "acme-secret",
             "redirect_uri": "http*//localhost*",
@@ -115,7 +101,19 @@ Below is an example JSON configuration file which needs to be in `DATAFILE_PATH`
 }
 ```
 
-## Notes
-* **Axes** is designed to mimic basic OAuth2/OpenID Connect functionality for local testing and development.
-* The tool provides a lightweight alternative to Keycloak for scenarios where resource efficiency and simplicity are priorities.
-* **Not for production**: This server lacks the robustness and security features required for production deployments.
+## 🎯 Pro Tips
+
+* **For Junior Devs:** Start with the default config and modify gradually
+* **For Mid-level Devs:** Check out the claim overrides for advanced user configuration
+* **For Senior Devs:** Yes, you can automate the config generation. We trust you!
+
+## ⚠️ Final Words of Wisdom
+
+Remember: Axes is like a practice sword - perfect for training, but don't bring it to a real battle. It's missing production-grade security features by design, keeping it light and simple for development purposes.
+
+## 🤝 Contributing
+
+Found a bug? Want to add a feature? PRs are welcome! Just remember our motto: "Keep it simple, keep it light!"
+
+---
+Made with ❤️ by developers who got tired of waiting for Keycloak to start
