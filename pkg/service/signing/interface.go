@@ -16,6 +16,7 @@ type SigningKeyHandler interface {
 	GetSigningMethod() SigningMethod
 	GetID() string
 	GetKey() any
+	Save(path string) error
 }
 
 type SigningServicer interface {

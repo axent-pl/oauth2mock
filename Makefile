@@ -1,9 +1,11 @@
 TAG=nightly
 run:
 	go mod download
+	go run cmd/keygen/main.go
 	go run cmd/server.go
 build:
 	go mod download
+	go build -o bin/keygen cmd/keygen/main.go
 	go build -o bin/server cmd/server.go
 container-build:
 	docker build . -t prond/axes:$(TAG)

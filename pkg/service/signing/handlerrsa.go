@@ -108,3 +108,17 @@ func (kh *rsaSigningKey) GetID() string {
 func (kh *rsaSigningKey) GetKey() any {
 	return kh.privateKey
 }
+
+func (kh *rsaSigningKey) Save(path string) error {
+	privateKeyBytes := x509.MarshalPKCS1PrivateKey(kh.privateKey)
+	block := &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: privateKeyBytes,
+	}
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	return pem.Encode(file, block)
+}
