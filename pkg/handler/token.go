@@ -1,4 +1,4 @@
-package token
+package handler
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/axent-pl/oauth2mock/pkg/auth"
-	"github.com/axent-pl/oauth2mock/pkg/handler/token/dto"
+	"github.com/axent-pl/oauth2mock/pkg/dto"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/service/signing"

@@ -10,10 +10,7 @@ import (
 
 	"github.com/axent-pl/oauth2mock/pkg/auth"
 	"github.com/axent-pl/oauth2mock/pkg/config"
-	authorizeHandler "github.com/axent-pl/oauth2mock/pkg/handler/authorize"
-	jwksHandler "github.com/axent-pl/oauth2mock/pkg/handler/jwks"
-	tokenHandler "github.com/axent-pl/oauth2mock/pkg/handler/token"
-	wellknownHandler "github.com/axent-pl/oauth2mock/pkg/handler/wellknown"
+	"github.com/axent-pl/oauth2mock/pkg/handler"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/http/server"
 	"github.com/axent-pl/oauth2mock/pkg/service/signing"
@@ -134,46 +131,46 @@ func init() {
 	router = routing.Router{}
 
 	router.RegisterHandler(
-		wellknownHandler.WellKnownHandler(openidConfiguration),
+		handler.WellKnownHandler(openidConfiguration),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath("/"))
 
 	router.RegisterHandler(
-		wellknownHandler.WellKnownHandler(openidConfiguration),
+		handler.WellKnownHandler(openidConfiguration),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath(openidConfiguration.WellKnownEndpoint))
 
 	router.RegisterHandler(
-		jwksHandler.JWKSGetHandler(keyService),
+		handler.JWKSGetHandler(keyService),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath(openidConfiguration.JWKSEndpoint))
 
 	router.RegisterHandler(
-		authorizeHandler.AuthorizeGetHandler(templateService, clientService),
+		handler.AuthorizeGetHandler(templateService, clientService),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath(openidConfiguration.AuthorizationEndpoint),
 		routing.ForQueryValue("response_type", "code"))
 
 	router.RegisterHandler(
-		authorizeHandler.AuthorizePostHandler(templateService, clientService, subjectService, authCodeService),
+		handler.AuthorizePostHandler(templateService, clientService, subjectService, authCodeService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.AuthorizationEndpoint),
 		routing.ForQueryValue("response_type", "code"))
 
 	router.RegisterHandler(
-		tokenHandler.TokenAuthorizationCodeHandler(openidConfiguration, clientService, authCodeService, claimService, keyService),
+		handler.TokenAuthorizationCodeHandler(openidConfiguration, clientService, authCodeService, claimService, keyService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "authorization_code"))
 
 	router.RegisterHandler(
-		tokenHandler.TokenClientCredentialsHandler(openidConfiguration, clientService, claimService, keyService),
+		handler.TokenClientCredentialsHandler(openidConfiguration, clientService, claimService, keyService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "client_credentials"))
 
 	router.RegisterHandler(
-		tokenHandler.TokenPasswordHandler(openidConfiguration, clientService, subjectService, claimService, keyService),
+		handler.TokenPasswordHandler(openidConfiguration, clientService, subjectService, claimService, keyService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "password"))

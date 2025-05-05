@@ -2,7 +2,7 @@ package tpl
 
 import (
 	"github.com/axent-pl/oauth2mock/pkg/auth"
-	"github.com/axent-pl/oauth2mock/pkg/handler/authorize/dto"
+	"github.com/axent-pl/oauth2mock/pkg/dto"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 )
 

@@ -1,4 +1,4 @@
-package jwks
+package handler
 
 import (
 	"net/http"

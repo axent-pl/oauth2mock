@@ -1,4 +1,4 @@
-package authorize
+package handler
 
 import (
 	"log/slog"
@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/axent-pl/oauth2mock/pkg/auth"
-	"github.com/axent-pl/oauth2mock/pkg/handler/authorize/dto"
-	"github.com/axent-pl/oauth2mock/pkg/handler/authorize/tpl"
+	"github.com/axent-pl/oauth2mock/pkg/dto"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/service/template"
+	"github.com/axent-pl/oauth2mock/pkg/tpl"
 )
 
 func AuthorizeGetHandler(templateDB template.TemplateStorer, clientDB auth.ClientServicer) routing.HandlerFunc {
