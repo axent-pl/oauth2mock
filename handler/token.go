@@ -8,7 +8,7 @@ import (
 	"github.com/axent-pl/oauth2mock/auth"
 	"github.com/axent-pl/oauth2mock/pkg/dto"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
-	routing "github.com/axent-pl/oauth2mock/pkg/http/router"
+	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/service/signing"
 )
 

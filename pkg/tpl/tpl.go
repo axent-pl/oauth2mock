@@ -1,4 +1,4 @@
-package template
+package tpl
 
 import (
 	"github.com/axent-pl/oauth2mock/auth"

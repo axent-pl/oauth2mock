@@ -11,10 +11,10 @@ import (
 	"github.com/axent-pl/oauth2mock/auth"
 	"github.com/axent-pl/oauth2mock/handler"
 	"github.com/axent-pl/oauth2mock/pkg/config"
-	routing "github.com/axent-pl/oauth2mock/pkg/http/router"
+	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/http/server"
 	"github.com/axent-pl/oauth2mock/pkg/service/signing"
-	"github.com/axent-pl/oauth2mock/template"
+	"github.com/axent-pl/oauth2mock/pkg/service/template"
 )
 
 type Settings struct {

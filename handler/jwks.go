@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	routing "github.com/axent-pl/oauth2mock/pkg/http/router"
+	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/service/signing"
 )
 

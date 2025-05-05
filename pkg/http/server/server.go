@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	routing "github.com/axent-pl/oauth2mock/pkg/http/router"
+	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 )
 
 type Serverer interface {

@@ -10,8 +10,9 @@ import (
 	"github.com/axent-pl/oauth2mock/auth"
 	"github.com/axent-pl/oauth2mock/pkg/dto"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
-	routing "github.com/axent-pl/oauth2mock/pkg/http/router"
-	"github.com/axent-pl/oauth2mock/template"
+	"github.com/axent-pl/oauth2mock/pkg/http/routing"
+	"github.com/axent-pl/oauth2mock/pkg/service/template"
+	"github.com/axent-pl/oauth2mock/pkg/tpl"
 )
 
 func AuthorizeGetHandler(templateDB template.TemplateStorer, clientDB auth.ClientServicer) routing.HandlerFunc {
@@ -47,7 +48,7 @@ func AuthorizeGetHandler(templateDB template.TemplateStorer, clientDB auth.Clien
 		}
 
 		// Init template data
-		templateData := template.AuthorizeTemplateData{
+		templateData := tpl.AuthorizeTemplateData{
 			FormAction:           r.URL.String(),
 			AuthorizationRequest: &authorizationRequest,
 		}
@@ -129,7 +130,7 @@ func AuthorizePostHandler(templateDB template.TemplateStorer, clientDB auth.Clie
 		}
 
 		// Init template data
-		templateData := template.AuthorizeTemplateData{
+		templateData := tpl.AuthorizeTemplateData{
 			FormAction:           r.URL.String(),
 			ValidationErrors:     credentialsValidator.Errors,
 			AuthenticationError:  authenticationErrorMessage,
