@@ -1,4 +1,4 @@
-package handler
+package jwks
 
 import (
 	"net/http"
@@ -9,8 +9,8 @@ import (
 
 func JWKSGetHandler(keyService signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		jwks, _ := keyService.GetJWKS()
+		jwksResponse, _ := keyService.GetJWKS()
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(jwks)
+		w.Write(jwksResponse)
 	}
 }

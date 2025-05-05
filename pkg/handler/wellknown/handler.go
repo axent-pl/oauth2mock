@@ -1,4 +1,4 @@
-package handler
+package wellknown
 
 import (
 	"encoding/json"
