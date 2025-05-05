@@ -6,7 +6,7 @@
   "documentation" : { },
   "id" : 1,
   "lastModifiedAgent" : "structurizr-ui",
-  "lastModifiedDate" : "2025-04-30T08:46:55Z",
+  "lastModifiedDate" : "2025-05-05T11:52:39Z",
   "model" : {
     "people" : [ {
       "id" : "1",
@@ -18,20 +18,20 @@
       "relationships" : [ {
         "description" : "Authorize request",
         "destinationId" : "5",
-        "id" : "15",
+        "id" : "16",
         "sourceId" : "1",
         "tags" : "Relationship"
       }, {
         "description" : "Authorize request",
         "destinationId" : "4",
-        "id" : "16",
-        "linkedRelationshipId" : "15",
+        "id" : "17",
+        "linkedRelationshipId" : "16",
         "sourceId" : "1"
       }, {
         "description" : "Authorize request",
         "destinationId" : "3",
-        "id" : "17",
-        "linkedRelationshipId" : "15",
+        "id" : "18",
+        "linkedRelationshipId" : "16",
         "sourceId" : "1"
       } ],
       "tags" : "Element,Person"
@@ -47,20 +47,20 @@
       "relationships" : [ {
         "description" : "Token request",
         "destinationId" : "5",
-        "id" : "18",
+        "id" : "19",
         "sourceId" : "2",
         "tags" : "Relationship"
       }, {
         "description" : "Token request",
         "destinationId" : "4",
-        "id" : "19",
-        "linkedRelationshipId" : "18",
+        "id" : "20",
+        "linkedRelationshipId" : "19",
         "sourceId" : "2"
       }, {
         "description" : "Token request",
         "destinationId" : "3",
-        "id" : "20",
-        "linkedRelationshipId" : "18",
+        "id" : "21",
+        "linkedRelationshipId" : "19",
         "sourceId" : "2"
       } ],
       "tags" : "Element,Software System"
@@ -76,7 +76,7 @@
           "relationships" : [ {
             "description" : "Uses",
             "destinationId" : "6",
-            "id" : "21",
+            "id" : "22",
             "sourceId" : "5",
             "tags" : "Relationship"
           } ],
@@ -91,13 +91,13 @@
           "relationships" : [ {
             "description" : "Uses",
             "destinationId" : "7",
-            "id" : "22",
+            "id" : "23",
             "sourceId" : "6",
             "tags" : "Relationship"
           }, {
             "description" : "Uses",
             "destinationId" : "8",
-            "id" : "23",
+            "id" : "24",
             "sourceId" : "6",
             "tags" : "Relationship"
           } ],
@@ -112,25 +112,25 @@
           "relationships" : [ {
             "description" : "Uses",
             "destinationId" : "9",
-            "id" : "24",
+            "id" : "25",
             "sourceId" : "7",
             "tags" : "Relationship,auth_flow"
           }, {
             "description" : "Uses",
             "destinationId" : "10",
-            "id" : "25",
+            "id" : "26",
             "sourceId" : "7",
             "tags" : "Relationship,token_flow"
           }, {
             "description" : "Uses",
             "destinationId" : "11",
-            "id" : "26",
+            "id" : "27",
             "sourceId" : "7",
             "tags" : "Relationship"
           }, {
             "description" : "Uses",
             "destinationId" : "12",
-            "id" : "27",
+            "id" : "28",
             "sourceId" : "7",
             "tags" : "Relationship"
           } ],
@@ -145,19 +145,25 @@
           "relationships" : [ {
             "description" : "Uses",
             "destinationId" : "10",
-            "id" : "28",
-            "sourceId" : "8",
-            "tags" : "Relationship"
-          }, {
-            "description" : "Uses",
-            "destinationId" : "12",
             "id" : "29",
             "sourceId" : "8",
             "tags" : "Relationship"
           }, {
             "description" : "Uses",
-            "destinationId" : "13",
+            "destinationId" : "12",
             "id" : "30",
+            "sourceId" : "8",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Uses",
+            "destinationId" : "13",
+            "id" : "31",
+            "sourceId" : "8",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Uses",
+            "destinationId" : "15",
+            "id" : "32",
             "sourceId" : "8",
             "tags" : "Relationship"
           } ],
@@ -188,13 +194,13 @@
           "relationships" : [ {
             "description" : "Uses",
             "destinationId" : "14",
-            "id" : "31",
+            "id" : "33",
             "sourceId" : "11",
             "tags" : "Relationship"
           }, {
             "description" : "Uses",
             "destinationId" : "10",
-            "id" : "32",
+            "id" : "34",
             "sourceId" : "11",
             "tags" : "Relationship"
           } ],
@@ -223,6 +229,14 @@
             "structurizr.dsl.identifier" : "c_usr_srv"
           },
           "tags" : "Element,Component,auth_flow"
+        }, {
+          "documentation" : { },
+          "id" : "15",
+          "name" : "Key Service",
+          "properties" : {
+            "structurizr.dsl.identifier" : "c_key_srv"
+          },
+          "tags" : "Element,Component,token_flow"
         } ],
         "documentation" : { },
         "id" : "4",
@@ -246,7 +260,7 @@
   },
   "name" : "Name",
   "properties" : {
-    "structurizr.dsl" : "d29ya3NwYWNlICJOYW1lIiAiRGVzY3JpcHRpb24iIHsKCiAgICBtb2RlbCB7CiAgICAgICAgdSA9IHBlcnNvbiAiVXNlciIKICAgICAgICBjID0gc29mdHdhcmVTeXN0ZW0gIkNsaWVudCIKICAgICAgICBzc19heGVzID0gc29mdHdhcmVTeXN0ZW0gIkF4ZXMiICJPQXV0aDIgQXV0aG9yaXphdGlvbiBTZXJ2ZXIiICIiIHsKICAgICAgICAgICAgLy8gIWRvY3MgLi9heGVzLm1kCiAgICAgICAgICAgIHdlYmFwcCA9IGNvbnRhaW5lciAiV2ViIEFwcGxpY2F0aW9uIiAiIiAiR28iICIiIHsKICAgICAgICAgICAgICAgIGNfc3J2ID0gY29tcG9uZW50ICJIVFRQIFNlcnZlciIgIiIgIiIgImF1dGhfZmxvdyx0b2tlbl9mbG93IgogICAgICAgICAgICAgICAgY19yb3V0ZXIgPSBjb21wb25lbnQgIkhUVFAgUm91dGVyIiAiIiAiIiAiYXV0aF9mbG93LHRva2VuX2Zsb3ciCgogICAgICAgICAgICAgICAgY19hdXRoaGFuZGxlciA9IGNvbXBvbmVudCAiQXV0aG9yaXplIEhhbmRsZXIiICIiICIiICJhdXRoX2Zsb3ciCiAgICAgICAgICAgICAgICBjX3Rva2VuaGFuZGxlciA9IGNvbXBvbmVudCAiVG9rZW4gSGFuZGxlciIgIiIgIiIgInRva2VuX2Zsb3ciCgogICAgICAgICAgICAgICAgY190cGxfc3J2ID0gY29tcG9uZW50ICJUZW1wbGF0ZSBTZXJ2aWNlIiAiIiAiIiAiYXV0aF9mbG93IgogICAgICAgICAgICAgICAgY19jbGlfc3J2ID0gY29tcG9uZW50ICJDbGllbnQgU2VydmljZSIgIiIgIiIgImF1dGhfZmxvdyx0b2tlbl9mbG93IiAgICAKICAgICAgICAgICAgICAgIGNfc3ViX3NydiA9IGNvbXBvbmVudCAiU3ViamVjdCBTZXJ2aWNlIiAiIiAiIiAiYXV0aF9mbG93IgogICAgICAgICAgICAgICAgY19hdWNfc3J2ID0gY29tcG9uZW50ICJBdXRoIENvZGUgU2VydmljZSIgIiIgIiIgImF1dGhfZmxvdyx0b2tlbl9mbG93IgogICAgICAgICAgICAgICAgY19jbGFfc3J2ID0gY29tcG9uZW50ICJDbGFpbSBTZXJ2aWNlIiAiIiAiIiAidG9rZW5fZmxvdyIKICAgICAgICAgICAgICAgIGNfdXNyX3NydiA9IGNvbXBvbmVudCAiVXNlciBTZXJ2aWNlIiAiIiAiIiAiYXV0aF9mbG93IgogICAgICAgICAgICB9CiAgICAgICAgfQoKICAgICAgICB1IC0+IGNfc3J2ICJBdXRob3JpemUgcmVxdWVzdCIKICAgICAgICBjIC0+IGNfc3J2ICJUb2tlbiByZXF1ZXN0IgoKICAgICAgICBjX3NydiAtPiBjX3JvdXRlciAiVXNlcyIKCiAgICAgICAgY19yb3V0ZXIgLT4gY19hdXRoaGFuZGxlciAiVXNlcyIKICAgICAgICBjX3JvdXRlciAtPiBjX3Rva2VuaGFuZGxlciAiVXNlcyIKCiAgICAgICAgY19hdXRoaGFuZGxlciAtPiBjX3RwbF9zcnYgIlVzZXMiICIiICJhdXRoX2Zsb3ciCiAgICAgICAgY19hdXRoaGFuZGxlciAtPiBjX2NsaV9zcnYgIlVzZXMiICIiICJ0b2tlbl9mbG93IgogICAgICAgIGNfYXV0aGhhbmRsZXIgLT4gY19zdWJfc3J2ICJVc2VzIiAiIiAiIgogICAgICAgIGNfYXV0aGhhbmRsZXIgLT4gY19hdWNfc3J2ICJVc2VzIiAiIiAiIgoKICAgICAgICBjX3Rva2VuaGFuZGxlciAtPiBjX2NsaV9zcnYgIlVzZXMiCiAgICAgICAgY190b2tlbmhhbmRsZXIgLT4gY19hdWNfc3J2ICJVc2VzIgogICAgICAgIGNfdG9rZW5oYW5kbGVyIC0+IGNfY2xhX3NydiAiVXNlcyIKCiAgICAgICAgY19zdWJfc3J2IC0+IGNfdXNyX3NydiAiVXNlcyIKICAgICAgICBjX3N1Yl9zcnYgLT4gY19jbGlfc3J2ICJVc2VzIgogICAgfQoKICAgIHZpZXdzIHsKICAgICAgICBzeXN0ZW1Db250ZXh0IHNzX2F4ZXMgewogICAgICAgICAgICBpbmNsdWRlICoKICAgICAgICAgICAgYXV0b2xheW91dCBscgogICAgICAgIH0KCiAgICAgICAgY29udGFpbmVyIHNzX2F4ZXMgewogICAgICAgICAgICBpbmNsdWRlICoKICAgICAgICAgICAgYXV0b2xheW91dCBscgogICAgICAgIH0KICAgICAgICBjb21wb25lbnQgd2ViYXBwICIwMDBfYWxsIiB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBhdXRvTGF5b3V0IGxyCiAgICAgICAgfQogICAgICAgIGNvbXBvbmVudCB3ZWJhcHAgIjAwMV9hdXRob3JpemVfZmxvdyIgewogICAgICAgICAgICBpbmNsdWRlIHUKICAgICAgICAgICAgaW5jbHVkZSBjCiAgICAgICAgICAgIGluY2x1ZGUgZWxlbWVudC50YWc9PWF1dGhfZmxvdwogICAgICAgICAgICBhdXRvTGF5b3V0IGxyCiAgICAgICAgfQogICAgICAgIGNvbXBvbmVudCB3ZWJhcHAgIjAwMl90b2tlbl9mbG93IiB7CiAgICAgICAgICAgIGluY2x1ZGUgdQogICAgICAgICAgICBpbmNsdWRlIGMKICAgICAgICAgICAgaW5jbHVkZSBlbGVtZW50LnRhZz09dG9rZW5fZmxvdwogICAgICAgICAgICBhdXRvTGF5b3V0IGxyCiAgICAgICAgfQoKICAgICAgICBzdHlsZXMgewogICAgICAgICAgICBlbGVtZW50ICJFbGVtZW50IiB7CiAgICAgICAgICAgICAgICBjb2xvciAjZmZmZmZmCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiUGVyc29uIiB7CiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICMwNDhjMDQKICAgICAgICAgICAgICAgIHNoYXBlIHBlcnNvbgogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgIlNvZnR3YXJlIFN5c3RlbSIgewogICAgICAgICAgICAgICAgYmFja2dyb3VuZCAjMDQ3ODA0CiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiQ29udGFpbmVyIiB7CiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICM1NWFhNTUKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJEYXRhYmFzZSIgewogICAgICAgICAgICAgICAgc2hhcGUgY3lsaW5kZXIKICAgICAgICAgICAgfQogICAgICAgIH0KICAgIH0KCiAgICBjb25maWd1cmF0aW9uIHsKICAgICAgICBzY29wZSBzb2Z0d2FyZXN5c3RlbQogICAgfQoKfQ=="
+    "structurizr.dsl" : "d29ya3NwYWNlICJOYW1lIiAiRGVzY3JpcHRpb24iIHsKCiAgICBtb2RlbCB7CiAgICAgICAgdSA9IHBlcnNvbiAiVXNlciIKICAgICAgICBjID0gc29mdHdhcmVTeXN0ZW0gIkNsaWVudCIKICAgICAgICBzc19heGVzID0gc29mdHdhcmVTeXN0ZW0gIkF4ZXMiICJPQXV0aDIgQXV0aG9yaXphdGlvbiBTZXJ2ZXIiICIiIHsKICAgICAgICAgICAgLy8gIWRvY3MgLi9heGVzLm1kCiAgICAgICAgICAgIHdlYmFwcCA9IGNvbnRhaW5lciAiV2ViIEFwcGxpY2F0aW9uIiAiIiAiR28iICIiIHsKICAgICAgICAgICAgICAgIGNfc3J2ID0gY29tcG9uZW50ICJIVFRQIFNlcnZlciIgIiIgIiIgImF1dGhfZmxvdyx0b2tlbl9mbG93IgogICAgICAgICAgICAgICAgY19yb3V0ZXIgPSBjb21wb25lbnQgIkhUVFAgUm91dGVyIiAiIiAiIiAiYXV0aF9mbG93LHRva2VuX2Zsb3ciCgogICAgICAgICAgICAgICAgY19hdXRoaGFuZGxlciA9IGNvbXBvbmVudCAiQXV0aG9yaXplIEhhbmRsZXIiICIiICIiICJhdXRoX2Zsb3ciCiAgICAgICAgICAgICAgICBjX3Rva2VuaGFuZGxlciA9IGNvbXBvbmVudCAiVG9rZW4gSGFuZGxlciIgIiIgIiIgInRva2VuX2Zsb3ciCgogICAgICAgICAgICAgICAgY190cGxfc3J2ID0gY29tcG9uZW50ICJUZW1wbGF0ZSBTZXJ2aWNlIiAiIiAiIiAiYXV0aF9mbG93IgogICAgICAgICAgICAgICAgY19jbGlfc3J2ID0gY29tcG9uZW50ICJDbGllbnQgU2VydmljZSIgIiIgIiIgImF1dGhfZmxvdyx0b2tlbl9mbG93IiAgICAKICAgICAgICAgICAgICAgIGNfc3ViX3NydiA9IGNvbXBvbmVudCAiU3ViamVjdCBTZXJ2aWNlIiAiIiAiIiAiYXV0aF9mbG93IgogICAgICAgICAgICAgICAgY19hdWNfc3J2ID0gY29tcG9uZW50ICJBdXRoIENvZGUgU2VydmljZSIgIiIgIiIgImF1dGhfZmxvdyx0b2tlbl9mbG93IgogICAgICAgICAgICAgICAgY19jbGFfc3J2ID0gY29tcG9uZW50ICJDbGFpbSBTZXJ2aWNlIiAiIiAiIiAidG9rZW5fZmxvdyIKICAgICAgICAgICAgICAgIGNfdXNyX3NydiA9IGNvbXBvbmVudCAiVXNlciBTZXJ2aWNlIiAiIiAiIiAiYXV0aF9mbG93IgogICAgICAgICAgICAgICAgY19rZXlfc3J2ID0gY29tcG9uZW50ICJLZXkgU2VydmljZSIgIiIgIiIgInRva2VuX2Zsb3ciCiAgICAgICAgICAgIH0KICAgICAgICB9CgogICAgICAgIHUgLT4gY19zcnYgIkF1dGhvcml6ZSByZXF1ZXN0IgogICAgICAgIGMgLT4gY19zcnYgIlRva2VuIHJlcXVlc3QiCgogICAgICAgIGNfc3J2IC0+IGNfcm91dGVyICJVc2VzIgoKICAgICAgICBjX3JvdXRlciAtPiBjX2F1dGhoYW5kbGVyICJVc2VzIgogICAgICAgIGNfcm91dGVyIC0+IGNfdG9rZW5oYW5kbGVyICJVc2VzIgoKICAgICAgICBjX2F1dGhoYW5kbGVyIC0+IGNfdHBsX3NydiAiVXNlcyIgIiIgImF1dGhfZmxvdyIKICAgICAgICBjX2F1dGhoYW5kbGVyIC0+IGNfY2xpX3NydiAiVXNlcyIgIiIgInRva2VuX2Zsb3ciCiAgICAgICAgY19hdXRoaGFuZGxlciAtPiBjX3N1Yl9zcnYgIlVzZXMiICIiICIiCiAgICAgICAgY19hdXRoaGFuZGxlciAtPiBjX2F1Y19zcnYgIlVzZXMiICIiICIiCgogICAgICAgIGNfdG9rZW5oYW5kbGVyIC0+IGNfY2xpX3NydiAiVXNlcyIKICAgICAgICBjX3Rva2VuaGFuZGxlciAtPiBjX2F1Y19zcnYgIlVzZXMiCiAgICAgICAgY190b2tlbmhhbmRsZXIgLT4gY19jbGFfc3J2ICJVc2VzIgogICAgICAgIGNfdG9rZW5oYW5kbGVyIC0+IGNfa2V5X3NydiAiVXNlcyIKCiAgICAgICAgY19zdWJfc3J2IC0+IGNfdXNyX3NydiAiVXNlcyIKICAgICAgICBjX3N1Yl9zcnYgLT4gY19jbGlfc3J2ICJVc2VzIgogICAgfQoKICAgIHZpZXdzIHsKICAgICAgICBzeXN0ZW1Db250ZXh0IHNzX2F4ZXMgewogICAgICAgICAgICBpbmNsdWRlICoKICAgICAgICAgICAgYXV0b2xheW91dCBscgogICAgICAgIH0KCiAgICAgICAgY29udGFpbmVyIHNzX2F4ZXMgewogICAgICAgICAgICBpbmNsdWRlICoKICAgICAgICAgICAgYXV0b2xheW91dCBscgogICAgICAgIH0KICAgICAgICBjb21wb25lbnQgd2ViYXBwICIwMDBfYWxsIiB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBhdXRvTGF5b3V0IGxyCiAgICAgICAgfQogICAgICAgIGNvbXBvbmVudCB3ZWJhcHAgIjAwMV9hdXRob3JpemVfZmxvdyIgewogICAgICAgICAgICBpbmNsdWRlIHUKICAgICAgICAgICAgaW5jbHVkZSBjCiAgICAgICAgICAgIGluY2x1ZGUgZWxlbWVudC50YWc9PWF1dGhfZmxvdwogICAgICAgICAgICBhdXRvTGF5b3V0IGxyCiAgICAgICAgfQogICAgICAgIGNvbXBvbmVudCB3ZWJhcHAgIjAwMl90b2tlbl9mbG93IiB7CiAgICAgICAgICAgIGluY2x1ZGUgdQogICAgICAgICAgICBpbmNsdWRlIGMKICAgICAgICAgICAgaW5jbHVkZSBlbGVtZW50LnRhZz09dG9rZW5fZmxvdwogICAgICAgICAgICBhdXRvTGF5b3V0IGxyCiAgICAgICAgfQoKICAgICAgICBzdHlsZXMgewogICAgICAgICAgICBlbGVtZW50ICJFbGVtZW50IiB7CiAgICAgICAgICAgICAgICBjb2xvciAjZmZmZmZmCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiUGVyc29uIiB7CiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICMwNDhjMDQKICAgICAgICAgICAgICAgIHNoYXBlIHBlcnNvbgogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgIlNvZnR3YXJlIFN5c3RlbSIgewogICAgICAgICAgICAgICAgYmFja2dyb3VuZCAjMDQ3ODA0CiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiQ29udGFpbmVyIiB7CiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICM1NWFhNTUKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJEYXRhYmFzZSIgewogICAgICAgICAgICAgICAgc2hhcGUgY3lsaW5kZXIKICAgICAgICAgICAgfQogICAgICAgIH0KICAgIH0KCiAgICBjb25maWd1cmF0aW9uIHsKICAgICAgICBzY29wZSBzb2Z0d2FyZXN5c3RlbQogICAgfQoKfQ=="
   },
   "views" : {
     "componentViews" : [ {
@@ -261,177 +275,110 @@
       },
       "containerId" : "4",
       "dimensions" : {
-        "height" : 3227,
+        "height" : 3649,
         "width" : 4620
       },
       "elements" : [ {
         "id" : "1",
         "x" : 225,
-        "y" : 797
+        "y" : 1140
       }, {
         "id" : "2",
         "x" : 200,
-        "y" : 1497
+        "y" : 1840
       }, {
         "id" : "5",
         "x" : 950,
-        "y" : 1172
+        "y" : 1515
       }, {
         "id" : "6",
         "x" : 1700,
-        "y" : 1172
+        "y" : 1515
       }, {
         "id" : "7",
         "x" : 2450,
-        "y" : 1547
+        "y" : 2115
       }, {
         "id" : "8",
         "x" : 2450,
-        "y" : 793
+        "y" : 915
       }, {
         "id" : "9",
         "x" : 3200,
-        "y" : 2601
+        "y" : 2115
       }, {
         "id" : "10",
         "x" : 3950,
-        "y" : 1476
+        "y" : 2423
       }, {
         "id" : "11",
         "x" : 3200,
-        "y" : 2001
+        "y" : 3023
       }, {
         "id" : "12",
         "x" : 3200,
-        "y" : 1093
+        "y" : 1515
       }, {
         "id" : "13",
         "x" : 3200,
-        "y" : 185
+        "y" : 915
       }, {
         "id" : "14",
         "x" : 3950,
-        "y" : 2076
+        "y" : 3023
+      }, {
+        "id" : "15",
+        "x" : 3200,
+        "y" : 315
       } ],
       "externalContainerBoundariesVisible" : false,
       "key" : "000_all",
       "order" : 3,
       "relationships" : [ {
-        "id" : "15"
+        "id" : "16"
       }, {
-        "id" : "18"
-      }, {
-        "id" : "21"
+        "id" : "19"
       }, {
         "id" : "22"
       }, {
         "id" : "23"
-      }, {
-        "id" : "24",
-        "vertices" : [ {
-          "x" : 3200,
-          "y" : 2451
-        } ]
-      }, {
-        "id" : "25"
-      }, {
-        "id" : "26"
-      }, {
-        "id" : "27"
-      }, {
-        "id" : "28",
-        "vertices" : [ {
-          "x" : 3650,
-          "y" : 943
-        } ]
-      }, {
-        "id" : "29"
-      }, {
-        "id" : "30"
-      }, {
-        "id" : "31"
-      }, {
-        "id" : "32"
-      } ]
-    }, {
-      "automaticLayout" : {
-        "applied" : false,
-        "edgeSeparation" : 0,
-        "implementation" : "Graphviz",
-        "nodeSeparation" : 300,
-        "rankDirection" : "LeftRight",
-        "rankSeparation" : 300,
-        "vertices" : false
-      },
-      "containerId" : "4",
-      "elements" : [ {
-        "id" : "1",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "2",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "5",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "6",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "7",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "9",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "10",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "11",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "12",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "14",
-        "x" : 0,
-        "y" : 0
-      } ],
-      "externalContainerBoundariesVisible" : false,
-      "key" : "001_authorize_flow",
-      "order" : 4,
-      "relationships" : [ {
-        "id" : "15"
-      }, {
-        "id" : "18"
-      }, {
-        "id" : "21"
-      }, {
-        "id" : "22"
       }, {
         "id" : "24"
       }, {
         "id" : "25"
       }, {
-        "id" : "26"
+        "id" : "26",
+        "vertices" : [ {
+          "x" : 3200,
+          "y" : 2565
+        } ]
       }, {
         "id" : "27"
+      }, {
+        "id" : "28"
+      }, {
+        "id" : "29",
+        "vertices" : [ {
+          "x" : 3200,
+          "y" : 165
+        }, {
+          "x" : 3650,
+          "y" : 165
+        } ]
+      }, {
+        "id" : "30"
       }, {
         "id" : "31"
       }, {
         "id" : "32"
+      }, {
+        "id" : "33"
+      }, {
+        "id" : "34"
       } ]
     }, {
       "automaticLayout" : {
-        "applied" : false,
+        "applied" : true,
         "edgeSeparation" : 0,
         "implementation" : "Graphviz",
         "nodeSeparation" : 300,
@@ -440,61 +387,155 @@
         "vertices" : false
       },
       "containerId" : "4",
+      "dimensions" : {
+        "height" : 2319,
+        "width" : 4620
+      },
       "elements" : [ {
         "id" : "1",
-        "x" : 0,
-        "y" : 0
+        "x" : 225,
+        "y" : 710
       }, {
         "id" : "2",
-        "x" : 0,
-        "y" : 0
+        "x" : 200,
+        "y" : 1410
       }, {
         "id" : "5",
-        "x" : 0,
-        "y" : 0
+        "x" : 950,
+        "y" : 1085
       }, {
         "id" : "6",
-        "x" : 0,
-        "y" : 0
+        "x" : 1700,
+        "y" : 1085
       }, {
-        "id" : "8",
-        "x" : 0,
-        "y" : 0
+        "id" : "7",
+        "x" : 2450,
+        "y" : 1085
+      }, {
+        "id" : "9",
+        "x" : 3200,
+        "y" : 185
       }, {
         "id" : "10",
-        "x" : 0,
-        "y" : 0
+        "x" : 3950,
+        "y" : 1693
+      }, {
+        "id" : "11",
+        "x" : 3200,
+        "y" : 1385
       }, {
         "id" : "12",
-        "x" : 0,
-        "y" : 0
+        "x" : 3200,
+        "y" : 785
+      }, {
+        "id" : "14",
+        "x" : 3950,
+        "y" : 1093
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "001_authorize_flow",
+      "order" : 4,
+      "relationships" : [ {
+        "id" : "16"
+      }, {
+        "id" : "19"
+      }, {
+        "id" : "22"
+      }, {
+        "id" : "23"
+      }, {
+        "id" : "25"
+      }, {
+        "id" : "26",
+        "vertices" : [ {
+          "x" : 3200,
+          "y" : 1835
+        } ]
+      }, {
+        "id" : "27"
+      }, {
+        "id" : "28"
+      }, {
+        "id" : "33"
+      }, {
+        "id" : "34"
+      } ]
+    }, {
+      "automaticLayout" : {
+        "applied" : true,
+        "edgeSeparation" : 0,
+        "implementation" : "Graphviz",
+        "nodeSeparation" : 300,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 300,
+        "vertices" : false
+      },
+      "containerId" : "4",
+      "dimensions" : {
+        "height" : 2611,
+        "width" : 3870
+      },
+      "elements" : [ {
+        "id" : "1",
+        "x" : 225,
+        "y" : 710
+      }, {
+        "id" : "2",
+        "x" : 200,
+        "y" : 1410
+      }, {
+        "id" : "5",
+        "x" : 950,
+        "y" : 1085
+      }, {
+        "id" : "6",
+        "x" : 1700,
+        "y" : 1085
+      }, {
+        "id" : "8",
+        "x" : 2450,
+        "y" : 1085
+      }, {
+        "id" : "10",
+        "x" : 3200,
+        "y" : 1985
+      }, {
+        "id" : "12",
+        "x" : 3200,
+        "y" : 1385
       }, {
         "id" : "13",
-        "x" : 0,
-        "y" : 0
+        "x" : 3200,
+        "y" : 785
+      }, {
+        "id" : "15",
+        "x" : 3200,
+        "y" : 185
       } ],
       "externalContainerBoundariesVisible" : false,
       "key" : "002_token_flow",
       "order" : 5,
       "relationships" : [ {
-        "id" : "15"
+        "id" : "16"
       }, {
-        "id" : "18"
+        "id" : "19"
       }, {
-        "id" : "21"
+        "id" : "22"
       }, {
-        "id" : "23"
-      }, {
-        "id" : "28"
+        "id" : "24"
       }, {
         "id" : "29"
       }, {
         "id" : "30"
+      }, {
+        "id" : "31"
+      }, {
+        "id" : "32"
       } ]
     } ],
     "configuration" : {
       "branding" : { },
-      "lastSavedView" : "000_all",
+      "lastSavedView" : "001_authorize_flow",
       "metadataSymbols" : "SquareBrackets",
       "styles" : {
         "elements" : [ {
@@ -519,7 +560,7 @@
     },
     "containerViews" : [ {
       "automaticLayout" : {
-        "applied" : false,
+        "applied" : true,
         "edgeSeparation" : 0,
         "implementation" : "Graphviz",
         "nodeSeparation" : 300,
@@ -527,33 +568,37 @@
         "rankSeparation" : 300,
         "vertices" : false
       },
+      "dimensions" : {
+        "height" : 1400,
+        "width" : 1620
+      },
       "elements" : [ {
         "id" : "1",
-        "x" : 0,
-        "y" : 0
+        "x" : 224,
+        "y" : 165
       }, {
         "id" : "2",
-        "x" : 0,
-        "y" : 0
+        "x" : 199,
+        "y" : 865
       }, {
         "id" : "4",
-        "x" : 0,
-        "y" : 0
+        "x" : 949,
+        "y" : 540
       } ],
       "externalSoftwareSystemBoundariesVisible" : false,
       "generatedKey" : true,
       "key" : "Container-001",
       "order" : 2,
       "relationships" : [ {
-        "id" : "16"
+        "id" : "17"
       }, {
-        "id" : "19"
+        "id" : "20"
       } ],
       "softwareSystemId" : "3"
     } ],
     "systemContextViews" : [ {
       "automaticLayout" : {
-        "applied" : false,
+        "applied" : true,
         "edgeSeparation" : 0,
         "implementation" : "Graphviz",
         "nodeSeparation" : 300,
@@ -561,27 +606,31 @@
         "rankSeparation" : 300,
         "vertices" : false
       },
+      "dimensions" : {
+        "height" : 1400,
+        "width" : 1600
+      },
       "elements" : [ {
         "id" : "1",
-        "x" : 0,
-        "y" : 0
+        "x" : 224,
+        "y" : 165
       }, {
         "id" : "2",
-        "x" : 0,
-        "y" : 0
+        "x" : 199,
+        "y" : 865
       }, {
         "id" : "3",
-        "x" : 0,
-        "y" : 0
+        "x" : 949,
+        "y" : 540
       } ],
       "enterpriseBoundaryVisible" : true,
       "generatedKey" : true,
       "key" : "SystemContext-001",
       "order" : 1,
       "relationships" : [ {
-        "id" : "17"
+        "id" : "18"
       }, {
-        "id" : "20"
+        "id" : "21"
       } ],
       "softwareSystemId" : "3"
     } ]

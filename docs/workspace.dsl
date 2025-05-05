@@ -18,6 +18,7 @@ workspace "Name" "Description" {
                 c_auc_srv = component "Auth Code Service" "" "" "auth_flow,token_flow"
                 c_cla_srv = component "Claim Service" "" "" "token_flow"
                 c_usr_srv = component "User Service" "" "" "auth_flow"
+                c_key_srv = component "Key Service" "" "" "token_flow"
             }
         }
 
@@ -37,6 +38,7 @@ workspace "Name" "Description" {
         c_tokenhandler -> c_cli_srv "Uses"
         c_tokenhandler -> c_auc_srv "Uses"
         c_tokenhandler -> c_cla_srv "Uses"
+        c_tokenhandler -> c_key_srv "Uses"
 
         c_sub_srv -> c_usr_srv "Uses"
         c_sub_srv -> c_cli_srv "Uses"
