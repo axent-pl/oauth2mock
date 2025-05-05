@@ -18,10 +18,10 @@ import (
 )
 
 type Settings struct {
-	KeyFile       string `env:"KEY_PATH" default:"assets/key.pem"`
-	DataFile      string `env:"DATAFILE_PATH" default:"data/config.json"`
+	KeyFile       string `env:"KEY_PATH" default:"assets/key/key.pem"`
+	DataFile      string `env:"DATAFILE_PATH" default:"assets/config/config.json"`
 	ServerAddress string `env:"SERVER_ADDRESS" default:":8080"`
-	TemplateDir   string `env:"TEMPLATES_PATH" default:"data"`
+	TemplateDir   string `env:"TEMPLATES_PATH" default:"assets/template"`
 
 	UseOrigin bool   `env:"OAUTH2_ISSUER_FROM_ORIGIN" default:"true"`
 	Issuer    string `env:"OAUTH2_ISSUER"`
@@ -42,6 +42,13 @@ var (
 	httpServer server.Serverer
 )
 
+// Configure logger
+func init() {
+	jsonHandler := slog.NewJSONHandler(os.Stdout, nil)
+	jsonLogger := slog.New(jsonHandler)
+	slog.SetDefault(jsonLogger)
+}
+
 // Load config settings
 func init() {
 	err := config.Load(&settings)
@@ -50,13 +57,6 @@ func init() {
 		os.Exit(1)
 	}
 	slog.Info("config settings initialized")
-}
-
-// Configure logger
-func init() {
-	jsonHandler := slog.NewJSONHandler(os.Stdout, nil)
-	jsonLogger := slog.New(jsonHandler)
-	slog.SetDefault(jsonLogger)
 }
 
 // Initialize services

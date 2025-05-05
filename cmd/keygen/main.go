@@ -9,8 +9,8 @@ import (
 )
 
 type Settings struct {
-	KeyType signing.SigningMethod `env:"KEY_TYPE" default:"ES521"`
-	KeyFile string                `env:"KEY_PATH" default:"assets/key.pem"`
+	KeyType signing.SigningMethod `env:"KEY_TYPE" default:"RS256"`
+	KeyFile string                `env:"KEY_PATH" default:"assets/key/key.pem"`
 }
 
 var settings Settings

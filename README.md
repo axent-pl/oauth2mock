@@ -43,11 +43,11 @@ Spot the difference? That's right - Axes is like a tiny espresso shot compared t
 
 | ENV | Default | What's this? |
 |-----|---------|-------------|
-| `KEY_PATH` | data/key.pem | Where to find your RSA/ECDSA private key |
+| `KEY_PATH` | assets/key/key.pem | Where to find your RSA/ECDSA private key |
 | `KEY_TYPE` | `RS256` | Signing key type, allowed values: `RS256`, `RS384`, `RS512`, `ES256`, `ES384`, `ES521` |
-| `DATAFILE_PATH` | data/config.json | Your configuration JSON file |
+| `DATAFILE_PATH` | assets/config/config.json | Your configuration JSON file |
 | `SERVER_ADDRESS` | :8080 | Where the magic happens |
-| `TEMPLATES_PATH` | data | HTML templates location |
+| `TEMPLATES_PATH` | assets/template | HTML templates location |
 | `OAUTH2_ISSUER` | empty | Your issuer URL (optional) |
 | `OAUTH2_ISSUER_FROM_ORIGIN` | TRUE | Auto-magic issuer detection |
 
