@@ -8,10 +8,10 @@ import (
 	"github.com/axent-pl/oauth2mock/auth"
 	"github.com/axent-pl/oauth2mock/dto"
 	routing "github.com/axent-pl/oauth2mock/pkg/http/router"
-	"github.com/axent-pl/oauth2mock/pkg/service/key"
+	"github.com/axent-pl/oauth2mock/pkg/service/signing"
 )
 
-func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, authCodeDB auth.AuthorizationCodeService, claimsDB auth.ClaimServicer, keyService key.JWKServicer) routing.HandlerFunc {
+func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, authCodeDB auth.AuthorizationCodeService, claimsDB auth.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requstDTO := &dto.TokenAuthorizationCodeRequestDTO{}
 		requestValidator := dto.NewValidator()
@@ -82,7 +82,7 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 	}
 }
 
-func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, claimsDB auth.ClaimServicer, keyService key.JWKServicer) routing.HandlerFunc {
+func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, claimsDB auth.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requstDTO := &dto.TokenClientCredentialsHandlerRequestDTO{}
 		requestValidator := dto.NewValidator()
@@ -138,7 +138,7 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 	}
 }
 
-func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, userDB auth.UserServicer, claimsDB auth.ClaimServicer, keyService key.JWKServicer) routing.HandlerFunc {
+func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, userDB auth.UserServicer, claimsDB auth.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requstDTO := &dto.TokenPasswrodRequestDTO{}
 		requestValidator := dto.NewValidator()

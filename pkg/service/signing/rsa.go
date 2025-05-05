@@ -1,4 +1,4 @@
-package key
+package signing
 
 import (
 	"crypto/rand"
@@ -11,14 +11,14 @@ import (
 	"os"
 )
 
-type keyHandlerRSA struct {
+type rsaSigningKey struct {
 	privateKey    *rsa.PrivateKey
-	signingMethod SignMethod
+	signingMethod SigningMethod
 	id            string
 }
 
-func NewFromFile(path string) (KeyHandler, error) {
-	kh := &keyHandlerRSA{}
+func NewRSASigningKeyFromFile(path string) (SigningKeyHandler, error) {
+	kh := &rsaSigningKey{}
 	// read
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -46,8 +46,8 @@ func NewFromFile(path string) (KeyHandler, error) {
 	return kh, nil
 }
 
-func NewFromPrivateKey(privateKey *rsa.PrivateKey) (KeyHandler, error) {
-	kh := &keyHandlerRSA{
+func NewRSASigningKeyFromPrivateKey(privateKey *rsa.PrivateKey) (SigningKeyHandler, error) {
+	kh := &rsaSigningKey{
 		privateKey: privateKey,
 	}
 	err := kh.init()
@@ -57,8 +57,8 @@ func NewFromPrivateKey(privateKey *rsa.PrivateKey) (KeyHandler, error) {
 	return kh, nil
 }
 
-func NewFromRandom(signingMethod SignMethod) (KeyHandler, error) {
-	kh := &keyHandlerRSA{}
+func NewRSASigningKeyFromRandom(signingMethod SigningMethod) (SigningKeyHandler, error) {
+	kh := &rsaSigningKey{}
 	switch signingMethod {
 	case RS256:
 		kh.privateKey, _ = rsa.GenerateKey(rand.Reader, 2048)
@@ -74,7 +74,7 @@ func NewFromRandom(signingMethod SignMethod) (KeyHandler, error) {
 	return kh, nil
 }
 
-func (kh *keyHandlerRSA) init() error {
+func (kh *rsaSigningKey) init() error {
 	// Calculate signing method
 	switch kh.privateKey.Size() {
 	case 256:
@@ -97,14 +97,14 @@ func (kh *keyHandlerRSA) init() error {
 	return nil
 }
 
-func (kh *keyHandlerRSA) GetSigningMethod() SignMethod {
+func (kh *rsaSigningKey) GetSigningMethod() SigningMethod {
 	return kh.signingMethod
 }
 
-func (kh *keyHandlerRSA) GetID() string {
+func (kh *rsaSigningKey) GetID() string {
 	return kh.id
 }
 
-func (kh *keyHandlerRSA) GetKey() any {
+func (kh *rsaSigningKey) GetKey() any {
 	return kh.privateKey
 }

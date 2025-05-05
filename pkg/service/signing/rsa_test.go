@@ -1,4 +1,4 @@
-package key
+package signing
 
 import (
 	"crypto/rand"
@@ -18,7 +18,7 @@ func TestKeyHandlerRSA_GetSigningMethod(t *testing.T) {
 	tests := []struct {
 		name   string
 		fields fields
-		want   SignMethod
+		want   SigningMethod
 	}{
 		{
 			name: "RS256",
@@ -44,7 +44,7 @@ func TestKeyHandlerRSA_GetSigningMethod(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			kh := &keyHandlerRSA{
+			kh := &rsaSigningKey{
 				privateKey: tt.fields.privateKey,
 			}
 			kh.init()

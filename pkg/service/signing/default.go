@@ -1,4 +1,4 @@
-package key
+package signing
 
 import (
 	"encoding/json"
@@ -9,18 +9,18 @@ import (
 	"github.com/square/go-jose/v3"
 )
 
-type defaultJWKService struct {
-	key KeyHandler
+type defaultSiginingService struct {
+	key SigningKeyHandler
 }
 
-func NewDefaultJWKService(key KeyHandler) (JWKServicer, error) {
-	s := &defaultJWKService{
+func NewDefaultSigningService(key SigningKeyHandler) (SigningServicer, error) {
+	s := &defaultSiginingService{
 		key: key,
 	}
 	return s, nil
 }
 
-func (s *defaultJWKService) GetJWKS() ([]byte, error) {
+func (s *defaultSiginingService) GetJWKS() ([]byte, error) {
 	publicKey := jose.JSONWebKey{
 		Key:       s.key.GetKey(),
 		Algorithm: string(s.key.GetSigningMethod()),
@@ -38,11 +38,11 @@ func (s *defaultJWKService) GetJWKS() ([]byte, error) {
 	return json.Marshal(jwks)
 }
 
-func (s *defaultJWKService) GetSigningMethods() []string {
+func (s *defaultSiginingService) GetSigningMethods() []string {
 	return []string{string(s.key.GetSigningMethod())}
 }
 
-func (s *defaultJWKService) Sign(payload map[string]any) ([]byte, error) {
+func (s *defaultSiginingService) Sign(payload map[string]any) ([]byte, error) {
 	claims := jwt.MapClaims{}
 	for key, value := range payload {
 		claims[key] = value
@@ -63,7 +63,7 @@ func (s *defaultJWKService) Sign(payload map[string]any) ([]byte, error) {
 	return []byte(tokenString), nil
 }
 
-func (s *defaultJWKService) SignWithMethod(payload map[string]any, method SignMethod) ([]byte, error) {
+func (s *defaultSiginingService) SignWithMethod(payload map[string]any, method SigningMethod) ([]byte, error) {
 	if method != s.key.GetSigningMethod() {
 		return nil, fmt.Errorf("unsupported signing method %s", method)
 	}

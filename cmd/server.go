@@ -13,7 +13,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/config"
 	routing "github.com/axent-pl/oauth2mock/pkg/http/router"
 	"github.com/axent-pl/oauth2mock/pkg/http/server"
-	"github.com/axent-pl/oauth2mock/pkg/service/key"
+	"github.com/axent-pl/oauth2mock/pkg/service/signing"
 	"github.com/axent-pl/oauth2mock/template"
 )
 
@@ -35,8 +35,8 @@ var (
 	subjectService  auth.UserServicer
 	claimService    auth.ClaimServicer
 	templateService template.TemplateStorer
-	keyHandler      key.KeyHandler
-	keyService      key.JWKServicer
+	keyHandler      signing.SigningKeyHandler
+	keyService      signing.SigningServicer
 
 	router     routing.Router
 	httpServer server.Serverer
@@ -98,14 +98,14 @@ func init() {
 	}
 	slog.Info("template service initialized")
 
-	keyHandler, err = key.NewFromRandom(key.RS512)
+	keyHandler, err = signing.NewRSASigningKeyFromRandom(signing.RS512)
 	if err != nil {
 		slog.Error("failed to load JWK", "error", err)
 		os.Exit(1)
 	}
 	slog.Info("JWK loaded")
 
-	keyService, err = key.NewDefaultJWKService(keyHandler)
+	keyService, err = signing.NewDefaultSigningService(keyHandler)
 	if err != nil {
 		slog.Error("failed to initialize JWK service", "error", err)
 		os.Exit(1)

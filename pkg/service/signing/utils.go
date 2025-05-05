@@ -1,4 +1,4 @@
-package key
+package signing
 
 import (
 	"fmt"
@@ -6,8 +6,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func toJWTSigningMethod(method SignMethod) (jwt.SigningMethod, error) {
-	mapping := map[SignMethod]jwt.SigningMethod{
+func toJWTSigningMethod(method SigningMethod) (jwt.SigningMethod, error) {
+	mapping := map[SigningMethod]jwt.SigningMethod{
 		RS256: jwt.SigningMethodRS256,
 		RS384: jwt.SigningMethodRS384,
 		RS512: jwt.SigningMethodRS512,

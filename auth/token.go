@@ -3,7 +3,7 @@ package auth
 import (
 	"time"
 
-	"github.com/axent-pl/oauth2mock/pkg/service/key"
+	"github.com/axent-pl/oauth2mock/pkg/service/signing"
 )
 
 type TokenResponse struct {
@@ -12,7 +12,7 @@ type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
 }
 
-func NewTokenReponse(issuer string, subject SubjectHandler, client ClientHandler, claims map[string]interface{}, keyService key.JWKServicer) (TokenResponse, error) {
+func NewTokenReponse(issuer string, subject SubjectHandler, client ClientHandler, claims map[string]interface{}, keyService signing.SigningServicer) (TokenResponse, error) {
 	tokenResponse := TokenResponse{Type: "Bearer"}
 
 	access_token_claims := make(map[string]interface{})
