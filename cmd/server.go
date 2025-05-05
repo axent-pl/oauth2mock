@@ -13,6 +13,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/config"
 	routing "github.com/axent-pl/oauth2mock/pkg/http/router"
 	"github.com/axent-pl/oauth2mock/pkg/http/server"
+	"github.com/axent-pl/oauth2mock/pkg/service/key"
 	"github.com/axent-pl/oauth2mock/template"
 )
 
@@ -34,13 +35,14 @@ var (
 	subjectService  auth.UserServicer
 	claimService    auth.ClaimServicer
 	templateService template.TemplateStorer
+	keyHandler      key.KeyHandler
+	keyService      key.JWKServicer
 
-	key        auth.JWK
 	router     routing.Router
 	httpServer server.Serverer
 )
 
-// Load envs
+// Load config settings
 func init() {
 	err := config.Load(&settings)
 	if err != nil {
@@ -57,48 +59,55 @@ func init() {
 	slog.SetDefault(jsonLogger)
 }
 
-// Configure stores
+// Initialize services
 func init() {
 	var err error
 
 	authCodeService, err = auth.NewAuthorizationCodeSimpleService()
 	if err != nil {
-		slog.Error("failed to initialize authorization code store", "error", err)
+		slog.Error("failed to initialize authorization code service", "error", err)
 		os.Exit(1)
 	}
-	slog.Info("authorization code store initialized")
+	slog.Info("authorization code service initialized")
 
 	clientService, err = auth.NewClientService(settings.DataFile)
 	if err != nil {
-		slog.Error("failed to initialize client store", "error", err)
+		slog.Error("failed to initialize client service", "error", err)
 		os.Exit(1)
 	}
-	slog.Info("client store initialized")
+	slog.Info("client service initialized")
 
 	subjectService, err = auth.NewUserService(settings.DataFile)
 	if err != nil {
-		slog.Error("failed to initialize subject store", "error", err)
+		slog.Error("failed to initialize subject service", "error", err)
 		os.Exit(1)
 	}
-	slog.Info("subject store initialized")
+	slog.Info("subject service initialized")
 
 	claimService, err = auth.NewClaimService(settings.DataFile)
 	if err != nil {
-		slog.Error("failed to initialize claim store", "error", err)
+		slog.Error("failed to initialize claim service", "error", err)
 		os.Exit(1)
 	}
-	slog.Info("claim store initialized")
+	slog.Info("claim service initialized")
 
 	templateService, err = template.NewDefaultTemplateStore(settings.TemplateDir)
 	if err != nil {
-		slog.Error("failed to initialize template store", "error", err)
+		slog.Error("failed to initialize template service", "error", err)
 		os.Exit(1)
 	}
-	slog.Info("template store initialized")
+	slog.Info("template service initialized")
 
-	key, err = auth.LoadOrGenerate(settings.KeyFile)
+	keyHandler, err = key.NewFromRandom(key.RS512)
 	if err != nil {
-		slog.Error("failed to load or generate JWK", "error", err)
+		slog.Error("failed to load JWK", "error", err)
+		os.Exit(1)
+	}
+	slog.Info("JWK loaded")
+
+	keyService, err = key.NewDefaultJWKService(keyHandler)
+	if err != nil {
+		slog.Error("failed to initialize JWK service", "error", err)
 		os.Exit(1)
 	}
 	slog.Info("JWK initialized")
@@ -116,7 +125,7 @@ func init() {
 		GrantTypesSupported:              []string{"authorization_code", "client_credentials", "password"},
 		ResponseTypesSupported:           []string{"code"},
 		SubjectTypesSupported:            []string{"public"},
-		IdTokenSigningAlgValuesSupported: []string{"RS256"},
+		IdTokenSigningAlgValuesSupported: keyService.GetSigningMethods(),
 	}
 
 	router = routing.Router{}
@@ -132,7 +141,7 @@ func init() {
 		routing.WithPath(openidConfiguration.WellKnownEndpoint))
 
 	router.RegisterHandler(
-		handler.JWKSGetHandler(&key),
+		handler.JWKSGetHandler(keyService),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath(openidConfiguration.JWKSEndpoint))
 
@@ -149,19 +158,19 @@ func init() {
 		routing.ForQueryValue("response_type", "code"))
 
 	router.RegisterHandler(
-		handler.TokenAuthorizationCodeHandler(openidConfiguration, clientService, authCodeService, claimService, &key),
+		handler.TokenAuthorizationCodeHandler(openidConfiguration, clientService, authCodeService, claimService, keyService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "authorization_code"))
 
 	router.RegisterHandler(
-		handler.TokenClientCredentialsHandler(openidConfiguration, clientService, claimService, &key),
+		handler.TokenClientCredentialsHandler(openidConfiguration, clientService, claimService, keyService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "client_credentials"))
 
 	router.RegisterHandler(
-		handler.TokenPasswordHandler(openidConfiguration, clientService, subjectService, claimService, &key),
+		handler.TokenPasswordHandler(openidConfiguration, clientService, subjectService, claimService, keyService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "password"))

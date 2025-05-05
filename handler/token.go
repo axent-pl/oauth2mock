@@ -8,9 +8,10 @@ import (
 	"github.com/axent-pl/oauth2mock/auth"
 	"github.com/axent-pl/oauth2mock/dto"
 	routing "github.com/axent-pl/oauth2mock/pkg/http/router"
+	"github.com/axent-pl/oauth2mock/pkg/service/key"
 )
 
-func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, authCodeDB auth.AuthorizationCodeService, claimsDB auth.ClaimServicer, key *auth.JWK) routing.HandlerFunc {
+func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, authCodeDB auth.AuthorizationCodeService, claimsDB auth.ClaimServicer, keyService key.JWKServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requstDTO := &dto.TokenAuthorizationCodeRequestDTO{}
 		requestValidator := dto.NewValidator()
@@ -66,7 +67,7 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 			issuer = getOriginFromRequest(r)
 		}
 
-		tokenResponse, err := auth.NewTokenReponse(issuer, subject, client, claims, *key)
+		tokenResponse, err := auth.NewTokenReponse(issuer, subject, client, claims, keyService)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -81,7 +82,7 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 	}
 }
 
-func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, claimsDB auth.ClaimServicer, key *auth.JWK) routing.HandlerFunc {
+func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, claimsDB auth.ClaimServicer, keyService key.JWKServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requstDTO := &dto.TokenClientCredentialsHandlerRequestDTO{}
 		requestValidator := dto.NewValidator()
@@ -122,7 +123,7 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 			issuer = getOriginFromRequest(r)
 		}
 
-		tokenResponse, err := auth.NewTokenReponse(issuer, client, client, claims, *key)
+		tokenResponse, err := auth.NewTokenReponse(issuer, client, client, claims, keyService)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -137,7 +138,7 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 	}
 }
 
-func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, userDB auth.UserServicer, claimsDB auth.ClaimServicer, key *auth.JWK) routing.HandlerFunc {
+func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, userDB auth.UserServicer, claimsDB auth.ClaimServicer, keyService key.JWKServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requstDTO := &dto.TokenPasswrodRequestDTO{}
 		requestValidator := dto.NewValidator()
@@ -190,7 +191,7 @@ func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.C
 			issuer = getOriginFromRequest(r)
 		}
 
-		tokenResponse, err := auth.NewTokenReponse(issuer, client, client, claims, *key)
+		tokenResponse, err := auth.NewTokenReponse(issuer, client, client, claims, keyService)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

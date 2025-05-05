@@ -1,0 +1,71 @@
+package key
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/square/go-jose/v3"
+)
+
+type defaultJWKService struct {
+	key KeyHandler
+}
+
+func NewDefaultJWKService(key KeyHandler) (JWKServicer, error) {
+	s := &defaultJWKService{
+		key: key,
+	}
+	return s, nil
+}
+
+func (s *defaultJWKService) GetJWKS() ([]byte, error) {
+	publicKey := jose.JSONWebKey{
+		Key:       s.key.GetKey(),
+		Algorithm: string(s.key.GetSigningMethod()),
+		Use:       "sig",
+		KeyID:     s.key.GetID(),
+	}
+
+	if !publicKey.Valid() {
+		return nil, errors.New("invalid publicKey")
+	}
+	jwks := jose.JSONWebKeySet{
+		Keys: []jose.JSONWebKey{publicKey},
+	}
+
+	return json.Marshal(jwks)
+}
+
+func (s *defaultJWKService) GetSigningMethods() []string {
+	return []string{string(s.key.GetSigningMethod())}
+}
+
+func (s *defaultJWKService) Sign(payload map[string]any) ([]byte, error) {
+	claims := jwt.MapClaims{}
+	for key, value := range payload {
+		claims[key] = value
+	}
+
+	signingMethod, err := toJWTSigningMethod(s.key.GetSigningMethod())
+	if err != nil {
+		return nil, fmt.Errorf("failed to map JWT signing method: %w", err)
+	}
+
+	token := jwt.NewWithClaims(signingMethod, claims)
+
+	tokenString, err := token.SignedString(s.key.GetKey())
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign JWT: %w", err)
+	}
+
+	return []byte(tokenString), nil
+}
+
+func (s *defaultJWKService) SignWithMethod(payload map[string]any, method SignMethod) ([]byte, error) {
+	if method != s.key.GetSigningMethod() {
+		return nil, fmt.Errorf("unsupported signing method %s", method)
+	}
+	return s.Sign(payload)
+}

@@ -2,6 +2,8 @@ package auth
 
 import (
 	"time"
+
+	"github.com/axent-pl/oauth2mock/pkg/service/key"
 )
 
 type TokenResponse struct {
@@ -10,7 +12,7 @@ type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
 }
 
-func NewTokenReponse(issuer string, subject SubjectHandler, client ClientHandler, claims map[string]interface{}, key JWK) (TokenResponse, error) {
+func NewTokenReponse(issuer string, subject SubjectHandler, client ClientHandler, claims map[string]interface{}, keyService key.JWKServicer) (TokenResponse, error) {
 	tokenResponse := TokenResponse{Type: "Bearer"}
 
 	access_token_claims := make(map[string]interface{})
@@ -23,7 +25,7 @@ func NewTokenReponse(issuer string, subject SubjectHandler, client ClientHandler
 	for k, v := range claims {
 		access_token_claims[k] = v
 	}
-	access_token, err := key.SignJWT(access_token_claims, RS256)
+	access_token, err := keyService.Sign(access_token_claims)
 	if err != nil {
 		return TokenResponse{}, err
 	}
@@ -39,7 +41,7 @@ func NewTokenReponse(issuer string, subject SubjectHandler, client ClientHandler
 	for k, v := range claims {
 		refresh_token_claims[k] = v
 	}
-	refresh_token, err := key.SignJWT(refresh_token_claims, RS256)
+	refresh_token, err := keyService.Sign(refresh_token_claims)
 	if err != nil {
 		return TokenResponse{}, err
 	}
