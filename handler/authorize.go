@@ -8,7 +8,8 @@ import (
 	"time"
 
 	"github.com/axent-pl/oauth2mock/auth"
-	"github.com/axent-pl/oauth2mock/dto"
+	"github.com/axent-pl/oauth2mock/pkg/dto"
+	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	routing "github.com/axent-pl/oauth2mock/pkg/http/router"
 	"github.com/axent-pl/oauth2mock/template"
 )
@@ -17,8 +18,8 @@ func AuthorizeGetHandler(templateDB template.TemplateStorer, clientDB auth.Clien
 	return func(w http.ResponseWriter, r *http.Request) {
 		// authorization request DTO
 		authorizeRequestDTO := &dto.AuthorizeRequestDTO{}
-		authorizeRequestValidator := dto.NewValidator()
-		dto.Unmarshal(r, authorizeRequestDTO)
+		authorizeRequestValidator := request.NewValidator()
+		request.Unmarshal(r, authorizeRequestDTO)
 		if !authorizeRequestValidator.Validate(authorizeRequestDTO) {
 			http.Error(w, "bad request", http.StatusBadRequest)
 			return
@@ -59,8 +60,8 @@ func AuthorizePostHandler(templateDB template.TemplateStorer, clientDB auth.Clie
 	return func(w http.ResponseWriter, r *http.Request) {
 		// authorization request DTO
 		authorizeRequestDTO := &dto.AuthorizeRequestDTO{}
-		authorizeRequestValidator := dto.NewValidator()
-		dto.Unmarshal(r, authorizeRequestDTO)
+		authorizeRequestValidator := request.NewValidator()
+		request.Unmarshal(r, authorizeRequestDTO)
 		slog.Info("AuthorizePostHandler reading authorize request param done", "RequestID", r.Context().Value("RequestID"), "authorizeRequestDTO", authorizeRequestDTO)
 
 		if !authorizeRequestValidator.Validate(authorizeRequestDTO) {
@@ -95,8 +96,8 @@ func AuthorizePostHandler(templateDB template.TemplateStorer, clientDB auth.Clie
 		// credentials
 		authenticationErrorMessage := ""
 		credentialsDTO := &dto.AuthorizeCredentialsDTO{}
-		credentialsValidator := dto.NewValidator()
-		dto.Unmarshal(r, credentialsDTO)
+		credentialsValidator := request.NewValidator()
+		request.Unmarshal(r, credentialsDTO)
 		slog.Info("AuthorizePostHandler subject credentials", "RequestID", r.Context().Value("RequestID"), "credentialsDTO", credentialsDTO)
 		if credentialsValidator.Validate(credentialsDTO) {
 			credentials, err := auth.NewAuthenticationCredentials(auth.FromUsernameAndPassword(credentialsDTO.Username, credentialsDTO.Password))
