@@ -40,7 +40,7 @@ func TestKeyHandlerECDSA_GetSigningMethod(t *testing.T) {
 			fields: fields{
 				privateKey: privateKey521,
 			},
-			want: ES521,
+			want: ES512,
 		},
 	}
 	for _, tt := range tests {

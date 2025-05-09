@@ -16,7 +16,7 @@ func NewSigningKeyFromRandom(signingMethod SigningMethod) (SigningKeyHandler, er
 	switch signingMethod {
 	case RS256, RS384, RS512:
 		return NewRSASigningKeyFromRandom(signingMethod)
-	case ES256, ES384, ES521:
+	case ES256, ES384, ES512:
 		return NewECDSASigningKeyFromRandom(signingMethod)
 	default:
 		return nil, errors.New("unsupported signing method")

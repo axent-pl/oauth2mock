@@ -2,11 +2,9 @@ package signing
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/square/go-jose/v3"
 )
 
 type defaultSiginingService struct {
@@ -21,18 +19,8 @@ func NewDefaultSigningService(key SigningKeyHandler) (SigningServicer, error) {
 }
 
 func (s *defaultSiginingService) GetJWKS() ([]byte, error) {
-	publicKey := jose.JSONWebKey{
-		Key:       s.key.GetKey(),
-		Algorithm: string(s.key.GetSigningMethod()),
-		Use:       "sig",
-		KeyID:     s.key.GetID(),
-	}
-
-	if !publicKey.Valid() {
-		return nil, errors.New("invalid publicKey")
-	}
-	jwks := jose.JSONWebKeySet{
-		Keys: []jose.JSONWebKey{publicKey},
+	jwks := JSONWebKeySet{
+		Keys: []SigningKeyHandler{s.key},
 	}
 
 	return json.Marshal(jwks)

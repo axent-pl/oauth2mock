@@ -5,6 +5,8 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
+	"encoding/binary"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -126,4 +128,22 @@ func (kh *rsaSigningKey) Save(path string) error {
 	}
 	defer file.Close()
 	return pem.Encode(file, block)
+}
+
+func (kh *rsaSigningKey) MarshalJSON() ([]byte, error) {
+	var raw *JSONWebKey = &JSONWebKey{
+		Kty: "RSA",
+		Kid: kh.id,
+		Alg: string(kh.signingMethod),
+		Use: "sig",
+	}
+
+	// modulus
+	raw.N = &byteBuffer{data: kh.privateKey.PublicKey.N.Bytes()}
+
+	// exponent
+	raw.E = &byteBuffer{data: make([]byte, 8)}
+	binary.BigEndian.PutUint64(raw.E.data, uint64(kh.privateKey.PublicKey.E))
+
+	return json.Marshal(raw)
 }
