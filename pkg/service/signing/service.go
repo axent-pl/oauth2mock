@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"maps"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -32,9 +34,7 @@ func (s *defaultSiginingService) GetSigningMethods() []string {
 
 func (s *defaultSiginingService) Sign(payload map[string]any) ([]byte, error) {
 	claims := jwt.MapClaims{}
-	for key, value := range payload {
-		claims[key] = value
-	}
+	maps.Copy(claims, payload)
 
 	signingMethod, err := toJWTSigningMethod(s.key.GetSigningMethod())
 	if err != nil {
