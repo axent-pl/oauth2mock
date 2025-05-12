@@ -2,22 +2,12 @@ package signing
 
 import "errors"
 
-func NewSigningKeyFromFile(path string) (SigningKeyHandler, error) {
-	if signingKeyHandler, err := NewRSASigningKeyFromFile(path); err == nil {
-		return signingKeyHandler, nil
-	}
-	if signingKeyHandler, err := NewECDSASigningKeyFromFile(path); err == nil {
-		return signingKeyHandler, nil
-	}
-	return nil, errors.New("unsupported signing key file format")
-}
-
-func NewSigningKeyFromRandom(signingMethod SigningMethod) (SigningKeyHandler, error) {
-	switch signingMethod {
-	case RS256, RS384, RS512:
-		return NewRSASigningKeyFromRandom(signingMethod)
-	case ES256, ES384, ES512:
-		return NewECDSASigningKeyFromRandom(signingMethod)
+func NewSigningKeyFromRandom(keyType KeyType) (SigningKeyHandler, error) {
+	switch keyType {
+	case RSA256, RSA384, RSA512:
+		return NewRSASigningKeyFromRandom(keyType)
+	case P256, P384, P521:
+		return NewECDSASigningKeyFromRandom(keyType)
 	default:
 		return nil, errors.New("unsupported signing method")
 	}

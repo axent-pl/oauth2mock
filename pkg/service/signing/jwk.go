@@ -24,7 +24,7 @@ type JSONWebKey struct {
 }
 
 type JSONWebKeySet struct {
-	Keys []SigningKeyHandler `json:"keys"`
+	Keys []JSONWebKey `json:"keys"`
 }
 
 type byteBuffer struct {

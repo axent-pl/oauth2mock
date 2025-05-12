@@ -1,11 +1,11 @@
 package signing
 
 type SigningKeyHandler interface {
-	GetSigningMethod() SigningMethod
 	GetID() string
 	GetKey() any
+	GetType() KeyType
+	GetJWK() JSONWebKey
 	Save(path string) error
-	MarshalJSON() ([]byte, error)
 }
 
 type SigningServicer interface {

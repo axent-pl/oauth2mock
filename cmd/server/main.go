@@ -18,7 +18,6 @@ import (
 )
 
 type Settings struct {
-	KeyFile       string `env:"KEY_PATH" default:"assets/key/key.pem"`
 	DataFile      string `env:"DATAFILE_PATH" default:"assets/config/config.json"`
 	ServerAddress string `env:"SERVER_ADDRESS" default:":8080"`
 	TemplateDir   string `env:"TEMPLATES_PATH" default:"assets/template"`
@@ -35,8 +34,7 @@ var (
 	subjectService  auth.UserServicer
 	claimService    auth.ClaimServicer
 	templateService template.TemplateServicer
-	keyHandler      signing.SigningKeyHandler
-	keyService      signing.SigningServicer
+	signingService  signing.SigningServicer
 
 	router     routing.Router
 	httpServer server.Serverer
@@ -98,19 +96,12 @@ func init() {
 	}
 	slog.Info("template service initialized")
 
-	keyHandler, err = signing.NewSigningKeyFromFile(settings.KeyFile)
+	signingService, err = signing.NewSigingService(settings.DataFile)
 	if err != nil {
-		slog.Error("failed to load JWK", "error", err)
+		slog.Error("failed to initialize signing service", "error", err)
 		os.Exit(1)
 	}
-	slog.Info("JWK loaded")
-
-	keyService, err = signing.NewDefaultSigningService(keyHandler)
-	if err != nil {
-		slog.Error("failed to initialize JWK service", "error", err)
-		os.Exit(1)
-	}
-	slog.Info("JWK initialized")
+	slog.Info("signing initialized")
 }
 
 // Configure HTTP router and server
@@ -125,7 +116,7 @@ func init() {
 		GrantTypesSupported:              []string{"authorization_code", "client_credentials", "password"},
 		ResponseTypesSupported:           []string{"code"},
 		SubjectTypesSupported:            []string{"public"},
-		IdTokenSigningAlgValuesSupported: keyService.GetSigningMethods(),
+		IdTokenSigningAlgValuesSupported: signingService.GetSigningMethods(),
 	}
 
 	router = routing.Router{}
@@ -141,7 +132,7 @@ func init() {
 		routing.WithPath(openidConfiguration.WellKnownEndpoint))
 
 	router.RegisterHandler(
-		handler.JWKSGetHandler(keyService),
+		handler.JWKSGetHandler(signingService),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath(openidConfiguration.JWKSEndpoint))
 
@@ -158,19 +149,19 @@ func init() {
 		routing.ForQueryValue("response_type", "code"))
 
 	router.RegisterHandler(
-		handler.TokenAuthorizationCodeHandler(openidConfiguration, clientService, authCodeService, claimService, keyService),
+		handler.TokenAuthorizationCodeHandler(openidConfiguration, clientService, authCodeService, claimService, signingService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "authorization_code"))
 
 	router.RegisterHandler(
-		handler.TokenClientCredentialsHandler(openidConfiguration, clientService, claimService, keyService),
+		handler.TokenClientCredentialsHandler(openidConfiguration, clientService, claimService, signingService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "client_credentials"))
 
 	router.RegisterHandler(
-		handler.TokenPasswordHandler(openidConfiguration, clientService, subjectService, claimService, keyService),
+		handler.TokenPasswordHandler(openidConfiguration, clientService, subjectService, claimService, signingService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "password"))

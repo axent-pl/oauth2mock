@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/x509"
-	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -15,9 +14,22 @@ import (
 )
 
 type ecdsaSigningKey struct {
-	privateKey    *ecdsa.PrivateKey
-	signingMethod SigningMethod
-	id            string
+	privateKey *ecdsa.PrivateKey
+	keyType    KeyType
+	id         string
+}
+
+func NewECDSASigningKeyFromFileAndMethod(path string, method SigningMethod) (SigningKeyHandler, error) {
+	key, err := NewECDSASigningKeyFromFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if IsKeyCompatible(method, key.GetType()) {
+		return key, nil
+	}
+
+	return nil, fmt.Errorf("given method %s does not match the key type and length %s", method, key.GetType())
 }
 
 func NewECDSASigningKeyFromFile(path string) (SigningKeyHandler, error) {
@@ -53,15 +65,15 @@ func NewECDSASigningKeyFromPrivateKey(privateKey *ecdsa.PrivateKey) (SigningKeyH
 	return kh, nil
 }
 
-func NewECDSASigningKeyFromRandom(signingMethod SigningMethod) (SigningKeyHandler, error) {
+func NewECDSASigningKeyFromRandom(keyType KeyType) (SigningKeyHandler, error) {
 	kh := &ecdsaSigningKey{}
 	var curve elliptic.Curve
-	switch signingMethod {
-	case ES256:
+	switch keyType {
+	case P256:
 		curve = elliptic.P256()
-	case ES384:
+	case P384:
 		curve = elliptic.P384()
-	case ES512:
+	case P521:
 		curve = elliptic.P521()
 	default:
 		return nil, errors.New("unsupported signing method")
@@ -79,15 +91,15 @@ func NewECDSASigningKeyFromRandom(signingMethod SigningMethod) (SigningKeyHandle
 
 func (kh *ecdsaSigningKey) init() error {
 	bitSize := kh.privateKey.Curve.Params().BitSize
-	slog.Info("Initializing ECDSA key", "BitSize", bitSize)
+	slog.Info("initializing ECDSA key", "BitSize", bitSize)
 
 	switch bitSize {
 	case 256:
-		kh.signingMethod = ES256
+		kh.keyType = P256
 	case 384:
-		kh.signingMethod = ES384
+		kh.keyType = P384
 	case 521:
-		kh.signingMethod = ES512
+		kh.keyType = P521
 	default:
 		return fmt.Errorf("unsupported curve bit size %d", bitSize)
 	}
@@ -100,21 +112,12 @@ func (kh *ecdsaSigningKey) init() error {
 	return nil
 }
 
-func (kh *ecdsaSigningKey) GetSigningMethod() SigningMethod {
-	return kh.signingMethod
+func (kh *ecdsaSigningKey) GetType() KeyType {
+	return kh.keyType
 }
 
 func (kh *ecdsaSigningKey) getCurveName() string {
-	switch kh.signingMethod {
-	case ES256:
-		return "P-256"
-	case ES384:
-		return "P-384"
-	case ES512:
-		return "P-521"
-	default:
-		return ""
-	}
+	return string(kh.keyType)
 }
 
 func (kh *ecdsaSigningKey) getCurveByteSize() int {
@@ -146,11 +149,10 @@ func (kh *ecdsaSigningKey) Save(path string) error {
 	return pem.Encode(file, block)
 }
 
-func (kh *ecdsaSigningKey) MarshalJSON() ([]byte, error) {
-	var raw *JSONWebKey = &JSONWebKey{
+func (kh *ecdsaSigningKey) GetJWK() JSONWebKey {
+	var raw JSONWebKey = JSONWebKey{
 		Kty: "EC",
 		Kid: kh.id,
-		Alg: string(kh.signingMethod),
 		Use: "sig",
 	}
 
@@ -167,5 +169,5 @@ func (kh *ecdsaSigningKey) MarshalJSON() ([]byte, error) {
 	padY := make([]byte, kh.getCurveByteSize()-len(kh.privateKey.PublicKey.Y.Bytes()))
 	raw.Y.data = append(padY, kh.privateKey.PublicKey.Y.Bytes()...)
 
-	return json.Marshal(raw)
+	return raw
 }

@@ -5,10 +5,20 @@ build:
 	go build -o bin/keygen cmd/keygen/main.go
 	go build -o bin/server cmd/server/main.go
 
+run-keygen:
+	go mod download
+	env KEY_TYPE="RSA256" KEY_PATH="assets/key/key.rsa256.pem" go run cmd/keygen/main.go
+	env KEY_TYPE="RSA384" KEY_PATH="assets/key/key.rsa384.pem" go run cmd/keygen/main.go
+	env KEY_TYPE="RSA512" KEY_PATH="assets/key/key.rsa512.pem" go run cmd/keygen/main.go
+	env KEY_TYPE="P-256" KEY_PATH="assets/key/key.p-256.pem" go run cmd/keygen/main.go
+	env KEY_TYPE="P-384" KEY_PATH="assets/key/key.p-384.pem" go run cmd/keygen/main.go
+	env KEY_TYPE="P-521" KEY_PATH="assets/key/key.p-521.pem" go run cmd/keygen/main.go
+
 run:
 	go mod download
-	go run cmd/keygen/main.go
 	go run cmd/server/main.go
+
+run-all: run-keygen run
 
 test:
 	go test ./...

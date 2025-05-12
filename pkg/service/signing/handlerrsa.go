@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/binary"
-	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -15,9 +14,22 @@ import (
 )
 
 type rsaSigningKey struct {
-	privateKey    *rsa.PrivateKey
-	signingMethod SigningMethod
-	id            string
+	privateKey *rsa.PrivateKey
+	id         string
+	keyType    KeyType
+}
+
+func NewRSASigningKeyFromFileAndMethod(path string, method SigningMethod) (SigningKeyHandler, error) {
+	key, err := NewRSASigningKeyFromFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if IsKeyCompatible(method, key.GetType()) {
+		return key, nil
+	}
+
+	return nil, fmt.Errorf("given method %s does not match the key type and length %s", method, key.GetType())
 }
 
 func NewRSASigningKeyFromFile(path string) (SigningKeyHandler, error) {
@@ -62,14 +74,14 @@ func NewRSASigningKeyFromPrivateKey(privateKey *rsa.PrivateKey) (SigningKeyHandl
 	return kh, nil
 }
 
-func NewRSASigningKeyFromRandom(signingMethod SigningMethod) (SigningKeyHandler, error) {
+func NewRSASigningKeyFromRandom(keyType KeyType) (SigningKeyHandler, error) {
 	kh := &rsaSigningKey{}
-	switch signingMethod {
-	case RS256:
+	switch keyType {
+	case RSA256:
 		kh.privateKey, _ = rsa.GenerateKey(rand.Reader, 2048)
-	case RS384:
+	case RSA384:
 		kh.privateKey, _ = rsa.GenerateKey(rand.Reader, 3072)
-	case RS512:
+	case RSA512:
 		kh.privateKey, _ = rsa.GenerateKey(rand.Reader, 4096)
 	}
 	err := kh.init()
@@ -84,11 +96,11 @@ func (kh *rsaSigningKey) init() error {
 	slog.Info("Initializing key", "N.BitLen", kh.privateKey.N.BitLen(), "Size", kh.privateKey.Size(), "D.BitLen", kh.privateKey.D.BitLen())
 	switch kh.privateKey.N.BitLen() {
 	case 4096:
-		kh.signingMethod = RS512
+		kh.keyType = RSA512
 	case 3072:
-		kh.signingMethod = RS384
+		kh.keyType = RSA384
 	case 2048:
-		kh.signingMethod = RS256
+		kh.keyType = RSA256
 	default:
 		return fmt.Errorf("unsupported key size %d", kh.privateKey.Size())
 	}
@@ -103,8 +115,8 @@ func (kh *rsaSigningKey) init() error {
 	return nil
 }
 
-func (kh *rsaSigningKey) GetSigningMethod() SigningMethod {
-	return kh.signingMethod
+func (kh *rsaSigningKey) GetType() KeyType {
+	return kh.keyType
 }
 
 func (kh *rsaSigningKey) GetID() string {
@@ -130,11 +142,10 @@ func (kh *rsaSigningKey) Save(path string) error {
 	return pem.Encode(file, block)
 }
 
-func (kh *rsaSigningKey) MarshalJSON() ([]byte, error) {
-	var raw *JSONWebKey = &JSONWebKey{
+func (kh *rsaSigningKey) GetJWK() JSONWebKey {
+	var raw JSONWebKey = JSONWebKey{
 		Kty: "RSA",
 		Kid: kh.id,
-		Alg: string(kh.signingMethod),
 		Use: "sig",
 	}
 
@@ -145,5 +156,5 @@ func (kh *rsaSigningKey) MarshalJSON() ([]byte, error) {
 	raw.E = &byteBuffer{data: make([]byte, 8)}
 	binary.BigEndian.PutUint64(raw.E.data, uint64(kh.privateKey.PublicKey.E))
 
-	return json.Marshal(raw)
+	return raw
 }

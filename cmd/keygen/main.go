@@ -9,8 +9,8 @@ import (
 )
 
 type Settings struct {
-	KeyType signing.SigningMethod `env:"KEY_TYPE" default:"RS256"`
-	KeyFile string                `env:"KEY_PATH" default:"assets/key/key.pem"`
+	KeyType signing.KeyType `env:"KEY_TYPE" default:"RSA256"`
+	KeyFile string          `env:"KEY_PATH" default:"assets/key/key.pem"`
 }
 
 var settings Settings
@@ -35,7 +35,7 @@ func main() {
 		slog.Error("failed to generate signing key", "error", err)
 		os.Exit(1)
 	}
-	slog.Info("genrated RSA private key", "signingMehtod", key.GetSigningMethod())
+	slog.Info("genrated RSA private key", "keyType", key.GetType())
 
 	err = key.Save(settings.KeyFile)
 	if err != nil {

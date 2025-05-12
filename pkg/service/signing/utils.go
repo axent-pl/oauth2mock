@@ -3,6 +3,8 @@ package signing
 import (
 	"fmt"
 
+	"slices"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -23,4 +25,12 @@ func toJWTSigningMethod(method SigningMethod) (jwt.SigningMethod, error) {
 		return alg, nil
 	}
 	return nil, fmt.Errorf("invalid signing method: %s", method)
+}
+
+func IsKeyCompatible(method SigningMethod, keyType KeyType) bool {
+	validKeys, ok := SigningMethodKeyTypeCompatibility[method]
+	if !ok {
+		return false
+	}
+	return slices.Contains(validKeys, keyType)
 }

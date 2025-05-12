@@ -1,4 +1,17 @@
 {
+    "signing" : {
+        "keys" : [{
+            "path":"assets/key/key.rsa256.pem",
+            "type":"RSA",
+            "method":"PS256",
+            "active":true
+        },{
+            "path":"assets/key/key.rsa256.pem",
+            "type":"RSA",
+            "method":"RS256",
+            "active":true
+        }]
+    },
     "users" : {
         "demo" : {
             "username": "demo",
