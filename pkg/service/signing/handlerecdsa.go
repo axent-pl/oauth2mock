@@ -104,7 +104,7 @@ func (kh *ecdsaSigningKey) GetSigningMethod() SigningMethod {
 	return kh.signingMethod
 }
 
-func (kh *ecdsaSigningKey) GetCurveName() string {
+func (kh *ecdsaSigningKey) getCurveName() string {
 	switch kh.signingMethod {
 	case ES256:
 		return "P-256"
@@ -117,7 +117,7 @@ func (kh *ecdsaSigningKey) GetCurveName() string {
 	}
 }
 
-func (kh *ecdsaSigningKey) GetCurveByteSize() int {
+func (kh *ecdsaSigningKey) getCurveByteSize() int {
 	return (kh.privateKey.Curve.Params().Params().BitSize + 7) / 8
 }
 
@@ -155,16 +155,16 @@ func (kh *ecdsaSigningKey) MarshalJSON() ([]byte, error) {
 	}
 
 	// curve name
-	raw.Crv = kh.GetCurveName()
+	raw.Crv = kh.getCurveName()
 
 	// X
-	raw.X = &byteBuffer{data: make([]byte, kh.GetCurveByteSize())}
-	padX := make([]byte, kh.GetCurveByteSize()-len(kh.privateKey.PublicKey.X.Bytes()))
+	raw.X = &byteBuffer{data: make([]byte, kh.getCurveByteSize())}
+	padX := make([]byte, kh.getCurveByteSize()-len(kh.privateKey.PublicKey.X.Bytes()))
 	raw.X.data = append(padX, kh.privateKey.PublicKey.X.Bytes()...)
 
 	// Y
-	raw.Y = &byteBuffer{data: make([]byte, kh.GetCurveByteSize())}
-	padY := make([]byte, kh.GetCurveByteSize()-len(kh.privateKey.PublicKey.Y.Bytes()))
+	raw.Y = &byteBuffer{data: make([]byte, kh.getCurveByteSize())}
+	padY := make([]byte, kh.getCurveByteSize()-len(kh.privateKey.PublicKey.Y.Bytes()))
 	raw.Y.data = append(padY, kh.privateKey.PublicKey.Y.Bytes()...)
 
 	return json.Marshal(raw)
