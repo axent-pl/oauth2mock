@@ -17,7 +17,7 @@ OAuth2Mock (codename Axes) is your friendly neighborhood OAuth2 authorization se
 
 ### For Go Developers
 ```sh
-make run    # That's it. Really.
+make run-all    # That's it. Really.
 ```
 
 ### For Docker Enthusiasts
@@ -43,8 +43,6 @@ Spot the difference? That's right - Axes is like a tiny espresso shot compared t
 
 | ENV | Default | What's this? |
 |-----|---------|-------------|
-| `KEY_PATH` | assets/key/key.pem | Where to find your RSA/ECDSA private key |
-| `KEY_TYPE` | `RS256` | Signing key type, allowed values: `RS256`, `RS384`, `RS512`, `ES256`, `ES384`, `ES521` |
 | `DATAFILE_PATH` | assets/config/config.json | Your configuration JSON file |
 | `SERVER_ADDRESS` | :8080 | Where the magic happens |
 | `TEMPLATES_PATH` | assets/template | HTML templates location |
@@ -76,6 +74,19 @@ Place this in your `DATAFILE_PATH` to define users and clients:
 
 ```json
 {
+    "signing" : {
+        "keys" : [{
+            "path":"assets/key/key.rsa256.pem",
+            "type":"RSA",
+            "method":"PS256",
+            "active":false
+        },{
+            "path":"assets/key/key.rsa256.pem",
+            "type":"RSA",
+            "method":"RS256",
+            "active":true
+        }]
+    },
     "users": {
         "demo": {
             "username": "demo",

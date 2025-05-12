@@ -26,13 +26,13 @@ test-e2e:
 	newman run tests/axes.postman_collection.json
 
 
-container-build:
+container-build: run-keygen
 	docker build . -t prond/axes:$(TAG)
 container-scan:
 	docker scout quickview
 container-cves:
 	docker scout cves local://prond/axes:$(TAG)
-container-build-push:
+container-build-push: run-keygen
 	docker build . -t prond/axes:$(TAG)
 	docker push prond/axes:$(TAG)
 container-push:
