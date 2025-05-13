@@ -3,12 +3,12 @@ package signing
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
-	"crypto/rand"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 )
@@ -19,20 +19,8 @@ type ecdsaSigningKey struct {
 	id         string
 }
 
-func NewECDSASigningKeyFromFileAndMethod(path string, method SigningMethod) (SigningKeyHandler, error) {
-	key, err := NewECDSASigningKeyFromFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	if IsKeyCompatible(method, key.GetType()) {
-		return key, nil
-	}
-
-	return nil, fmt.Errorf("given method %s does not match the key type and length %s", method, key.GetType())
-}
-
 func NewECDSASigningKeyFromFile(path string) (SigningKeyHandler, error) {
+	slog.Info("loading ECDSA key from file", "path", path)
 	kh := &ecdsaSigningKey{}
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -43,7 +31,7 @@ func NewECDSASigningKeyFromFile(path string) (SigningKeyHandler, error) {
 		return nil, errors.New("failed to decode PEM block containing ECDSA private key")
 	}
 	if block.Type != "EC PRIVATE KEY" {
-		return nil, errors.New("invalid private key file")
+		return nil, errors.New("file does not contain EC PRIVATE KEY block")
 	}
 	privateKey, err := x509.ParseECPrivateKey(block.Bytes)
 	if err != nil {
@@ -65,7 +53,8 @@ func NewECDSASigningKeyFromPrivateKey(privateKey *ecdsa.PrivateKey) (SigningKeyH
 	return kh, nil
 }
 
-func NewECDSASigningKeyFromRandom(keyType KeyType) (SigningKeyHandler, error) {
+func NewECDSASigningKeyFromRandom(keyType KeyType, randReader io.Reader) (SigningKeyHandler, error) {
+	slog.Info("generating ECDSA key from random", "keyType", keyType)
 	kh := &ecdsaSigningKey{}
 	var curve elliptic.Curve
 	switch keyType {
@@ -76,9 +65,9 @@ func NewECDSASigningKeyFromRandom(keyType KeyType) (SigningKeyHandler, error) {
 	case P521:
 		curve = elliptic.P521()
 	default:
-		return nil, errors.New("unsupported signing method")
+		return nil, fmt.Errorf("unsupported key type %s", keyType)
 	}
-	privateKey, err := ecdsa.GenerateKey(curve, rand.Reader)
+	privateKey, err := ecdsa.GenerateKey(curve, randReader)
 	if err != nil {
 		return nil, err
 	}

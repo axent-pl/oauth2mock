@@ -10,6 +10,7 @@ import (
 
 type Settings struct {
 	KeyType signing.KeyType `env:"KEY_TYPE" default:"RSA256"`
+	KeySeed string          `env:"KEY_SEED" default:""`
 	KeyFile string          `env:"KEY_PATH" default:"assets/key/key.pem"`
 }
 
@@ -30,7 +31,11 @@ func init() {
 }
 
 func main() {
-	key, err := signing.NewSigningKeyFromRandom(settings.KeyType)
+	var deterministic bool = false
+	if settings.KeySeed != "" {
+		deterministic = true
+	}
+	key, err := signing.NewSigningKeyHandlerFromRandom(settings.KeyType, deterministic, settings.KeySeed)
 	if err != nil {
 		slog.Error("failed to generate signing key", "error", err)
 		os.Exit(1)

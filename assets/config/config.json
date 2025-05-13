@@ -1,22 +1,44 @@
 {
-    "signing" : {
-        "keys" : [{
-            "path":"assets/key/key.rsa256.pem",
-            "type":"RSA",
-            "method":"PS256",
-            "active":true
-        },{
-            "path":"assets/key/key.rsa256.pem",
-            "type":"RSA",
-            "method":"RS256",
-            "active":true
-        }]
+    "signing": {
+        "keys": [
+            {
+                "source": {
+                    "fromPEM": {
+                        "path": "assets/key/key.rsa256.pem"
+                    }
+                },
+                "type": "RSA256",
+                "method": "PS256",
+                "active": false
+            },
+            {
+                "source": {
+                    "fromPEM": {
+                        "path": "assets/key/key.rsa256.pem"
+                    }
+                },
+                "type": "RSA256",
+                "method": "RS256",
+                "active": false
+            },
+            {
+                "source": {
+                    "fromRandom": {
+                        "deterministic": true,
+                        "seed": "abc"
+                    }
+                },
+                "type": "P-256",
+                "method": "ES256",
+                "active": true
+            }
+        ]
     },
-    "users" : {
-        "demo" : {
+    "users": {
+        "demo": {
             "username": "demo",
             "password": "demo",
-            "claims" : {
+            "claims": {
                 "base": {
                     "sub": "Demo",
                     "preferred_username": "John.Demo@acme.com",
@@ -31,10 +53,10 @@
                 }
             }
         },
-        "admin" : {
+        "admin": {
             "username": "admin",
             "password": "admin",
-            "claims" : {
+            "claims": {
                 "base": {
                     "sub": "Demo",
                     "preferred_username": "John.Demo@acme.com",
@@ -58,8 +80,8 @@
             }
         }
     },
-    "clients" : {
-        "ACME" : {
+    "clients": {
+        "ACME": {
             "client_id": "ACME",
             "client_secret": "acme-secret",
             "redirect_uri": "http*//localhost*",
@@ -67,7 +89,7 @@
                 "azp": "ACME"
             }
         },
-        "ACME2" : {
+        "ACME2": {
             "client_id": "ACME2",
             "client_secret": "secret-acme-pass",
             "redirect_uri": "http*//localhost*",

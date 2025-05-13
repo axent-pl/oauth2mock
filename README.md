@@ -74,18 +74,40 @@ Place this in your `DATAFILE_PATH` to define users and clients:
 
 ```json
 {
-    "signing" : {
-        "keys" : [{
-            "path":"assets/key/key.rsa256.pem",
-            "type":"RSA",
-            "method":"PS256",
-            "active":false
-        },{
-            "path":"assets/key/key.rsa256.pem",
-            "type":"RSA",
-            "method":"RS256",
-            "active":true
-        }]
+    "signing": {
+        "keys": [
+            {
+                "source": {
+                    "fromPEM": {
+                        "path": "assets/key/key.rsa256.pem"
+                    }
+                },
+                "type": "RSA256",
+                "method": "PS256",
+                "active": false
+            },
+            {
+                "source": {
+                    "fromPEM": {
+                        "path": "assets/key/key.rsa256.pem"
+                    }
+                },
+                "type": "RSA256",
+                "method": "RS256",
+                "active": false
+            },
+            {
+                "source": {
+                    "fromRandom": {
+                        "deterministic": true,
+                        "seed": "abc"
+                    }
+                },
+                "type": "P-256",
+                "method": "ES256",
+                "active": true
+            }
+        ]
     },
     "users": {
         "demo": {

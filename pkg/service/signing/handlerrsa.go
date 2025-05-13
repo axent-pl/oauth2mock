@@ -1,7 +1,6 @@
 package signing
 
 import (
-	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
@@ -9,6 +8,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 )
@@ -19,20 +19,8 @@ type rsaSigningKey struct {
 	keyType    KeyType
 }
 
-func NewRSASigningKeyFromFileAndMethod(path string, method SigningMethod) (SigningKeyHandler, error) {
-	key, err := NewRSASigningKeyFromFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	if IsKeyCompatible(method, key.GetType()) {
-		return key, nil
-	}
-
-	return nil, fmt.Errorf("given method %s does not match the key type and length %s", method, key.GetType())
-}
-
 func NewRSASigningKeyFromFile(path string) (SigningKeyHandler, error) {
+	slog.Info("loading RSA key from file", "path", path)
 	kh := &rsaSigningKey{}
 	// read
 	data, err := os.ReadFile(path)
@@ -74,15 +62,16 @@ func NewRSASigningKeyFromPrivateKey(privateKey *rsa.PrivateKey) (SigningKeyHandl
 	return kh, nil
 }
 
-func NewRSASigningKeyFromRandom(keyType KeyType) (SigningKeyHandler, error) {
+func NewRSASigningKeyFromRandom(keyType KeyType, randReader io.Reader) (SigningKeyHandler, error) {
+	slog.Info("generating RSA key from random", "keyType", keyType)
 	kh := &rsaSigningKey{}
 	switch keyType {
 	case RSA256:
-		kh.privateKey, _ = rsa.GenerateKey(rand.Reader, 2048)
+		kh.privateKey, _ = rsa.GenerateKey(randReader, 2048)
 	case RSA384:
-		kh.privateKey, _ = rsa.GenerateKey(rand.Reader, 3072)
+		kh.privateKey, _ = rsa.GenerateKey(randReader, 3072)
 	case RSA512:
-		kh.privateKey, _ = rsa.GenerateKey(rand.Reader, 4096)
+		kh.privateKey, _ = rsa.GenerateKey(randReader, 4096)
 	}
 	err := kh.init()
 	if err != nil {
@@ -92,8 +81,9 @@ func NewRSASigningKeyFromRandom(keyType KeyType) (SigningKeyHandler, error) {
 }
 
 func (kh *rsaSigningKey) init() error {
-	// Calculate signing method
-	slog.Info("Initializing key", "N.BitLen", kh.privateKey.N.BitLen(), "Size", kh.privateKey.Size(), "D.BitLen", kh.privateKey.D.BitLen())
+	slog.Info("initializing RSA key", "N.BitLen", kh.privateKey.N.BitLen(), "Size", kh.privateKey.Size(), "D.BitLen", kh.privateKey.D.BitLen())
+
+	// Calculate key type
 	switch kh.privateKey.N.BitLen() {
 	case 4096:
 		kh.keyType = RSA512
@@ -105,7 +95,7 @@ func (kh *rsaSigningKey) init() error {
 		return fmt.Errorf("unsupported key size %d", kh.privateKey.Size())
 	}
 
-	// Calculate ID
+	// Calculate key id
 	publicKeyBytes, err := x509.MarshalPKIXPublicKey(&kh.privateKey.PublicKey)
 	if err != nil {
 		return fmt.Errorf("failed to marshal public key: %w", err)

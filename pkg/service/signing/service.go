@@ -10,28 +10,20 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type siginingServiceKeyConfig struct {
-	Path   string        `json:"path"`
-	Type   string        `json:"type"`
-	Method SigningMethod `json:"method"`
-	Active bool          `json:"active"`
+type signingService struct {
+	keys []signingServiceKey
 }
 
-type siginingServiceKey struct {
-	config  siginingServiceKeyConfig
+type signingServiceKey struct {
+	config  SigningServiceKeyConfig
 	handler SigningKeyHandler
 }
 
-type siginingService struct {
-	keys []siginingServiceKey
-}
-
 func NewSigingService(jsonFilepath string) (SigningServicer, error) {
-	type jsonSigingServiceConfigStruct struct {
-		Keys []siginingServiceKeyConfig `json:"keys"`
-	}
 	type jsonConfigStruct struct {
-		Signing jsonSigingServiceConfigStruct `json:"Signing"`
+		Signing struct {
+			Keys []SigningServiceKeyConfig `json:"keys"`
+		} `json:"Signing"`
 	}
 	f := jsonConfigStruct{}
 
@@ -44,66 +36,52 @@ func NewSigingService(jsonFilepath string) (SigningServicer, error) {
 		return nil, fmt.Errorf("failed to parse signing config file: %w", err)
 	}
 
-	s := &siginingService{}
+	s := &signingService{}
 
 	for _, keyConfig := range f.Signing.Keys {
-		switch keyConfig.Type {
-		case "RSA":
-			key, err := NewRSASigningKeyFromFileAndMethod(keyConfig.Path, keyConfig.Method)
-			if err != nil {
-				return nil, fmt.Errorf("failed to initialize RSA key: %w", err)
-			}
-			signingKey := siginingServiceKey{config: keyConfig, handler: key}
-			s.keys = append(s.keys, signingKey)
-		case "ECDSA":
-			key, err := NewECDSASigningKeyFromFileAndMethod(keyConfig.Path, keyConfig.Method)
-			if err != nil {
-				return nil, fmt.Errorf("failed to initialize ECDSA key: %w", err)
-			}
-			signingKey := siginingServiceKey{config: keyConfig, handler: key}
-			s.keys = append(s.keys, signingKey)
-		default:
-			return nil, fmt.Errorf("unsupported key key type: %s", keyConfig.Type)
+		signingKey, err := keyConfig.Source.Init(keyConfig.Type)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize signing key: %w", err)
 		}
+		s.keys = append(s.keys, signingServiceKey{config: keyConfig, handler: signingKey})
 	}
 
 	return s, nil
 }
 
-func (s *siginingService) getActiveKey() (siginingServiceKey, error) {
+func (s *signingService) getActiveKey() (signingServiceKey, error) {
 	for _, k := range s.keys {
 		if k.config.Active {
 			return k, nil
 		}
 	}
 
-	return siginingServiceKey{}, errors.New("no active signing key")
+	return signingServiceKey{}, errors.New("no active signing key")
 }
 
-func (s *siginingService) getActiveKeyByMethod(method SigningMethod) (siginingServiceKey, error) {
+func (s *signingService) getActiveKeyByMethod(method SigningMethod) (signingServiceKey, error) {
 	for _, k := range s.keys {
 		if k.config.Active && k.config.Method == method {
 			return k, nil
 		}
 	}
-	return siginingServiceKey{}, fmt.Errorf("no active signing key for method: %s", method)
+	return signingServiceKey{}, fmt.Errorf("no active signing key for method: %s", method)
 }
 
-func (s *siginingService) GetJWKS() ([]byte, error) {
-	keys := make([]JSONWebKey, len(s.keys))
-	for i, k := range s.keys {
-		keys[i] = k.handler.GetJWK()
-		keys[i].Alg = string(k.config.Method)
+func (s *signingService) GetJWKS() ([]byte, error) {
+	jwks := JSONWebKeySet{
+		Keys: make([]JSONWebKey, len(s.keys)),
 	}
 
-	jwks := JSONWebKeySet{
-		Keys: keys,
+	for i, k := range s.keys {
+		jwks.Keys[i] = k.handler.GetJWK()
+		jwks.Keys[i].Alg = string(k.config.Method)
 	}
 
 	return json.Marshal(jwks)
 }
 
-func (s *siginingService) GetSigningMethods() []string {
+func (s *signingService) GetSigningMethods() []string {
 	methods := make([]string, len(s.keys))
 	for i, k := range s.keys {
 		methods[i] = string(k.config.Method)
@@ -111,7 +89,7 @@ func (s *siginingService) GetSigningMethods() []string {
 	return methods
 }
 
-func (s *siginingService) Sign(payload map[string]any) ([]byte, error) {
+func (s *signingService) Sign(payload map[string]any) ([]byte, error) {
 	claims := jwt.MapClaims{}
 	maps.Copy(claims, payload)
 
@@ -135,7 +113,7 @@ func (s *siginingService) Sign(payload map[string]any) ([]byte, error) {
 	return []byte(tokenString), nil
 }
 
-func (s *siginingService) SignWithMethod(payload map[string]any, method SigningMethod) ([]byte, error) {
+func (s *signingService) SignWithMethod(payload map[string]any, method SigningMethod) ([]byte, error) {
 	claims := jwt.MapClaims{}
 	maps.Copy(claims, payload)
 
