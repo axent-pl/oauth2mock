@@ -5,7 +5,7 @@ type SigningKeyHandler interface {
 	GetKey() any
 	GetType() KeyType
 	GetJWK() JSONWebKey
-	Save(path string) error
+	Save(paths ...string) error
 }
 
 type SigningServicer interface {

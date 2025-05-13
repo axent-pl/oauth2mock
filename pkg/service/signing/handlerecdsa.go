@@ -121,7 +121,12 @@ func (kh *ecdsaSigningKey) GetKey() any {
 	return kh.privateKey
 }
 
-func (kh *ecdsaSigningKey) Save(path string) error {
+func (kh *ecdsaSigningKey) Save(paths ...string) error {
+	if len(paths) != 1 {
+		return errors.New("exactly one path is required: keyPath")
+	}
+	path := paths[0]
+
 	privateKeyBytes, err := x509.MarshalECPrivateKey(kh.privateKey)
 	if err != nil {
 		return err

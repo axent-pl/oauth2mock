@@ -13,6 +13,9 @@ run-keygen:
 	env KEY_TYPE="P-256" KEY_PATH="assets/key/key.p-256.pem" go run cmd/keygen/main.go
 	env KEY_TYPE="P-384" KEY_PATH="assets/key/key.p-384.pem" go run cmd/keygen/main.go
 	env KEY_TYPE="P-521" KEY_PATH="assets/key/key.p-521.pem" go run cmd/keygen/main.go
+	env KEY_TYPE="RSA256" KEY_PATH="assets/key/cert.key.rsa256.pem" CERT_PATH="assets/key/cert.cert.rsa256.pem" go run cmd/certgen/main.go
+	env KEY_TYPE="RSA384" KEY_PATH="assets/key/cert.key.rsa384.pem" CERT_PATH="assets/key/cert.cert.rsa384.pem" go run cmd/certgen/main.go
+	env KEY_TYPE="RSA512" KEY_PATH="assets/key/cert.key.rsa512.pem" CERT_PATH="assets/key/cert.cert.rsa512.pem" go run cmd/certgen/main.go
 
 run:
 	go mod download

@@ -167,8 +167,45 @@ func (kh *certSigningKey) GetKey() any {
 	return kh.privateKey
 }
 
-func (kh *certSigningKey) Save(path string) error {
-	return errors.New("Save not supported for certSigningKey")
+func (kh *certSigningKey) Save(paths ...string) error {
+	if len(paths) != 2 {
+		return errors.New("exactly two paths are required: certPath and keyPath")
+	}
+	certPath, keyPath := paths[0], paths[1]
+
+	// Save the certificate to the specified path
+	certOut, err := os.Create(certPath)
+	if err != nil {
+		return fmt.Errorf("creating cert file: %w", err)
+	}
+	defer certOut.Close()
+
+	err = pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: kh.certificate.Raw})
+	if err != nil {
+		return fmt.Errorf("writing cert to file: %w", err)
+	}
+
+	// Save the private key to the specified path
+	keyOut, err := os.Create(keyPath)
+	if err != nil {
+		return fmt.Errorf("creating key file: %w", err)
+	}
+	defer keyOut.Close()
+
+	var keyBlock *pem.Block
+	switch key := kh.privateKey.(type) {
+	case *rsa.PrivateKey:
+		keyBlock = &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)}
+	default:
+		return errors.New("unsupported private key type (only RSA supported)")
+	}
+
+	err = pem.Encode(keyOut, keyBlock)
+	if err != nil {
+		return fmt.Errorf("writing key to file: %w", err)
+	}
+
+	return nil
 }
 
 func (kh *certSigningKey) GetJWK() JSONWebKey {

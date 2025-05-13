@@ -117,7 +117,12 @@ func (kh *rsaSigningKey) GetKey() any {
 	return kh.privateKey
 }
 
-func (kh *rsaSigningKey) Save(path string) error {
+func (kh *rsaSigningKey) Save(paths ...string) error {
+	if len(paths) != 1 {
+		return errors.New("exactly one path is required: keyPath")
+	}
+	path := paths[0]
+
 	privateKeyBytes := x509.MarshalPKCS1PrivateKey(kh.privateKey)
 	block := &pem.Block{
 		Type:  "RSA PRIVATE KEY",
