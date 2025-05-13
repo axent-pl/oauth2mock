@@ -11,6 +11,7 @@ import (
 )
 
 type signingService struct {
+	// here we need configuration (and below the implementation) of the key rotation (roundrobin, ...)
 	keys []signingServiceKey
 }
 
@@ -19,7 +20,7 @@ type signingServiceKey struct {
 	handler SigningKeyHandler
 }
 
-func NewSigingService(jsonFilepath string) (SigningServicer, error) {
+func NewSigningService(jsonFilepath string) (SigningServicer, error) {
 	type jsonConfigStruct struct {
 		Signing struct {
 			Keys []SigningServiceKeyConfig `json:"keys"`

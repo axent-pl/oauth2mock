@@ -96,7 +96,7 @@ func init() {
 	}
 	slog.Info("template service initialized")
 
-	signingService, err = signing.NewSigingService(settings.DataFile)
+	signingService, err = signing.NewSigningService(settings.DataFile)
 	if err != nil {
 		slog.Error("failed to initialize signing service", "error", err)
 		os.Exit(1)
