@@ -35,5 +35,5 @@ func NewSigningKeyHandlerFromRandom(keyType KeyType, deterministic bool, seed st
 }
 
 func init() {
-	RegisterSigningKeySource("fromRandom", func() SigningKeySourcer { return &FromRandomConfig{} })
+	RegisterSigningKeyProvider("fromRandom", func() SigningKeyProvider { return &FromRandomConfig{} })
 }

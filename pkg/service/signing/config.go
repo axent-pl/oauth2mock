@@ -6,18 +6,18 @@ import (
 )
 
 type SigningServiceKeyConfig struct {
-	Source SigningKeySourcer `json:"source"`
-	Type   KeyType           `json:"type"`
-	Method SigningMethod     `json:"method"`
-	Active bool              `json:"active"`
+	Provider SigningKeyProvider `json:"provider"`
+	Type     KeyType            `json:"type"`
+	Method   SigningMethod      `json:"method"`
+	Active   bool               `json:"active"`
 }
 
 func (cfg *SigningServiceKeyConfig) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Source map[string]json.RawMessage `json:"source"`
-		Type   KeyType                    `json:"type"`
-		Method SigningMethod              `json:"method"`
-		Active bool                       `json:"active"`
+		Provider map[string]json.RawMessage `json:"provider"`
+		Type     KeyType                    `json:"type"`
+		Method   SigningMethod              `json:"method"`
+		Active   bool                       `json:"active"`
 	}
 
 	if err := json.Unmarshal(data, &raw); err != nil {
@@ -28,16 +28,16 @@ func (cfg *SigningServiceKeyConfig) UnmarshalJSON(data []byte) error {
 	cfg.Method = raw.Method
 	cfg.Active = raw.Active
 
-	for name, rawSource := range raw.Source {
-		constructor, ok := signingKeySourceRegistry[name]
+	for name, rawProvider := range raw.Provider {
+		constructor, ok := signingKeyProviderRegistry[name]
 		if !ok {
-			return fmt.Errorf("unsupported key source type: %s", name)
+			return fmt.Errorf("unsupported key provider type: %s", name)
 		}
 		instance := constructor()
-		if err := json.Unmarshal(rawSource, instance); err != nil {
-			return fmt.Errorf("failed to unmarshal %s source: %w", name, err)
+		if err := json.Unmarshal(rawProvider, instance); err != nil {
+			return fmt.Errorf("failed to unmarshal %s provider: %w", name, err)
 		}
-		cfg.Source = instance
+		cfg.Provider = instance
 	}
 
 	return nil

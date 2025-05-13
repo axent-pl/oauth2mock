@@ -2,7 +2,7 @@
     "signing": {
         "keys": [
             {
-                "source": {
+                "provider": {
                     "fromPEM": {
                         "path": "assets/key/key.rsa256.pem"
                     }
@@ -12,7 +12,7 @@
                 "active": false
             },
             {
-                "source": {
+                "provider": {
                     "fromPEM": {
                         "path": "assets/key/key.rsa256.pem"
                     }
@@ -22,7 +22,7 @@
                 "active": false
             },
             {
-                "source": {
+                "provider": {
                     "fromRandom": {
                         "deterministic": true,
                         "seed": "abc"
@@ -33,7 +33,7 @@
                 "active": true
             },
             {
-                "source": {
+                "provider": {
                     "fromCertPEM": {
                         "keyPath":"assets/key/cert.key.rsa512.pem",
                         "certPath":"assets/key/cert.cert.rsa512.pem"

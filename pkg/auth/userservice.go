@@ -9,6 +9,7 @@ import (
 
 type UserServicer interface {
 	Authenticate(credentials AuthenticationCredentialsHandler) (SubjectHandler, error)
+	GetUsers() ([]SubjectHandler, error)
 }
 
 type userService struct {
@@ -73,4 +74,12 @@ func (s *userService) Authenticate(inputCredentials AuthenticationCredentialsHan
 	}
 
 	return nil, ErrUserCredsInvalid
+}
+
+func (s *userService) GetUsers() ([]SubjectHandler, error) {
+	var users []SubjectHandler = make([]SubjectHandler, 0)
+	for _, k := range s.users {
+		users = append(users, &k)
+	}
+	return users, nil
 }

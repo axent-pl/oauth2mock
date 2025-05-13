@@ -34,5 +34,5 @@ func NewSigningKeyHandlerFromFile(keyType KeyType, path string) (SigningKeyHandl
 }
 
 func init() {
-	RegisterSigningKeySource("fromPEM", func() SigningKeySourcer { return &FromPEMConfig{} })
+	RegisterSigningKeyProvider("fromPEM", func() SigningKeyProvider { return &FromPEMConfig{} })
 }

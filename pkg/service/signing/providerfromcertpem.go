@@ -10,5 +10,5 @@ func (c *FromCertPEMConfig) Init(keyType KeyType) (SigningKeyHandler, error) {
 }
 
 func init() {
-	RegisterSigningKeySource("fromCertPEM", func() SigningKeySourcer { return &FromCertPEMConfig{} })
+	RegisterSigningKeyProvider("fromCertPEM", func() SigningKeyProvider { return &FromCertPEMConfig{} })
 }

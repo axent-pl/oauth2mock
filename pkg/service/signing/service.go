@@ -40,7 +40,7 @@ func NewSigningService(jsonFilepath string) (SigningServicer, error) {
 	s := &signingService{}
 
 	for _, keyConfig := range f.Signing.Keys {
-		signingKey, err := keyConfig.Source.Init(keyConfig.Type)
+		signingKey, err := keyConfig.Provider.Init(keyConfig.Type)
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize signing key: %w", err)
 		}
