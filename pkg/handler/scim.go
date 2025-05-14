@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/axent-pl/oauth2mock/pkg/auth"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 )
 
@@ -22,8 +21,11 @@ type SCIMListResponseDTO struct {
 	Resources    []SCIMUserDTO `json:"Resources"`
 }
 
+type UserServicer interface {
+	GetUsers() ([]User, error)
+}
+
 type User struct {
-	Id       string
 	Username string
 }
 
@@ -31,11 +33,19 @@ type UserService struct {
 	users []User
 }
 
-func (s *UserService) GetUsers() []User {
-	return s.users
+func (u *User) Id() string {
+	return u.Username
 }
 
-func SCIMGetHandler(userService auth.UserServicer) routing.HandlerFunc {
+func (u *User) Name() string {
+	return u.Username
+}
+
+func (s *UserService) GetUsers() ([]User, error) {
+	return s.users, nil
+}
+
+func SCIMGetHandler(userService UserServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// get users from service
 		users, err := userService.GetUsers()
@@ -48,11 +58,9 @@ func SCIMGetHandler(userService auth.UserServicer) routing.HandlerFunc {
 		var scimUsers []SCIMUserDTO = make([]SCIMUserDTO, len(users))
 		for idx, user := range users {
 			scimUsers[idx] = SCIMUserDTO{
-				Schemas:     []string{"urn:ietf:params:scim:schemas:core:2.0:User"},
-				ID:          user.Name(),
-				UserName:    user.Name(),
-				Active:      true,
-				DisplayName: user.Name(),
+				Schemas:  []string{"urn:ietf:params:scim:schemas:core:2.0:User"},
+				ID:       user.Id(),
+				UserName: user.Name(),
 			}
 		}
 
