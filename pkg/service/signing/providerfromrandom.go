@@ -6,12 +6,13 @@ import (
 )
 
 type FromRandomConfig struct {
-	Deterministic bool   `json:"deterministic"`
-	Seed          string `json:"seed"`
+	Type          KeyType `json:"type"`
+	Deterministic bool    `json:"deterministic"`
+	Seed          string  `json:"seed"`
 }
 
-func (config *FromRandomConfig) Init(keyType KeyType) (SigningKeyHandler, error) {
-	return NewSigningKeyHandlerFromRandom(keyType, config.Deterministic, config.Seed)
+func (config *FromRandomConfig) Init() (SigningKeyHandler, error) {
+	return NewSigningKeyHandlerFromRandom(config.Type, config.Deterministic, config.Seed)
 }
 
 func NewSigningKeyHandlerFromRandom(keyType KeyType, deterministic bool, seed string) (SigningKeyHandler, error) {

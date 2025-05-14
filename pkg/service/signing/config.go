@@ -2,7 +2,6 @@ package signing
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 type SigningServiceKeyConfig struct {
@@ -28,17 +27,11 @@ func (cfg *SigningServiceKeyConfig) UnmarshalJSON(data []byte) error {
 	cfg.Method = raw.Method
 	cfg.Active = raw.Active
 
-	for name, rawProvider := range raw.Provider {
-		constructor, ok := signingKeyProviderRegistry[name]
-		if !ok {
-			return fmt.Errorf("unsupported key provider type: %s", name)
-		}
-		instance := constructor()
-		if err := json.Unmarshal(rawProvider, instance); err != nil {
-			return fmt.Errorf("failed to unmarshal %s provider: %w", name, err)
-		}
-		cfg.Provider = instance
+	provider, err := FromJSONRawMessage(raw.Provider)
+	if err != nil {
+		return err
 	}
+	cfg.Provider = provider
 
 	return nil
 }

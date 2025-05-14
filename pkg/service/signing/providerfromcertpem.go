@@ -5,7 +5,7 @@ type FromCertPEMConfig struct {
 	KeyPath  string `json:"keyPath"`
 }
 
-func (c *FromCertPEMConfig) Init(keyType KeyType) (SigningKeyHandler, error) {
+func (c *FromCertPEMConfig) Init() (SigningKeyHandler, error) {
 	return NewCertSigningKeyFromFiles(c.CertPath, c.KeyPath)
 }
 

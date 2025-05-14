@@ -7,7 +7,6 @@
                         "path": "assets/key/key.rsa256.pem"
                     }
                 },
-                "type": "RSA256",
                 "method": "PS256",
                 "active": false
             },
@@ -17,18 +16,17 @@
                         "path": "assets/key/key.rsa256.pem"
                     }
                 },
-                "type": "RSA256",
                 "method": "RS256",
                 "active": false
             },
             {
                 "provider": {
                     "fromRandom": {
+                        "type": "P-256",
                         "deterministic": true,
                         "seed": "abc"
                     }
                 },
-                "type": "P-256",
                 "method": "ES256",
                 "active": true
             },
@@ -39,7 +37,6 @@
                         "certPath":"assets/key/cert.cert.rsa512.pem"
                     }
                 },
-                "type": "RSA512",
                 "method": "RS256",
                 "active": false
             }
