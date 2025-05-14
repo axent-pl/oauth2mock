@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type SCIMUserDTO struct {
@@ -22,26 +23,42 @@ type SCIMListResponseDTO struct {
 }
 
 type UserServicer interface {
-	GetUsers() ([]User, error)
+	GetUsers() ([]UserHandler, error)
+}
+
+type UserHandler interface {
+	Id() string
+	Name() string
+	SetPassword(string) error
 }
 
 type User struct {
-	Username string
-}
-
-type UserService struct {
-	users []User
+	username     string
+	passwordHash string
 }
 
 func (u *User) Id() string {
-	return u.Username
+	return u.username
 }
 
 func (u *User) Name() string {
-	return u.Username
+	return u.username
 }
 
-func (s *UserService) GetUsers() ([]User, error) {
+func (u *User) SetPassword(password string) error {
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	u.passwordHash = string(hashedBytes)
+	return nil
+}
+
+type UserService struct {
+	users []UserHandler
+}
+
+func (s *UserService) GetUsers() ([]UserHandler, error) {
 	return s.users, nil
 }
 
