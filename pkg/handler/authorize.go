@@ -19,9 +19,8 @@ func AuthorizeGetHandler(templateDB template.TemplateServicer, clientDB auth.Cli
 	return func(w http.ResponseWriter, r *http.Request) {
 		// authorization request DTO
 		authorizeRequestDTO := &dto.AuthorizeRequestDTO{}
-		authorizeRequestValidator := request.NewValidator()
-		request.Unmarshal(r, authorizeRequestDTO)
-		if !authorizeRequestValidator.Validate(authorizeRequestDTO) {
+		if valid, validator := request.UnmarshalAndValidate(r, authorizeRequestDTO); !valid {
+			slog.Error("invalid authorize request", "validationErrors", validator.Errors)
 			http.Error(w, "bad request", http.StatusBadRequest)
 			return
 		}
@@ -29,6 +28,7 @@ func AuthorizeGetHandler(templateDB template.TemplateServicer, clientDB auth.Cli
 		// client
 		client, err := clientDB.GetClient(authorizeRequestDTO.ClientId)
 		if err != nil {
+			slog.Error("invalid client", "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -43,6 +43,7 @@ func AuthorizeGetHandler(templateDB template.TemplateServicer, clientDB auth.Cli
 		}
 		err = authorizationRequest.Valid()
 		if err != nil {
+			slog.Error("invalid authorize request", "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -57,25 +58,21 @@ func AuthorizeGetHandler(templateDB template.TemplateServicer, clientDB auth.Cli
 	}
 }
 
-func AuthorizePostHandler(templateDB template.TemplateServicer, clientDB auth.ClientServicer, subjectDB auth.UserServicer, authCodeDB auth.AuthorizationCodeService) routing.HandlerFunc {
+func AuthorizePostHandler(templateDB template.TemplateServicer, clientDB auth.ClientServicer, userService auth.UserServicer, authCodeDB auth.AuthorizationCodeService) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// authorization request DTO
 		authorizeRequestDTO := &dto.AuthorizeRequestDTO{}
-		authorizeRequestValidator := request.NewValidator()
-		request.Unmarshal(r, authorizeRequestDTO)
-		slog.Info("AuthorizePostHandler reading authorize request param done", "RequestID", r.Context().Value("RequestID"), "authorizeRequestDTO", authorizeRequestDTO)
-
-		if !authorizeRequestValidator.Validate(authorizeRequestDTO) {
+		if valid, validator := request.UnmarshalAndValidate(r, authorizeRequestDTO); !valid {
+			slog.Error("invalid authorize request", "validationErrors", validator.Errors)
 			http.Error(w, "bad request", http.StatusBadRequest)
-			slog.Error("AuthorizePostHandler validating authorize request param failed", "RequestID", r.Context().Value("RequestID"), "validationErrors", authorizeRequestValidator.Errors)
 			return
 		}
 
 		// client
 		client, err := clientDB.GetClient(authorizeRequestDTO.ClientId)
 		if err != nil {
+			slog.Error("invalid client", "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			slog.Error("AuthorizePostHandler fetching client failed", "RequestID", r.Context().Value("RequestID"), "clientID", authorizeRequestDTO.ClientId, "error", err)
 			return
 		}
 
@@ -89,32 +86,31 @@ func AuthorizePostHandler(templateDB template.TemplateServicer, clientDB auth.Cl
 		}
 		err = authorizationRequest.Valid()
 		if err != nil {
+			slog.Error("invalid authorize request", "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			slog.Error("AuthorizePostHandler validating authorize request failed", "RequestID", r.Context().Value("RequestID"), "error", err)
 			return
 		}
 
-		// credentials
+		// authorization request credentials DTO
 		authenticationErrorMessage := ""
 		credentialsDTO := &dto.AuthorizeCredentialsDTO{}
-		credentialsValidator := request.NewValidator()
-		request.Unmarshal(r, credentialsDTO)
-		slog.Info("AuthorizePostHandler subject credentials", "RequestID", r.Context().Value("RequestID"), "credentialsDTO", credentialsDTO)
-		if credentialsValidator.Validate(credentialsDTO) {
+		credentialsDTOValid, credentialsValidator := request.UnmarshalAndValidate(r, credentialsDTO)
+
+		if credentialsDTOValid {
 			credentials, err := auth.NewAuthenticationCredentials(auth.FromUsernameAndPassword(credentialsDTO.Username, credentialsDTO.Password))
 			if err != nil {
+				slog.Error("invalid authorize request credentials", "error", err)
 				http.Error(w, err.Error(), http.StatusBadRequest)
-				slog.Error("AuthorizePostHandler subject credentials initialization failed", "RequestID", r.Context().Value("RequestID"), "error", err)
 				return
 			}
 			// authentication
-			subject, authenticationErr := subjectDB.Authenticate(credentials)
+			user, authenticationErr := userService.Authenticate(credentials)
 			if authenticationErr == nil {
-				authorizationRequest.Subject = subject
+				authorizationRequest.Subject = user
 				code, err := authCodeDB.GenerateCode(&authorizationRequest, time.Hour)
 				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
 					slog.Error("AuthorizePostHandler authorization code generation failed", "RequestID", r.Context().Value("RequestID"), "error", err)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
 				redirectURL, _ := url.Parse(authorizationRequest.RedirectURI)
