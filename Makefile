@@ -17,6 +17,10 @@ run-keygen:
 	env KEY_TYPE="RSA384" KEY_PATH="assets/key/cert.key.rsa384.pem" CERT_PATH="assets/key/cert.cert.rsa384.pem" go run cmd/certgen/main.go
 	env KEY_TYPE="RSA512" KEY_PATH="assets/key/cert.key.rsa512.pem" CERT_PATH="assets/key/cert.cert.rsa512.pem" go run cmd/certgen/main.go
 
+run-proxy:
+	go mod download
+	go run cmd/proxy/main.go
+
 run:
 	go mod download
 	go run cmd/server/main.go
