@@ -33,14 +33,35 @@
             {
                 "provider": {
                     "fromCertPEM": {
-                        "keyPath":"assets/key/cert.key.rsa512.pem",
-                        "certPath":"assets/key/cert.cert.rsa512.pem"
+                        "keyPath": "assets/key/cert.key.rsa512.pem",
+                        "certPath": "assets/key/cert.cert.rsa512.pem"
                     }
                 },
                 "method": "RS256",
                 "active": false
             }
         ]
+    },
+    "proxy": {
+        "authorization": {
+            "fromOAuth": {
+                "tokenEndpoint": "http://localhost:8080/token",
+                "grant_type": "client_credentials",
+                "client_id": "ACME",
+                "client_secret": "acme-secret"
+            },
+            "fromSelfSignedAssertion": {
+                "key": {
+                    "provider": {
+                        "fromCertPEM": {
+                            "keyPath": "assets/key/cert.key.rsa512.pem",
+                            "certPath": "assets/key/cert.cert.rsa512.pem"
+                        }
+                    },
+                    "method": "RS256"
+                }
+            }
+        }
     },
     "users": {
         "demo": {
