@@ -75,7 +75,7 @@ func (s *clientService) Authenticate(credentials authentication.CredentialsHandl
 		return nil, e.ErrUserCredsInvalid
 	}
 
-	authenticated := client.authScheme.IsValid(credentials)
+	authenticated := client.authScheme.Matches(credentials)
 	if !authenticated {
 		return nil, e.ErrUserCredsInvalid
 	}

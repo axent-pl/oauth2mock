@@ -12,7 +12,7 @@ import (
 
 // ClaimServicer interface defines a method to retrieve claims for a subject and client.
 type ClaimServicer interface {
-	GetUserClaims(subject UserHandler, client ClientHandler, scope []string) (map[string]interface{}, error)
+	GetUserClaims(user UserHandler, client ClientHandler, scope []string) (map[string]interface{}, error)
 	GetClientClaims(client ClientHandler, scope []string) (map[string]interface{}, error)
 }
 

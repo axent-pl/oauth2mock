@@ -16,7 +16,7 @@ type UserServicer interface {
 }
 
 type userService struct {
-	users   map[string]userHandler
+	users   map[string]UserHandler
 	usersMU sync.RWMutex
 }
 
@@ -38,18 +38,19 @@ func NewUserService(usersFile string) (UserServicer, error) {
 	}
 
 	userStore := userService{
-		users: make(map[string]userHandler),
+		users: make(map[string]UserHandler),
 	}
 
 	for username, userData := range rawData.Users {
-		credentials, err := authentication.NewScheme(authentication.WithUsernameAndPassword(userData.Username, userData.Password))
+		authScheme, err := authentication.NewScheme(authentication.WithUsernameAndPassword(userData.Username, userData.Password))
 		if err != nil {
 			panic(fmt.Errorf("failed to parse user credentials from config file: %w", err))
 		}
-		userStore.users[username] = userHandler{
-			name:       userData.Username,
-			authScheme: credentials,
+		user, err := NewUserHandler(username, authScheme)
+		if err != nil {
+			panic(fmt.Errorf("failed to initialize user from config file: %w", err))
 		}
+		userStore.users[username] = user
 	}
 
 	return &userStore, nil
@@ -72,8 +73,8 @@ func (s *userService) Authenticate(inputCredentials authentication.CredentialsHa
 	}
 
 	// check if credentials match
-	if user.authScheme.IsValid(inputCredentials) {
-		return &user, nil
+	if user.AuthenticationScheme().Matches(inputCredentials) {
+		return user, nil
 	}
 
 	return nil, e.ErrUserCredsInvalid
@@ -82,7 +83,7 @@ func (s *userService) Authenticate(inputCredentials authentication.CredentialsHa
 func (s *userService) GetUsers() ([]UserHandler, error) {
 	var users []UserHandler = make([]UserHandler, 0)
 	for _, k := range s.users {
-		users = append(users, &k)
+		users = append(users, k)
 	}
 	return users, nil
 }

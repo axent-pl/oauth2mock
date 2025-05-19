@@ -8,7 +8,7 @@ import (
 )
 
 type SchemeHandler interface {
-	IsValid(inputCredentials CredentialsHandler) bool
+	Matches(inputCredentials CredentialsHandler) bool
 }
 
 // schemeHandler represents the configuration for multiple authentication methods.
@@ -85,7 +85,7 @@ func WithClientAssertion(assertionType, assertionClaim string, assertionJWKS str
 	}
 }
 
-func (s *schemeHandler) IsValid(inputCredentials CredentialsHandler) bool {
+func (s *schemeHandler) Matches(inputCredentials CredentialsHandler) bool {
 	identity, err := inputCredentials.IdentityName()
 	if err != nil {
 		return false
