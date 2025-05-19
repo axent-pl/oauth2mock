@@ -3,6 +3,8 @@ package auth
 import (
 	"errors"
 	"log/slog"
+
+	e "github.com/axent-pl/oauth2mock/pkg/error"
 )
 
 type AuthenticationSchemeHandler interface {
@@ -35,10 +37,10 @@ func NewAuthenticationScheme(options ...AuthenticationSchemeOption) (Authenticat
 func WithClientIdAndSecret(clientId, clientSecret string) AuthenticationSchemeOption {
 	return func(s *authenticationScheme) error {
 		if clientId == "" {
-			return ErrClientCredsMissingClientId
+			return e.ErrClientCredsMissingClientId
 		}
 		if clientSecret == "" {
-			return ErrClientCredsMissingClientSecret
+			return e.ErrClientCredsMissingClientSecret
 		}
 		s.ClientId = clientId
 		s.ClientSecret = clientSecret
@@ -49,10 +51,10 @@ func WithClientIdAndSecret(clientId, clientSecret string) AuthenticationSchemeOp
 func WithUsernameAndPassword(username, password string) AuthenticationSchemeOption {
 	return func(s *authenticationScheme) error {
 		if username == "" {
-			return ErrUserCredsMissingUsername
+			return e.ErrUserCredsMissingUsername
 		}
 		if password == "" {
-			return ErrUserCredsMissingPassword
+			return e.ErrUserCredsMissingPassword
 		}
 		s.Username = username
 		s.Password = password
@@ -63,10 +65,10 @@ func WithUsernameAndPassword(username, password string) AuthenticationSchemeOpti
 func WithClientAssertion(assertionType, assertionClaim string, assertionJWKS string) AuthenticationSchemeOption {
 	return func(s *authenticationScheme) error {
 		if assertionType == "" {
-			return ErrClientCredsMissingMissingAssertionType
+			return e.ErrClientCredsMissingMissingAssertionType
 		}
 		if assertionType != "urn:ietf:params:oauth:client-assertion-type:jwt-bearer" {
-			return ErrClientCredsMissingInvalidAssertionType
+			return e.ErrClientCredsMissingInvalidAssertionType
 		}
 		s.AssertionType = assertionType
 		s.AssertionClaim = assertionClaim

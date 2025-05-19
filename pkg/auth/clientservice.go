@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+
+	e "github.com/axent-pl/oauth2mock/pkg/error"
 )
 
 type ClientServicer interface {
@@ -56,7 +58,7 @@ func NewClientService(jsonFilepath string) (ClientServicer, error) {
 func (s *clientService) GetClient(client_id string) (ClientHandler, error) {
 	client, ok := s.clients[client_id]
 	if !ok {
-		return nil, ErrInvalidClientId
+		return nil, e.ErrInvalidClientId
 	}
 	return &client, nil
 }
@@ -64,17 +66,17 @@ func (s *clientService) GetClient(client_id string) (ClientHandler, error) {
 func (s *clientService) Authenticate(credentials AuthenticationCredentialsHandler) (ClientHandler, error) {
 	clientId, err := credentials.IdentityName()
 	if err != nil {
-		return nil, ErrUserCredsInvalid
+		return nil, e.ErrUserCredsInvalid
 	}
 
 	client, ok := s.clients[clientId]
 	if !ok {
-		return nil, ErrUserCredsInvalid
+		return nil, e.ErrUserCredsInvalid
 	}
 
 	authenticated := client.authScheme.IsValid(credentials)
 	if !authenticated {
-		return nil, ErrUserCredsInvalid
+		return nil, e.ErrUserCredsInvalid
 	}
 
 	return &client, nil

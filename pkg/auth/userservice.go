@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"sync"
+
+	e "github.com/axent-pl/oauth2mock/pkg/error"
 )
 
 type UserServicer interface {
@@ -65,7 +67,7 @@ func (s *userService) Authenticate(inputCredentials AuthenticationCredentialsHan
 	// find user
 	user, ok := s.users[username]
 	if !ok {
-		return nil, ErrUserCredsInvalid
+		return nil, e.ErrUserCredsInvalid
 	}
 
 	// check if credentials match
@@ -73,7 +75,7 @@ func (s *userService) Authenticate(inputCredentials AuthenticationCredentialsHan
 		return &user, nil
 	}
 
-	return nil, ErrUserCredsInvalid
+	return nil, e.ErrUserCredsInvalid
 }
 
 func (s *userService) GetUsers() ([]UserHandler, error) {

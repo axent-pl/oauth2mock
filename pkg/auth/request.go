@@ -1,5 +1,7 @@
 package auth
 
+import e "github.com/axent-pl/oauth2mock/pkg/error"
+
 type AuthorizationRequest struct {
 	ResponseType string
 	RedirectURI  string
@@ -19,17 +21,17 @@ func (req *AuthorizationRequest) GetRedirectURI() string {
 func (req *AuthorizationRequest) Valid() error {
 	// Validate required
 	if len(req.ResponseType) == 0 {
-		return ErrMissingResponseType
+		return e.ErrMissingResponseType
 	}
 
 	// Validate ResponseType
 	if req.ResponseType != "code" {
-		return ErrInvalidResponseType
+		return e.ErrInvalidResponseType
 	}
 
 	// Validate RedirectURI
 	if len(req.RedirectURI) > 0 && !MatchesWildcard(req.RedirectURI, req.Client.RedirectURIPattern()) {
-		return ErrInvalidClientRedirectURI
+		return e.ErrInvalidClientRedirectURI
 	}
 
 	return nil

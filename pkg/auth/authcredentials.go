@@ -1,6 +1,10 @@
 package auth
 
-import "errors"
+import (
+	"errors"
+
+	e "github.com/axent-pl/oauth2mock/pkg/error"
+)
 
 type AuthenticationCredentialsHandler interface {
 	IdentityName() (string, error)
@@ -23,10 +27,10 @@ type AuthenticationCredentialsOption func(*authenticationCredentials) error
 func FromUsernameAndPassword(username string, password string) AuthenticationCredentialsOption {
 	return func(c *authenticationCredentials) error {
 		if username == "" {
-			return ErrUserCredsMissingUsername
+			return e.ErrUserCredsMissingUsername
 		}
 		if password == "" {
-			return ErrUserCredsMissingPassword
+			return e.ErrUserCredsMissingPassword
 		}
 		c.Username = username
 		c.Password = password
@@ -37,10 +41,10 @@ func FromUsernameAndPassword(username string, password string) AuthenticationCre
 func FromCliendIdAndSecret(clientId string, clientSecret string) AuthenticationCredentialsOption {
 	return func(c *authenticationCredentials) error {
 		if clientId == "" {
-			return ErrClientCredsMissingClientId
+			return e.ErrClientCredsMissingClientId
 		}
 		if clientSecret == "" {
-			return ErrClientCredsMissingClientSecret
+			return e.ErrClientCredsMissingClientSecret
 		}
 		c.ClientId = clientId
 		c.ClientSecret = clientSecret
