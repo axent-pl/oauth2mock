@@ -6,11 +6,12 @@ import (
 	"os"
 
 	e "github.com/axent-pl/oauth2mock/pkg/error"
+	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
 )
 
 type ClientServicer interface {
 	GetClient(client_id string) (ClientHandler, error)
-	Authenticate(credentials AuthenticationCredentialsHandler) (ClientHandler, error)
+	Authenticate(credentials authentication.CredentialsHandler) (ClientHandler, error)
 }
 
 type clientService struct {
@@ -41,7 +42,7 @@ func NewClientService(jsonFilepath string) (ClientServicer, error) {
 		clients: make(map[string]client),
 	}
 	for k, v := range f.Clients {
-		credentials, err := NewAuthenticationScheme(WithClientIdAndSecret(v.Id, v.Secret))
+		credentials, err := authentication.NewScheme(authentication.WithClientIdAndSecret(v.Id, v.Secret))
 		if err != nil {
 			panic(fmt.Errorf("failed to parse client credentials from config file: %w", err))
 		}
@@ -63,7 +64,7 @@ func (s *clientService) GetClient(client_id string) (ClientHandler, error) {
 	return &client, nil
 }
 
-func (s *clientService) Authenticate(credentials AuthenticationCredentialsHandler) (ClientHandler, error) {
+func (s *clientService) Authenticate(credentials authentication.CredentialsHandler) (ClientHandler, error) {
 	clientId, err := credentials.IdentityName()
 	if err != nil {
 		return nil, e.ErrUserCredsInvalid

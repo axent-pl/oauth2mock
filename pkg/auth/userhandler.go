@@ -1,8 +1,10 @@
 package auth
 
+import "github.com/axent-pl/oauth2mock/pkg/service/authentication"
+
 type userHandler struct {
 	name       string
-	authScheme AuthenticationSchemeHandler
+	authScheme authentication.SchemeHandler
 }
 
 func (s *userHandler) Id() string {
@@ -17,6 +19,6 @@ func (s *userHandler) Active() bool {
 	return true
 }
 
-func (s *userHandler) AuthenticationScheme() AuthenticationSchemeHandler {
+func (s *userHandler) AuthenticationScheme() authentication.SchemeHandler {
 	return s.authScheme
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/dto"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
+	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
 	"github.com/axent-pl/oauth2mock/pkg/service/signing"
 )
 
@@ -27,7 +28,7 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 		}
 
 		// Authenticate client
-		credentials, err := auth.NewAuthenticationCredentials(auth.FromCliendIdAndSecret(requstDTO.ClientId, requstDTO.ClientSecret))
+		credentials, err := authentication.NewCredentials(authentication.FromCliendIdAndSecret(requstDTO.ClientId, requstDTO.ClientSecret))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -98,7 +99,7 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 		}
 
 		// Authenticate client
-		credentials, err := auth.NewAuthenticationCredentials(auth.FromCliendIdAndSecret(requstDTO.ClientId, requstDTO.ClientSecret))
+		credentials, err := authentication.NewCredentials(authentication.FromCliendIdAndSecret(requstDTO.ClientId, requstDTO.ClientSecret))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -154,7 +155,7 @@ func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.C
 		}
 
 		// Authenticate client
-		clientCredentials, err := auth.NewAuthenticationCredentials(auth.FromCliendIdAndSecret(requstDTO.ClientId, requstDTO.ClientSecret))
+		clientCredentials, err := authentication.NewCredentials(authentication.FromCliendIdAndSecret(requstDTO.ClientId, requstDTO.ClientSecret))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -166,7 +167,7 @@ func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.C
 		}
 
 		// Authenticate user
-		userCredenmtials, err := auth.NewAuthenticationCredentials(auth.FromUsernameAndPassword(requstDTO.Username, requstDTO.Password))
+		userCredenmtials, err := authentication.NewCredentials(authentication.FromUsernameAndPassword(requstDTO.Username, requstDTO.Password))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

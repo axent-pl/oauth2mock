@@ -1,17 +1,19 @@
 package auth
 
+import "github.com/axent-pl/oauth2mock/pkg/service/authentication"
+
 type ClientHandler interface {
 	Id() string
 	Name() string
 	RedirectURIPattern() string
-	AuthenticationScheme() AuthenticationSchemeHandler
+	AuthenticationScheme() authentication.SchemeHandler
 	ValidateRedirectURI(redirectURI string) bool
 }
 
 type client struct {
 	id                 string
 	redirectURIPattern string
-	authScheme         AuthenticationSchemeHandler
+	authScheme         authentication.SchemeHandler
 }
 
 func (c *client) Id() string {
@@ -31,6 +33,6 @@ func (c *client) ValidateRedirectURI(redirectURI string) bool {
 	return (len(redirectURI) > 0) && MatchesWildcard(redirectURI, c.redirectURIPattern)
 }
 
-func (c *client) AuthenticationScheme() AuthenticationSchemeHandler {
+func (c *client) AuthenticationScheme() authentication.SchemeHandler {
 	return c.authScheme
 }

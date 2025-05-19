@@ -11,6 +11,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/dto"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
+	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
 	"github.com/axent-pl/oauth2mock/pkg/service/template"
 	"github.com/axent-pl/oauth2mock/pkg/tpl"
 )
@@ -97,7 +98,7 @@ func AuthorizePostHandler(templateDB template.TemplateServicer, clientDB auth.Cl
 		credentialsDTOValid, credentialsValidator := request.UnmarshalAndValidate(r, credentialsDTO)
 
 		if credentialsDTOValid {
-			credentials, err := auth.NewAuthenticationCredentials(auth.FromUsernameAndPassword(credentialsDTO.Username, credentialsDTO.Password))
+			credentials, err := authentication.NewCredentials(authentication.FromUsernameAndPassword(credentialsDTO.Username, credentialsDTO.Password))
 			if err != nil {
 				slog.Error("invalid authorize request credentials", "error", err)
 				http.Error(w, err.Error(), http.StatusBadRequest)

@@ -7,10 +7,11 @@ import (
 	"sync"
 
 	e "github.com/axent-pl/oauth2mock/pkg/error"
+	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
 )
 
 type UserServicer interface {
-	Authenticate(credentials AuthenticationCredentialsHandler) (UserHandler, error)
+	Authenticate(credentials authentication.CredentialsHandler) (UserHandler, error)
 	GetUsers() ([]UserHandler, error)
 }
 
@@ -41,7 +42,7 @@ func NewUserService(usersFile string) (UserServicer, error) {
 	}
 
 	for username, userData := range rawData.Users {
-		credentials, err := NewAuthenticationScheme(WithUsernameAndPassword(userData.Username, userData.Password))
+		credentials, err := authentication.NewScheme(authentication.WithUsernameAndPassword(userData.Username, userData.Password))
 		if err != nil {
 			panic(fmt.Errorf("failed to parse user credentials from config file: %w", err))
 		}
@@ -54,7 +55,7 @@ func NewUserService(usersFile string) (UserServicer, error) {
 	return &userStore, nil
 }
 
-func (s *userService) Authenticate(inputCredentials AuthenticationCredentialsHandler) (UserHandler, error) {
+func (s *userService) Authenticate(inputCredentials authentication.CredentialsHandler) (UserHandler, error) {
 	s.usersMU.RLock()
 	defer s.usersMU.RUnlock()
 
