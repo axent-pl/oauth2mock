@@ -2,6 +2,7 @@ package authentication
 
 import (
 	"errors"
+	"log/slog"
 
 	e "github.com/axent-pl/oauth2mock/pkg/error"
 )
@@ -41,8 +42,12 @@ func WithClientIdAndSecret(clientId, clientSecret string) SchemeOption {
 		if clientSecret == "" {
 			return e.ErrClientCredsMissingClientSecret
 		}
+		clientSecretHash, err := HashPassword(clientSecret)
+		if err != nil {
+			return err
+		}
 		s.ClientId = clientId
-		s.ClientSecret = clientSecret
+		s.ClientSecret = clientSecretHash
 		return nil
 	}
 }
@@ -55,8 +60,12 @@ func WithUsernameAndPassword(username, password string) SchemeOption {
 		if password == "" {
 			return e.ErrUserCredsMissingPassword
 		}
+		passwordHash, err := HashPassword(password)
+		if err != nil {
+			return err
+		}
 		s.Username = username
-		s.Password = password
+		s.Password = passwordHash
 		return nil
 	}
 }
@@ -88,15 +97,24 @@ func (s *schemeHandler) IsValid(inputCredentials CredentialsHandler) bool {
 
 	switch inputCredentials.Method() {
 	case UserPassword:
-		if s.Username == identity && s.Password == credentials {
-			return true
+		if s.Username != identity {
+			slog.Error("username does not match")
+			return false
 		}
-		return false
+		if credentialsMatch, err := CheckPasswordHash(credentials, s.Password); !credentialsMatch || err != nil {
+			slog.Error("password does not match", "credentials", credentials, "s.Password", s.Password)
+			return false
+		}
+		return true
 	case ClientSecret:
-		if s.ClientId == identity && s.ClientSecret == credentials {
-			return true
+		if s.ClientId != identity {
+			return false
 		}
-		return false
+		if credentialsMatch, err := CheckPasswordHash(credentials, s.ClientSecret); !credentialsMatch || err != nil {
+			slog.Error("client secret does not match", "credentials", credentials)
+			return false
+		}
+		return true
 	case ClientAssertion:
 		return false
 	default:

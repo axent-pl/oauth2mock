@@ -102,6 +102,6 @@ func (c *credentialsHandler) Credentials() (string, error) {
 	case ClientAssertion:
 		return c.assertion, nil
 	default:
-		return "", errors.New("credentials do not have a valid authentication method")
+		return "", errors.New("credentials do not contain a valid authentication method")
 	}
 }
