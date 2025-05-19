@@ -1,0 +1,34 @@
+module schema
+
+typealias SignMethod = 
+"RS256"|"RS384"|"RS512"
+|"ES256"|"ES384"|"ES512"
+|"PS256"|"PS384"|"PS512"
+
+typealias SignKeyProvider = PEMProvider|RandomProvider
+
+class SignConfig {
+  keys: List<SignKey>
+}
+
+class SignKey {
+  provider: SignKeyProvider
+  method: SignMethod
+  active: Boolean = true
+}
+
+class PEMProviderConfig {
+  path: String
+}
+class PEMProvider {
+  fromPEM: PEMProviderConfig
+}
+
+class RandomProviderConfig {
+    type: String
+    deterministic: Boolean
+    seed: String
+}
+class RandomProvider {
+  fromRandom: RandomProviderConfig
+}
