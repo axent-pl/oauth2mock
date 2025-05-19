@@ -31,7 +31,7 @@ var (
 
 	authCodeService auth.AuthorizationCodeService
 	clientService   auth.ClientServicer
-	subjectService  auth.UserServicer
+	userService     auth.UserServicer
 	claimService    auth.ClaimServicer
 	templateService template.TemplateServicer
 	signingService  signing.SigningServicer
@@ -75,7 +75,7 @@ func init() {
 	}
 	slog.Info("client service initialized")
 
-	subjectService, err = auth.NewUserService(settings.DataFile)
+	userService, err = auth.NewUserService(settings.DataFile)
 	if err != nil {
 		slog.Error("failed to initialize subject service", "error", err)
 		os.Exit(1)
@@ -143,7 +143,7 @@ func init() {
 		routing.ForQueryValue("response_type", "code"))
 
 	router.RegisterHandler(
-		handler.AuthorizePostHandler(templateService, clientService, subjectService, authCodeService),
+		handler.AuthorizePostHandler(templateService, clientService, userService, authCodeService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.AuthorizationEndpoint),
 		routing.ForQueryValue("response_type", "code"))
@@ -161,10 +161,15 @@ func init() {
 		routing.ForPostFormValue("grant_type", "client_credentials"))
 
 	router.RegisterHandler(
-		handler.TokenPasswordHandler(openidConfiguration, clientService, subjectService, claimService, signingService),
+		handler.TokenPasswordHandler(openidConfiguration, clientService, userService, claimService, signingService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "password"))
+
+	router.RegisterHandler(
+		handler.SCIMGetHandler(userService),
+		routing.WithMethod(http.MethodGet),
+		routing.WithPath("/beta/scim/users"))
 
 	httpServer, _ = server.NewServer(settings.ServerAddress, router)
 }

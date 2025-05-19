@@ -1,6 +1,8 @@
 package auth
 
-type SubjectHandler interface {
+type UserHandler interface {
+	Id() string
 	Name() string
+	Active() bool
 	AuthenticationScheme() AuthenticationSchemeHandler
 }

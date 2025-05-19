@@ -8,12 +8,12 @@ import (
 )
 
 type UserServicer interface {
-	Authenticate(credentials AuthenticationCredentialsHandler) (SubjectHandler, error)
-	GetUsers() ([]SubjectHandler, error)
+	Authenticate(credentials AuthenticationCredentialsHandler) (UserHandler, error)
+	GetUsers() ([]UserHandler, error)
 }
 
 type userService struct {
-	users   map[string]subject
+	users   map[string]userHandler
 	usersMU sync.RWMutex
 }
 
@@ -35,7 +35,7 @@ func NewUserService(usersFile string) (UserServicer, error) {
 	}
 
 	userStore := userService{
-		users: make(map[string]subject),
+		users: make(map[string]userHandler),
 	}
 
 	for username, userData := range rawData.Users {
@@ -43,7 +43,7 @@ func NewUserService(usersFile string) (UserServicer, error) {
 		if err != nil {
 			panic(fmt.Errorf("failed to parse user credentials from config file: %w", err))
 		}
-		userStore.users[username] = subject{
+		userStore.users[username] = userHandler{
 			name:       userData.Username,
 			authScheme: credentials,
 		}
@@ -52,7 +52,7 @@ func NewUserService(usersFile string) (UserServicer, error) {
 	return &userStore, nil
 }
 
-func (s *userService) Authenticate(inputCredentials AuthenticationCredentialsHandler) (SubjectHandler, error) {
+func (s *userService) Authenticate(inputCredentials AuthenticationCredentialsHandler) (UserHandler, error) {
 	s.usersMU.RLock()
 	defer s.usersMU.RUnlock()
 
@@ -76,8 +76,8 @@ func (s *userService) Authenticate(inputCredentials AuthenticationCredentialsHan
 	return nil, ErrUserCredsInvalid
 }
 
-func (s *userService) GetUsers() ([]SubjectHandler, error) {
-	var users []SubjectHandler = make([]SubjectHandler, 0)
+func (s *userService) GetUsers() ([]UserHandler, error) {
+	var users []UserHandler = make([]UserHandler, 0)
 	for _, k := range s.users {
 		users = append(users, &k)
 	}

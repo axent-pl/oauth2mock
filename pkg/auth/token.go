@@ -12,12 +12,19 @@ type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
 }
 
-func NewTokenReponse(issuer string, subject SubjectHandler, client ClientHandler, claims map[string]interface{}, keyService signing.SigningServicer) (TokenResponse, error) {
+func getSubClaim(user UserHandler, client ClientHandler) string {
+	if user != nil {
+		return user.Id()
+	}
+	return client.Id()
+}
+
+func NewTokenReponse(issuer string, user UserHandler, client ClientHandler, claims map[string]interface{}, keyService signing.SigningServicer) (TokenResponse, error) {
 	tokenResponse := TokenResponse{Type: "Bearer"}
 
 	access_token_claims := make(map[string]interface{})
 	access_token_claims["iss"] = issuer
-	access_token_claims["sub"] = subject.Name()
+	access_token_claims["sub"] = getSubClaim(user, client)
 	access_token_claims["azp"] = client.Id()
 	access_token_claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
 	access_token_claims["iat"] = time.Now().Unix()
@@ -33,7 +40,7 @@ func NewTokenReponse(issuer string, subject SubjectHandler, client ClientHandler
 
 	refresh_token_claims := make(map[string]interface{})
 	refresh_token_claims["iss"] = issuer
-	refresh_token_claims["sub"] = subject.Name()
+	refresh_token_claims["sub"] = getSubClaim(user, client)
 	refresh_token_claims["azp"] = client.Id()
 	refresh_token_claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
 	refresh_token_claims["iat"] = time.Now().Unix()

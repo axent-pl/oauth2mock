@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/axent-pl/oauth2mock/pkg/auth"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
-	"golang.org/x/crypto/bcrypt"
 )
+
+// ---------- DTO
 
 type SCIMUserDTO struct {
 	Schemas     []string `json:"schemas"`
@@ -16,53 +18,28 @@ type SCIMUserDTO struct {
 	DisplayName string   `json:"displayName"`
 }
 
+type SCIMUserCreateRequestDTO struct {
+	Schemas     []string `json:"schemas"`
+	ID          string   `json:"id"`
+	UserName    string   `json:"userName"`
+	Active      bool     `json:"active"`
+	DisplayName string   `json:"displayName"`
+	Password    string   `json:"password"`
+}
+
 type SCIMListResponseDTO struct {
 	Schemas      []string      `json:"schemas"`
 	TotalResults int           `json:"totalResults"`
 	Resources    []SCIMUserDTO `json:"Resources"`
 }
 
-type UserServicer interface {
-	GetUsers() ([]UserHandler, error)
-}
+func SCIMPostHandler(userService auth.UserServicer) routing.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-type UserHandler interface {
-	Id() string
-	Name() string
-	SetPassword(string) error
-}
-
-type User struct {
-	username     string
-	passwordHash string
-}
-
-func (u *User) Id() string {
-	return u.username
-}
-
-func (u *User) Name() string {
-	return u.username
-}
-
-func (u *User) SetPassword(password string) error {
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
 	}
-	u.passwordHash = string(hashedBytes)
-	return nil
 }
 
-type UserService struct {
-	users []UserHandler
-}
-
-func (s *UserService) GetUsers() ([]UserHandler, error) {
-	return s.users, nil
-}
-
-func SCIMGetHandler(userService UserServicer) routing.HandlerFunc {
+func SCIMGetHandler(userService auth.UserServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// get users from service
 		users, err := userService.GetUsers()
@@ -78,6 +55,7 @@ func SCIMGetHandler(userService UserServicer) routing.HandlerFunc {
 				Schemas:  []string{"urn:ietf:params:scim:schemas:core:2.0:User"},
 				ID:       user.Id(),
 				UserName: user.Name(),
+				Active:   user.Active(),
 			}
 		}
 

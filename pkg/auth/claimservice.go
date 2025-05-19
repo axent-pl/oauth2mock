@@ -12,7 +12,8 @@ import (
 
 // ClaimServicer interface defines a method to retrieve claims for a subject and client.
 type ClaimServicer interface {
-	GetClaims(subject SubjectHandler, client ClientHandler, scope []string) (map[string]interface{}, error)
+	GetUserClaims(subject UserHandler, client ClientHandler, scope []string) (map[string]interface{}, error)
+	GetClientClaims(client ClientHandler, scope []string) (map[string]interface{}, error)
 }
 
 // claimDetails holds the base claims and client-specific overrides.
@@ -25,7 +26,8 @@ type claimDetails struct {
 // claimService implements the ClaimServicer interface and manages claim data.
 type claimService struct {
 	claimsJSONFilepath string // Path to the claims JSON file.
-	claims             map[string]claimDetails
+	userClaims         map[string]claimDetails
+	clientClaims       map[string]claimDetails
 	claimsMU           sync.RWMutex // Mutex to synchronize access to claims.
 	lastModified       time.Time    // Tracks the last modification time of the file.
 }
@@ -38,7 +40,7 @@ func NewClaimService(claimsJSONFilepath string) (ClaimServicer, error) {
 	}
 	defer file.Close()
 
-	claims, err := unmarshalClaimsFromReader(file)
+	userClaims, clientClaims, err := unmarshalClaimsFromReader(file)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +51,8 @@ func NewClaimService(claimsJSONFilepath string) (ClaimServicer, error) {
 	}
 
 	cs := &claimService{
-		claims:             claims,
+		userClaims:         userClaims,
+		clientClaims:       clientClaims,
 		claimsJSONFilepath: claimsJSONFilepath,
 		lastModified:       fileInfo.ModTime(),
 	}
@@ -58,7 +61,7 @@ func NewClaimService(claimsJSONFilepath string) (ClaimServicer, error) {
 }
 
 // unmarshalClaimsFromReader reads and parses the JSON file into claim details.
-func unmarshalClaimsFromReader(reader io.Reader) (map[string]claimDetails, error) {
+func unmarshalClaimsFromReader(reader io.Reader) (map[string]claimDetails, map[string]claimDetails, error) {
 	var rawData struct {
 		Users map[string]struct {
 			Claims struct {
@@ -77,26 +80,27 @@ func unmarshalClaimsFromReader(reader io.Reader) (map[string]claimDetails, error
 	}
 
 	if err := json.NewDecoder(reader).Decode(&rawData); err != nil {
-		return nil, fmt.Errorf("failed to parse claims config file: %w", err)
+		return nil, nil, fmt.Errorf("failed to parse claims config file: %w", err)
 	}
 
-	claims := make(map[string]claimDetails)
+	userClaims := make(map[string]claimDetails)
 	for username, user := range rawData.Users {
-		claims[username] = claimDetails{
+		userClaims[username] = claimDetails{
 			Base:            user.Claims.Base,
 			ClientOverrides: user.Claims.ClientOverrides,
 			ScopeOverrides:  user.Claims.ScopeOverrides,
 		}
 	}
+	clientClaims := make(map[string]claimDetails)
 	for clientId, client := range rawData.Clients {
-		claims[clientId] = claimDetails{
+		clientClaims[clientId] = claimDetails{
 			Base:            client.Claims.Base,
 			ClientOverrides: client.Claims.ClientOverrides,
 			ScopeOverrides:  client.Claims.ScopeOverrides,
 		}
 	}
 
-	return claims, nil
+	return userClaims, clientClaims, nil
 }
 
 // reloadClaimsJob periodically checks and reloads the claims file if it has changed.
@@ -134,36 +138,37 @@ func (s *claimService) reloadClaims() {
 	}
 	defer file.Close()
 
-	claims, err := unmarshalClaimsFromReader(file)
+	userClaims, clientClaims, err := unmarshalClaimsFromReader(file)
 	if err != nil {
 		slog.Error("failed to parse claims config file", "error", err)
 		return
 	}
 
 	// Update claims and last modification time.
-	s.claims = claims
+	s.userClaims = userClaims
+	s.clientClaims = clientClaims
 	s.lastModified = fileInfo.ModTime()
 }
 
-// GetClaims retrieves claims for a given subject and client.
-func (s *claimService) GetClaims(subject SubjectHandler, client ClientHandler, scope []string) (map[string]interface{}, error) {
+// GetClaims retrieves claims for a given user and client.
+func (s *claimService) GetUserClaims(subject UserHandler, client ClientHandler, scope []string) (map[string]interface{}, error) {
 	s.claimsMU.RLock()
 	defer s.claimsMU.RUnlock()
 
 	claims := make(map[string]interface{})
 
-	subjectClaims, ok := s.claims[subject.Name()]
+	userClaims, ok := s.userClaims[subject.Name()]
 	if !ok {
 		return claims, fmt.Errorf("no claims for subject %s", subject.Name())
 	}
 
 	// Add base claims.
-	for c, v := range subjectClaims.Base {
+	for c, v := range userClaims.Base {
 		claims[c] = v
 	}
 
 	// Override claims with client-specific values, if available.
-	clientOverrides, ok := subjectClaims.ClientOverrides[client.Id()]
+	clientOverrides, ok := userClaims.ClientOverrides[client.Id()]
 	if ok {
 		for c, v := range clientOverrides {
 			claims[c] = v
@@ -171,7 +176,44 @@ func (s *claimService) GetClaims(subject SubjectHandler, client ClientHandler, s
 	}
 
 	for _, scopeItem := range scope {
-		scopeOverrides, ok := subjectClaims.ScopeOverrides[scopeItem]
+		scopeOverrides, ok := userClaims.ScopeOverrides[scopeItem]
+		if ok {
+			for c, v := range scopeOverrides {
+				claims[c] = v
+			}
+		}
+	}
+
+	return claims, nil
+}
+
+// GetClaims retrieves claims for a given user and client.
+func (s *claimService) GetClientClaims(client ClientHandler, scope []string) (map[string]interface{}, error) {
+	s.claimsMU.RLock()
+	defer s.claimsMU.RUnlock()
+
+	claims := make(map[string]interface{})
+
+	clientClaims, ok := s.clientClaims[client.Name()]
+	if !ok {
+		return claims, fmt.Errorf("no claims for client %s", client.Name())
+	}
+
+	// Add base claims.
+	for c, v := range clientClaims.Base {
+		claims[c] = v
+	}
+
+	// Override claims with client-specific values, if available.
+	clientOverrides, ok := clientClaims.ClientOverrides[client.Id()]
+	if ok {
+		for c, v := range clientOverrides {
+			claims[c] = v
+		}
+	}
+
+	for _, scopeItem := range scope {
+		scopeOverrides, ok := clientClaims.ScopeOverrides[scopeItem]
 		if ok {
 			for c, v := range scopeOverrides {
 				claims[c] = v

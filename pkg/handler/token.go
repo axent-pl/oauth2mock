@@ -57,7 +57,7 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 
 		subject := authCodeData.Request.Subject
 		scope := authCodeData.Request.Scope
-		claims, err := claimsDB.GetClaims(subject, client, scope)
+		claims, err := claimsDB.GetUserClaims(subject, client, scope)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -113,7 +113,7 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 		if len(requstDTO.Scope) > 0 {
 			scope = strings.Split(requstDTO.Scope, " ")
 		}
-		claims, err := claimsDB.GetClaims(client, client, scope)
+		claims, err := claimsDB.GetClientClaims(client, scope)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -124,7 +124,7 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 			issuer = getOriginFromRequest(r)
 		}
 
-		tokenResponse, err := auth.NewTokenReponse(issuer, client, client, claims, keyService)
+		tokenResponse, err := auth.NewTokenReponse(issuer, nil, client, claims, keyService)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -181,7 +181,7 @@ func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.C
 		if len(requstDTO.Scope) > 0 {
 			scope = strings.Split(requstDTO.Scope, " ")
 		}
-		claims, err := claimsDB.GetClaims(user, client, scope)
+		claims, err := claimsDB.GetUserClaims(user, client, scope)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -192,7 +192,7 @@ func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.C
 			issuer = getOriginFromRequest(r)
 		}
 
-		tokenResponse, err := auth.NewTokenReponse(issuer, client, client, claims, keyService)
+		tokenResponse, err := auth.NewTokenReponse(issuer, user, client, claims, keyService)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

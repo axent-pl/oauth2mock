@@ -6,7 +6,7 @@ type AuthorizationRequest struct {
 	Scope        []string
 	State        string
 	Client       ClientHandler
-	Subject      SubjectHandler
+	Subject      UserHandler
 }
 
 func (req *AuthorizationRequest) GetRedirectURI() string {
