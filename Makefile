@@ -46,4 +46,4 @@ container-push:
 	docker push prond/axes:$(TAG)
 
 documentation:
-	docker run -it --rm -p 8080:8080 -v ./docs:/usr/local/structurizr structurizr/lite:2025.03.28
+	docker run -it --rm -p 8088:8080 -v ./docs:/usr/local/structurizr structurizr/lite:2025.03.28

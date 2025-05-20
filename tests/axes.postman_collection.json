@@ -60,7 +60,7 @@
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8080/authorize?response_type=code&client_id=ACME&redirect_uri={{REDIRECT_URL}}&scope=profile shopping",
+					"raw": "http://localhost:8080/authorize?response_type=code&client_id=ACME&redirect_uri={{REDIRECT_URL}}&scope=email profile shopping",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -84,7 +84,7 @@
 						},
 						{
 							"key": "scope",
-							"value": "profile shopping"
+							"value": "email profile shopping"
 						}
 					]
 				}
@@ -92,12 +92,15 @@
 			"response": []
 		},
 		{
-			"name": "Token",
+			"name": "Token (authorization_code)",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"exec": [
+							"",
+							"var atob = require('atob');",
+							"",
 							"pm.test(\"Status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
 							"});",
@@ -117,7 +120,32 @@
 							"    var jsonData = pm.response.json();",
 							"    pm.expect(jsonData.type).to.eql(\"Bearer\");",
 							"});",
-							""
+							"// access_token claims",
+							"pm.test(\"`access_token` has `iss` claim\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    let jwt = jsonData.access_token",
+							"    let [jwtHeader, jwtPayload, jwtSignature] = jwt.split('.')",
+							"    let jwtPayloadJsonString = atob(jwtPayload)",
+							"    let jwtPayloadJson = JSON.parse(jwtPayloadJsonString)",
+							"    pm.expect(jwtPayloadJson).to.have.property(\"iss\")",
+							"});",
+							"pm.test(\"`access_token` has `exp` claim\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    let jwt = jsonData.access_token",
+							"    let [jwtHeader, jwtPayload, jwtSignature] = jwt.split('.')",
+							"    let jwtPayloadJsonString = atob(jwtPayload)",
+							"    let jwtPayloadJson = JSON.parse(jwtPayloadJsonString)",
+							"    pm.expect(jwtPayloadJson).to.have.property(\"exp\")",
+							"});",
+							"// additional claims from scopes",
+							"pm.test(\"`access_token` has `email` claim\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    let jwt = jsonData.access_token",
+							"    let [jwtHeader, jwtPayload, jwtSignature] = jwt.split('.')",
+							"    let jwtPayloadJsonString = atob(jwtPayload)",
+							"    let jwtPayloadJson = JSON.parse(jwtPayloadJsonString)",
+							"    pm.expect(jwtPayloadJson).to.have.property(\"email\")",
+							"});"
 						],
 						"type": "text/javascript",
 						"packages": {}
@@ -171,6 +199,224 @@
 					"port": "8080",
 					"path": [
 						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Token (client_credentials)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Payload has `type`\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"type\")",
+							"});",
+							"pm.test(\"Payload has `access_token`\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"access_token\")",
+							"});",
+							"pm.test(\"Payload has `refresh_token`\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"refresh_token\")",
+							"});",
+							"pm.test(\"Payload `type` is `Bearer` \", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.type).to.eql(\"Bearer\");",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "",
+							"value": "",
+							"type": "text"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "text"
+						},
+						{
+							"key": "client_id",
+							"value": "ACME",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "acme-secret",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8080/token",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Token (password)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Payload has `type`\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"type\")",
+							"});",
+							"pm.test(\"Payload has `access_token`\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"access_token\")",
+							"});",
+							"pm.test(\"Payload has `refresh_token`\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"refresh_token\")",
+							"});",
+							"pm.test(\"Payload `type` is `Bearer` \", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.type).to.eql(\"Bearer\");",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "",
+							"value": "",
+							"type": "text"
+						},
+						{
+							"key": "grant_type",
+							"value": "password",
+							"type": "text"
+						},
+						{
+							"key": "client_id",
+							"value": "ACME",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "acme-secret",
+							"type": "text"
+						},
+						{
+							"key": "username",
+							"value": "demo",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "demo",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8080/token",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SCIM Create",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// pm.test(\"Location is present\", function () {",
+							"//     pm.response.to.have.header(\"Location\");",
+							"// });",
+							"",
+							"// pm.test(\"Location header contains 'code' query parameter\", function () {",
+							"//     let locationHeader = pm.response.headers.get(\"Location\");",
+							"//     let codeMatch = locationHeader.match(/[?&]code=([^&]+)/);",
+							"//     pm.expect(codeMatch).to.not.be.null;",
+							"//     if (codeMatch) {",
+							"//         let code = codeMatch[1]; ",
+							"//         pm.collectionVariables.set(\"AUTHORIZATION_CODE\", code);",
+							"//         console.log(\"Saved code:\", code);",
+							"//     }",
+							"// });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"followRedirects": false
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"schemas\": [\n    \"urn:ietf:params:scim:schemas:core:2.0:User\",\n    \"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User\",\n    \"urn:example:params:scim:schemas:extension:custom:2.0:User\"\n  ],\n  \"userName\": \"{{$randomUserName}}\",\n  \"password\": \"{{$randomPassword}}\",\n  \"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User\": {\n    \"employeeNumber\": \"12345\",\n    \"department\": \"IT\"\n  },\n  \"urn:example:params:scim:schemas:extension:custom:2.0:User\": {\n    \"favoriteColor\": \"blue\",\n    \"projectCodes\": [\"X1\", \"Y2\"]\n  }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/beta/scim/users",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"beta",
+						"scim",
+						"users"
 					]
 				}
 			},

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -13,6 +14,7 @@ import (
 type UserServicer interface {
 	Authenticate(credentials authentication.CredentialsHandler) (UserHandler, error)
 	GetUsers() ([]UserHandler, error)
+	AddUser(UserHandler) error
 }
 
 type userService struct {
@@ -86,4 +88,19 @@ func (s *userService) GetUsers() ([]UserHandler, error) {
 		users = append(users, k)
 	}
 	return users, nil
+}
+
+func (s *userService) AddUser(user UserHandler) error {
+	s.usersMU.RLock()
+	defer s.usersMU.RUnlock()
+
+	username := user.Name()
+
+	if _, ok := s.users[username]; ok {
+		return errors.New("user already exists")
+	}
+
+	s.users[username] = user
+
+	return nil
 }

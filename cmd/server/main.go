@@ -170,6 +170,10 @@ func init() {
 		handler.SCIMGetHandler(userService),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath("/beta/scim/users"))
+	router.RegisterHandler(
+		handler.SCIMPostHandler(userService),
+		routing.WithMethod(http.MethodPost),
+		routing.WithPath("/beta/scim/users"))
 
 	httpServer, _ = server.NewServer(settings.ServerAddress, router)
 }

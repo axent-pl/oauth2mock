@@ -12,9 +12,8 @@ type UserHandler interface {
 	AuthenticationScheme() authentication.SchemeHandler
 	SetAuthenticationScheme(authentication.SchemeHandler)
 
-	// Custom / Enterprise SCIM schema data
-	GetCustomAttributes() map[string]interface{}
-	SetCustomAttribute(key string, value interface{})
+	GetCustomAttributes(key string) map[string]interface{}
+	SetCustomAttributes(key string, value map[string]interface{})
 }
 
 // -------------------- implementation
@@ -24,7 +23,7 @@ type userHandler struct {
 	name         string
 	active       bool
 	authScheme   authentication.SchemeHandler
-	customFields map[string]interface{}
+	customFields map[string]map[string]interface{}
 }
 
 func (s *userHandler) Id() string {
@@ -55,13 +54,19 @@ func (s *userHandler) SetAuthenticationScheme(scheme authentication.SchemeHandle
 	s.authScheme = scheme
 }
 
-func (s *userHandler) GetCustomAttributes() map[string]interface{} {
-	return s.customFields
+func (s *userHandler) GetCustomAttributes(key string) map[string]interface{} {
+	if value, ok := s.customFields[key]; ok {
+		return value
+	}
+	return nil
 }
 
-func (s *userHandler) SetCustomAttribute(key string, value interface{}) {
+func (s *userHandler) SetCustomAttributes(key string, value map[string]interface{}) {
+	if value == nil {
+		return
+	}
 	if s.customFields == nil {
-		s.customFields = make(map[string]interface{})
+		s.customFields = make(map[string]map[string]interface{})
 	}
 	s.customFields[key] = value
 }
@@ -74,7 +79,7 @@ func NewUserHandler(id string, authScheme authentication.SchemeHandler, options 
 		name:         id, // default name equals ID unless overridden
 		active:       true,
 		authScheme:   authScheme,
-		customFields: make(map[string]interface{}),
+		customFields: make(map[string]map[string]interface{}),
 	}
 
 	for _, opt := range options {
@@ -104,9 +109,9 @@ func WithActive(active bool) UserHandlerOption {
 	}
 }
 
-func WithCustomField(key string, value interface{}) UserHandlerOption {
+func WithCustomAttributes(key string, value map[string]interface{}) UserHandlerOption {
 	return func(u *userHandler) error {
-		u.SetCustomAttribute(key, value)
+		u.SetCustomAttributes(key, value)
 		return nil
 	}
 }
