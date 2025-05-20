@@ -114,6 +114,12 @@ func SCIMPostHandler(userService auth.UserServicer) routing.HandlerFunc {
 			Active:      newUser.Active(),
 			DisplayName: userDTO.DisplayName,
 		}
+		if customAttributes := newUser.GetCustomAttributes("custom"); customAttributes != nil {
+			outUserDTO.CustomAttributes = customAttributes
+		}
+		if enterpriseAttributes := newUser.GetCustomAttributes("enterprise"); enterpriseAttributes != nil {
+			outUserDTO.EnterpriseAttributes = enterpriseAttributes
+		}
 
 		responseBytes, err := json.Marshal(outUserDTO)
 		if err != nil {

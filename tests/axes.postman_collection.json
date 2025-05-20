@@ -371,20 +371,44 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"// pm.test(\"Location is present\", function () {",
-							"//     pm.response.to.have.header(\"Location\");",
-							"// });",
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
 							"",
-							"// pm.test(\"Location header contains 'code' query parameter\", function () {",
-							"//     let locationHeader = pm.response.headers.get(\"Location\");",
-							"//     let codeMatch = locationHeader.match(/[?&]code=([^&]+)/);",
-							"//     pm.expect(codeMatch).to.not.be.null;",
-							"//     if (codeMatch) {",
-							"//         let code = codeMatch[1]; ",
-							"//         pm.collectionVariables.set(\"AUTHORIZATION_CODE\", code);",
-							"//         console.log(\"Saved code:\", code);",
-							"//     }",
-							"// });"
+							"pm.test(\"User userName same as posted\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    var userName = pm.collectionVariables.get(\"USER1_USERNAME\")",
+							"    pm.expect(jsonData.userName).to.eql(userName);",
+							"});",
+							"",
+							"pm.test(\"User is active\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.active).to.eql(true);",
+							"});",
+							"",
+							"pm.test(\"User has custom attribute\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData['urn:example:params:scim:schemas:extension:custom:2.0:User']['favoriteColor']).to.eql(\"blue\");",
+							"});",
+							"",
+							"pm.test(\"User has enterprise attribute\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData['urn:ietf:params:scim:schemas:extension:enterprise:2.0:User']['department']).to.eql(\"IT\");",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const newUserName = `user_${Math.floor(Math.random() * 1000000)}`;",
+							"const newUserPass = \"pass_\"+newUserName.substr(5);",
+							"pm.collectionVariables.set(\"USER1_USERNAME\", newUserName);",
+							"pm.collectionVariables.set(\"USER1_PASSWORD\", newUserPass);"
 						],
 						"type": "text/javascript",
 						"packages": {}
@@ -399,7 +423,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"schemas\": [\n    \"urn:ietf:params:scim:schemas:core:2.0:User\",\n    \"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User\",\n    \"urn:example:params:scim:schemas:extension:custom:2.0:User\"\n  ],\n  \"userName\": \"{{$randomUserName}}\",\n  \"password\": \"{{$randomPassword}}\",\n  \"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User\": {\n    \"employeeNumber\": \"12345\",\n    \"department\": \"IT\"\n  },\n  \"urn:example:params:scim:schemas:extension:custom:2.0:User\": {\n    \"favoriteColor\": \"blue\",\n    \"projectCodes\": [\"X1\", \"Y2\"]\n  }\n}",
+					"raw": "{\n  \"schemas\": [\n    \"urn:ietf:params:scim:schemas:core:2.0:User\",\n    \"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User\",\n    \"urn:example:params:scim:schemas:extension:custom:2.0:User\"\n  ],\n  \"userName\": \"{{USER1_USERNAME}}\",\n  \"password\": \"{{USER1_PASSWORD}}\",\n  \"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User\": {\n    \"employeeNumber\": \"12345\",\n    \"department\": \"IT\"\n  },\n  \"urn:example:params:scim:schemas:extension:custom:2.0:User\": {\n    \"favoriteColor\": \"blue\",\n    \"projectCodes\": [\"X1\", \"Y2\"]\n  }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -454,6 +478,14 @@
 			"key": "REDIRECT_URL",
 			"value": "http://localhost:8888",
 			"type": "string"
+		},
+		{
+			"key": "USER1_USERNAME",
+			"value": ""
+		},
+		{
+			"key": "USER1_PASSWORD",
+			"value": ""
 		}
 	]
 }
