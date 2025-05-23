@@ -1,10 +1,9 @@
 package authentication
 
 import (
-	"errors"
 	"log/slog"
 
-	e "github.com/axent-pl/oauth2mock/pkg/error"
+	"github.com/axent-pl/oauth2mock/pkg/errs"
 )
 
 type SchemeHandler interface {
@@ -37,10 +36,10 @@ func NewScheme(options ...SchemeOption) (SchemeHandler, error) {
 func WithClientIdAndSecret(clientId, clientSecret string) SchemeOption {
 	return func(s *schemeHandler) error {
 		if clientId == "" {
-			return e.ErrClientCredsMissingClientId
+			return errs.ErrClientCredsMissingClientId
 		}
 		if clientSecret == "" {
-			return e.ErrClientCredsMissingClientSecret
+			return errs.ErrClientCredsMissingClientSecret
 		}
 		clientSecretHash, err := HashPassword(clientSecret)
 		if err != nil {
@@ -55,10 +54,10 @@ func WithClientIdAndSecret(clientId, clientSecret string) SchemeOption {
 func WithUsernameAndPassword(username, password string) SchemeOption {
 	return func(s *schemeHandler) error {
 		if username == "" {
-			return e.ErrUserCredsMissingUsername
+			return errs.ErrUserCredsMissingUsername
 		}
 		if password == "" {
-			return e.ErrUserCredsMissingPassword
+			return errs.ErrUserCredsMissingPassword
 		}
 		passwordHash, err := HashPassword(password)
 		if err != nil {
@@ -73,15 +72,15 @@ func WithUsernameAndPassword(username, password string) SchemeOption {
 func WithClientAssertion(assertionType, assertionClaim string, assertionJWKS string) SchemeOption {
 	return func(s *schemeHandler) error {
 		if assertionType == "" {
-			return e.ErrClientCredsMissingMissingAssertionType
+			return errs.ErrClientCredsMissingMissingAssertionType
 		}
 		if assertionType != "urn:ietf:params:oauth:client-assertion-type:jwt-bearer" {
-			return e.ErrClientCredsMissingInvalidAssertionType
+			return errs.ErrClientCredsMissingInvalidAssertionType
 		}
 		s.AssertionType = assertionType
 		s.AssertionClaim = assertionClaim
 		s.AssertionJWKS = assertionJWKS
-		return errors.New("unsupported")
+		return errs.New("client assertion is not supported", errs.ErrUnsupportedFeature)
 	}
 }
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	e "github.com/axent-pl/oauth2mock/pkg/error"
+	e "github.com/axent-pl/oauth2mock/pkg/errs"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
 )
 

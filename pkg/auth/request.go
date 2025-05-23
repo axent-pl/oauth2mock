@@ -1,6 +1,6 @@
 package auth
 
-import e "github.com/axent-pl/oauth2mock/pkg/error"
+import e "github.com/axent-pl/oauth2mock/pkg/errs"
 
 type AuthorizationRequest struct {
 	ResponseType string

@@ -1,9 +1,7 @@
 package authentication
 
 import (
-	"errors"
-
-	e "github.com/axent-pl/oauth2mock/pkg/error"
+	"github.com/axent-pl/oauth2mock/pkg/errs"
 )
 
 type CredentialsHandler interface {
@@ -37,10 +35,10 @@ func NewCredentials(option CredentialsOption) (CredentialsHandler, error) {
 func FromUsernameAndPassword(username string, password string) CredentialsOption {
 	return func(c *credentialsHandler) error {
 		if username == "" {
-			return e.ErrUserCredsMissingUsername
+			return errs.ErrUserCredsMissingUsername
 		}
 		if password == "" {
-			return e.ErrUserCredsMissingPassword
+			return errs.ErrUserCredsMissingPassword
 		}
 		c.username = username
 		c.password = password
@@ -52,10 +50,10 @@ func FromUsernameAndPassword(username string, password string) CredentialsOption
 func FromCliendIdAndSecret(clientId string, clientSecret string) CredentialsOption {
 	return func(c *credentialsHandler) error {
 		if clientId == "" {
-			return e.ErrClientCredsMissingClientId
+			return errs.ErrClientCredsMissingClientId
 		}
 		if clientSecret == "" {
-			return e.ErrClientCredsMissingClientSecret
+			return errs.ErrClientCredsMissingClientSecret
 		}
 		c.clientId = clientId
 		c.clientSecret = clientSecret
@@ -67,10 +65,10 @@ func FromCliendIdAndSecret(clientId string, clientSecret string) CredentialsOpti
 func FromClientAssertion(assertionType, assertion string) CredentialsOption {
 	return func(c *credentialsHandler) error {
 		if assertionType == "" {
-			return e.ErrClientCredsMissingMissingAssertionType
+			return errs.ErrClientCredsMissingMissingAssertionType
 		}
 		if assertionType != "urn:ietf:params:oauth:client-assertion-type:jwt-bearer" {
-			return e.ErrClientCredsMissingInvalidAssertionType
+			return errs.ErrClientCredsMissingInvalidAssertionType
 		}
 		c.assertionType = assertionType
 		c.assertion = assertion
@@ -90,7 +88,7 @@ func (c *credentialsHandler) IdentityName() (string, error) {
 	if len(c.clientId) > 0 {
 		return c.clientId, nil
 	}
-	return "", errors.New("credentials do not contain identity name")
+	return "", errs.ErrCredsMissingIdentity
 }
 
 func (c *credentialsHandler) Credentials() (string, error) {
@@ -102,6 +100,6 @@ func (c *credentialsHandler) Credentials() (string, error) {
 	case ClientAssertion:
 		return c.assertion, nil
 	default:
-		return "", errors.New("credentials do not contain a valid authentication method")
+		return "", errs.ErrCredsUndefinedAuthMethod
 	}
 }
