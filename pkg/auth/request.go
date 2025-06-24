@@ -1,6 +1,9 @@
 package auth
 
-import e "github.com/axent-pl/oauth2mock/pkg/errs"
+import (
+	e "github.com/axent-pl/oauth2mock/pkg/errs"
+	usr "github.com/axent-pl/oauth2mock/pkg/service/user"
+)
 
 type AuthorizationRequest struct {
 	ResponseType string
@@ -9,7 +12,7 @@ type AuthorizationRequest struct {
 	State        string
 	Nonce        string
 	Client       ClientHandler
-	Subject      UserHandler
+	Subject      usr.UserHandler
 }
 
 func (req *AuthorizationRequest) GetRedirectURI() string {

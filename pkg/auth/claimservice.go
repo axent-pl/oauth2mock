@@ -8,11 +8,13 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	usr "github.com/axent-pl/oauth2mock/pkg/service/user"
 )
 
 // ClaimServicer interface defines a method to retrieve claims for a subject and client.
 type ClaimServicer interface {
-	GetUserClaims(user UserHandler, client ClientHandler, scope []string) (map[string]interface{}, error)
+	GetUserClaims(user usr.UserHandler, client ClientHandler, scope []string) (map[string]interface{}, error)
 	GetClientClaims(client ClientHandler, scope []string) (map[string]interface{}, error)
 }
 
@@ -151,7 +153,7 @@ func (s *claimService) reloadClaims() {
 }
 
 // GetClaims retrieves claims for a given user and client.
-func (s *claimService) GetUserClaims(subject UserHandler, client ClientHandler, scope []string) (map[string]interface{}, error) {
+func (s *claimService) GetUserClaims(subject usr.UserHandler, client ClientHandler, scope []string) (map[string]interface{}, error) {
 	s.claimsMU.RLock()
 	defer s.claimsMU.RUnlock()
 

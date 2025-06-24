@@ -7,10 +7,10 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/axent-pl/oauth2mock/pkg/auth"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
+	usr "github.com/axent-pl/oauth2mock/pkg/service/user"
 )
 
 // ---------- DTO
@@ -65,7 +65,7 @@ func validateSchemas(schemas []string) (bool, error) {
 	return true, nil
 }
 
-func SCIMPostHandler(userService auth.UserServicer) routing.HandlerFunc {
+func SCIMPostHandler(userService usr.UserServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var userDTO = &SCIMUserCreateRequestDTO{}
 		if err := json.NewDecoder(r.Body).Decode(&userDTO); err != nil {
@@ -94,7 +94,7 @@ func SCIMPostHandler(userService auth.UserServicer) routing.HandlerFunc {
 		}
 
 		// Create a new user
-		newUser, err := auth.NewUserHandler(userDTO.UserName, authScheme, auth.WithCustomAttributes("custom", userDTO.CustomAttributes), auth.WithCustomAttributes("enterprise", userDTO.EnterpriseAttributes))
+		newUser, err := usr.NewUserHandler(userDTO.UserName, authScheme, usr.WithCustomAttributes("custom", userDTO.CustomAttributes), usr.WithCustomAttributes("enterprise", userDTO.EnterpriseAttributes))
 		if err != nil {
 			slog.Error("could not initialize user from SCIM input", "error", err)
 			http.Error(w, "could not initialize user from SCIM input", http.StatusBadRequest)
@@ -133,7 +133,7 @@ func SCIMPostHandler(userService auth.UserServicer) routing.HandlerFunc {
 	}
 }
 
-func SCIMGetHandler(userService auth.UserServicer) routing.HandlerFunc {
+func SCIMGetHandler(userService usr.UserServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// get users from service
 		users, err := userService.GetUsers()
