@@ -30,7 +30,7 @@ type Settings struct {
 var (
 	settings Settings
 
-	authCodeService auth.AuthorizationCodeService
+	authCodeService auth.AuthorizationCodeServicer
 	clientService   auth.ClientServicer
 	userService     usr.UserServicer
 	claimService    auth.ClaimServicer
@@ -62,7 +62,7 @@ func init() {
 func init() {
 	var err error
 
-	authCodeService, err = auth.NewAuthorizationCodeSimpleService()
+	authCodeService, err = auth.NewAuthorizationCodeService()
 	if err != nil {
 		slog.Error("failed to initialize authorization code service", "error", err)
 		os.Exit(1)

@@ -14,7 +14,7 @@ import (
 	usr "github.com/axent-pl/oauth2mock/pkg/service/user"
 )
 
-func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, authCodeDB auth.AuthorizationCodeService, claimsDB auth.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
+func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, authCodeDB auth.AuthorizationCodeServicer, claimsDB auth.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requstDTO := &dto.TokenAuthorizationCodeRequestDTO{}
 		requestValidator := request.NewValidator()

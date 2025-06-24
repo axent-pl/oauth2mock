@@ -60,7 +60,7 @@ func AuthorizeGetHandler(templateDB template.TemplateServicer, clientDB auth.Cli
 	}
 }
 
-func AuthorizePostHandler(templateDB template.TemplateServicer, clientDB auth.ClientServicer, userService usr.UserServicer, authCodeDB auth.AuthorizationCodeService) routing.HandlerFunc {
+func AuthorizePostHandler(templateDB template.TemplateServicer, clientDB auth.ClientServicer, userService usr.UserServicer, authCodeDB auth.AuthorizationCodeServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// authorization request DTO
 		authorizeRequestDTO := &dto.AuthorizeRequestDTO{}

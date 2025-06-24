@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// AuthorizationCodeService defines the interface for an authorization code database
-type AuthorizationCodeService interface {
+// AuthorizationCodeServicer defines the interface for an authorization code database
+type AuthorizationCodeServicer interface {
 	// GenerateCode generates and stores an authorization code with a TTL
 	GenerateCode(request *AuthorizationRequest, ttl time.Duration) (string, error)
 
@@ -24,28 +24,32 @@ type AuthorizationCodeData struct {
 	Request   *AuthorizationRequest
 }
 
-// AuthorizationCodeSimpleService is a thread-safe store for authorization codes
-type AuthorizationCodeSimpleService struct {
-	codes   map[string]AuthorizationCodeData
-	codesMU sync.RWMutex
+// AuthorizationCodeService is a thread-safe store for authorization codes
+type AuthorizationCodeService struct {
+	ticker     time.Duration
+	codeLength int
+	codes      map[string]AuthorizationCodeData
+	codesMU    sync.RWMutex
 }
 
-// NewAuthorizationCodeSimpleService creates a new instance of AuthorizationCodeDatabase
-func NewAuthorizationCodeSimpleService() (*AuthorizationCodeSimpleService, error) {
-	db := &AuthorizationCodeSimpleService{
-		codes: make(map[string]AuthorizationCodeData),
+// NewAuthorizationCodeService creates a new instance of AuthorizationCodeDatabase
+func NewAuthorizationCodeService() (*AuthorizationCodeService, error) {
+	db := &AuthorizationCodeService{
+		ticker:     1 * time.Minute,
+		codeLength: 32,
+		codes:      make(map[string]AuthorizationCodeData),
 	}
 	go db.cleanupExpiredCodes() // Background task to clean up expired codes
 	return db, nil
 }
 
 // GenerateCode generates and stores an authorization code with a TTL
-func (db *AuthorizationCodeSimpleService) GenerateCode(request *AuthorizationRequest, ttl time.Duration) (string, error) {
-	db.codesMU.Lock()
-	defer db.codesMU.Unlock()
+func (acs *AuthorizationCodeService) GenerateCode(request *AuthorizationRequest, ttl time.Duration) (string, error) {
+	acs.codesMU.Lock()
+	defer acs.codesMU.Unlock()
 
 	// Generate code
-	code, err := GenerateRandomCode(32)
+	code, err := GenerateRandomCode(acs.codeLength)
 	if err != nil {
 		return "", err
 	}
@@ -57,45 +61,45 @@ func (db *AuthorizationCodeSimpleService) GenerateCode(request *AuthorizationReq
 		Request:   request,
 	}
 
-	db.codes[code] = codeData
+	acs.codes[code] = codeData
 
 	return code, nil
 }
 
 // GetCode retrieves an authorization code if it exists and has not expired
-func (db *AuthorizationCodeSimpleService) GetCode(code string) (AuthorizationCodeData, bool) {
-	db.codesMU.RLock()
-	defer db.codesMU.RUnlock()
+func (acs *AuthorizationCodeService) GetCode(code string) (AuthorizationCodeData, bool) {
+	acs.codesMU.RLock()
+	defer acs.codesMU.RUnlock()
 
-	data, exists := db.codes[code]
+	data, exists := acs.codes[code]
 	if !exists || time.Now().After(data.expiresAt) {
 		return AuthorizationCodeData{}, false
 	}
 
-	delete(db.codes, code)
+	delete(acs.codes, code)
 
 	return data, true
 }
 
 // RevokeCode removes an authorization code from the database
-func (db *AuthorizationCodeSimpleService) RevokeCode(code string) {
-	db.codesMU.Lock()
-	defer db.codesMU.Unlock()
-	delete(db.codes, code)
+func (acs *AuthorizationCodeService) RevokeCode(code string) {
+	acs.codesMU.Lock()
+	defer acs.codesMU.Unlock()
+	delete(acs.codes, code)
 }
 
 // cleanupExpiredCodes removes expired authorization codes periodically
-func (db *AuthorizationCodeSimpleService) cleanupExpiredCodes() {
-	ticker := time.NewTicker(1 * time.Minute) // Adjust interval as needed
+func (acs *AuthorizationCodeService) cleanupExpiredCodes() {
+	ticker := time.NewTicker(acs.ticker)
 	defer ticker.Stop()
 
 	for range ticker.C {
-		db.codesMU.Lock()
-		for code, data := range db.codes {
+		acs.codesMU.Lock()
+		for code, data := range acs.codes {
 			if time.Now().After(data.expiresAt) {
-				delete(db.codes, code)
+				delete(acs.codes, code)
 			}
 		}
-		db.codesMU.Unlock()
+		acs.codesMU.Unlock()
 	}
 }
