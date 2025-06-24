@@ -10,6 +10,7 @@ type TokenResponse struct {
 	Type         string `json:"type"`
 	RefreshToken string `json:"refresh_token"`
 	AccessToken  string `json:"access_token"`
+	IDToken      string `json:"id_token"`
 }
 
 func getSubClaim(user UserHandler, client ClientHandler) string {
@@ -53,6 +54,22 @@ func NewTokenReponse(issuer string, user UserHandler, client ClientHandler, clai
 		return TokenResponse{}, err
 	}
 	tokenResponse.RefreshToken = string(refresh_token)
+
+	id_token_claims := make(map[string]interface{})
+	id_token_claims["iss"] = issuer
+	id_token_claims["sub"] = getSubClaim(user, client)
+	id_token_claims["aud"] = client.Id()
+	id_token_claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
+	id_token_claims["iat"] = time.Now().Unix()
+	id_token_claims["typ"] = "ID"
+	for k, v := range claims {
+		id_token_claims[k] = v
+	}
+	id_token, err := keyService.Sign(id_token_claims)
+	if err != nil {
+		return TokenResponse{}, err
+	}
+	tokenResponse.IDToken = string(id_token)
 
 	return tokenResponse, nil
 }

@@ -7,6 +7,7 @@ type AuthorizationRequest struct {
 	RedirectURI  string
 	Scope        []string
 	State        string
+	Nonce        string
 	Client       ClientHandler
 	Subject      UserHandler
 }

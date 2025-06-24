@@ -15,6 +15,8 @@ func WellKnownHandler(openidConfig auth.OpenIDConfiguration) routing.HandlerFunc
 		if openidConfig.UseOrigin {
 			origin := getOriginFromRequest(r)
 			openidConfigCopy.SetIssuer(origin)
+		} else {
+			openidConfigCopy.SetIssuer(openidConfigCopy.Issuer)
 		}
 
 		resp, err := json.Marshal(openidConfigCopy)

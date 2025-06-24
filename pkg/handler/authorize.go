@@ -83,6 +83,7 @@ func AuthorizePostHandler(templateDB template.TemplateServicer, clientDB auth.Cl
 			RedirectURI:  authorizeRequestDTO.RedirectURI,
 			Scope:        strings.Split(authorizeRequestDTO.Scope, " "),
 			State:        authorizeRequestDTO.State,
+			Nonce:        authorizeRequestDTO.Nonce,
 			Client:       client,
 		}
 		err = authorizationRequest.Valid()
@@ -117,6 +118,7 @@ func AuthorizePostHandler(templateDB template.TemplateServicer, clientDB auth.Cl
 				redirectURL, _ := url.Parse(authorizationRequest.RedirectURI)
 				redirectURLQuery := redirectURL.Query()
 				redirectURLQuery.Add("code", code)
+				redirectURLQuery.Add("state", authorizationRequest.State)
 				redirectURL.RawQuery = redirectURLQuery.Encode()
 				slog.Info("AuthorizePostHandler redirecting", "RequestID", r.Context().Value("RequestID"), "redirectURL", redirectURL.String())
 				http.Redirect(w, r, redirectURL.String(), http.StatusSeeOther)

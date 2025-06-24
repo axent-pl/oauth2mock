@@ -11,4 +11,5 @@ type AuthorizeRequestDTO struct {
 	RedirectURI  string `queryParam:"redirect_uri"`
 	Scope        string `queryParam:"scope"`
 	State        string `queryParam:"state"`
+	Nonce        string `queryParam:"nonce"`
 }

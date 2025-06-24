@@ -64,6 +64,10 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 			return
 		}
 
+		if authCodeData.Request.Nonce != "" {
+			claims["nonce"] = authCodeData.Request.Nonce
+		}
+
 		issuer := openidConfig.Issuer
 		if openidConfig.UseOrigin {
 			issuer = getOriginFromRequest(r)
