@@ -8,6 +8,7 @@ import (
 
 type SchemeHandler interface {
 	Matches(inputCredentials CredentialsHandler) bool
+	PasswordHash() string
 }
 
 // schemeHandler represents the configuration for multiple authentication methods.
@@ -119,4 +120,8 @@ func (s *schemeHandler) Matches(inputCredentials CredentialsHandler) bool {
 	default:
 		return false
 	}
+}
+
+func (s *schemeHandler) PasswordHash() string {
+	return s.Password
 }

@@ -1,4 +1,4 @@
-package auth
+package userservice
 
 import "github.com/axent-pl/oauth2mock/pkg/service/authentication"
 
