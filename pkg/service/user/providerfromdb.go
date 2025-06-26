@@ -9,13 +9,36 @@ import (
 
 	"github.com/axent-pl/oauth2mock/pkg/errs"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
+	_ "github.com/lib/pq"
 )
+
+type FromDBConfig struct {
+	Driver   string            `json:"driver"`
+	User     string            `json:"user"`
+	Password string            `json:"password"`
+	Host     string            `json:"host"`
+	Port     string            `json:"port"`
+	Database string            `json:"database"`
+	Options  map[string]string `json:"options"`
+}
 
 type userDBService struct {
 	db *sql.DB
 }
 
-func NewUserDBServiceSQL(db *sql.DB) (UserServicer, error) {
+func (c *FromDBConfig) Init() (UserServicer, error) {
+	if c.Driver != "postgres" {
+		return nil, errors.New("unsupported driver")
+	}
+	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", c.Driver, c.User, c.Password, c.Host, c.Port, c.Database)
+	db, err := sql.Open(c.Driver, connectionString)
+	if err != nil {
+		return nil, err
+	}
+	return NewUserDBService(db)
+}
+
+func NewUserDBService(db *sql.DB) (UserServicer, error) {
 	return &userDBService{db: db}, nil
 }
 
@@ -134,4 +157,8 @@ func (s *userDBService) AddUser(user UserHandler) error {
 		username, pw, user.Active(), customAttrsJSON)
 
 	return err
+}
+
+func init() {
+	RegisterUserServiceProvider("fromDB", func() UserServiceProvider { return &FromDBConfig{} })
 }

@@ -64,46 +64,56 @@
         }
     },
     "users": {
-        "demo": {
-            "username": "demo",
-            "password": "demo",
-            "claims": {
-                "base": {
-                    "sub": "Demo",
-                    "preferred_username": "John.Demo@acme.com",
-                    "realm_roles": [
-                        "DEMO"
-                    ]
-                },
-                "scopeOverrides": {
-                    "email": {
-                        "email": "John.Demo@acme.com"
-                    }
-                }
-            }
-        },
-        "admin": {
-            "username": "admin",
-            "password": "admin",
-            "claims": {
-                "base": {
-                    "sub": "Demo",
-                    "preferred_username": "John.Demo@acme.com",
-                    "realm_roles": [
-                        "ADMIN"
-                    ]
-                },
-                "clientOverrides": {
-                    "ACME": {
-                        "client_roles": [
-                            "DEMO",
-                            "ADMIN"
-                        ]
-                    }
-                },
-                "scopeOverrides": {
-                    "email": {
-                        "email": "John.Demo@acme.com"
+        "provider": {
+            "fromJSON": {
+                "users": {
+                    "demo": {
+                        "username": "demo",
+                        "password": "demo",
+                        "attributes": {
+                            "claims": {
+                                "base": {
+                                    "sub": "Demo",
+                                    "preferred_username": "John.Demo@acme.com",
+                                    "realm_roles": [
+                                        "DEMO"
+                                    ]
+                                },
+                                "scopeOverrides": {
+                                    "email": {
+                                        "email": "John.Demo@acme.com"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "admin": {
+                        "username": "admin",
+                        "password": "admin",
+                        "attributes": {
+                            "claims": {
+                                "base": {
+                                    "sub": "Demo",
+                                    "preferred_username": "John.Demo@acme.com",
+                                    "realm_roles": [
+                                        "ADMIN"
+                                    ]
+                                },
+                                "clientOverrides": {
+                                    "ACME": {
+                                        "client_roles": [
+                                            "DEMO",
+                                            "ADMIN"
+                                        ]
+                                    }
+                                },
+                                "scopeOverrides": {
+                                    "email": {
+                                        "email": "John.Demo@acme.com"
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

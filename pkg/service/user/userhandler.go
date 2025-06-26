@@ -2,28 +2,32 @@ package userservice
 
 import "github.com/axent-pl/oauth2mock/pkg/service/authentication"
 
-// UserHandler is the interface for user operations
-type UserHandler interface {
-	Id() string
-	Name() string
-	SetName(string)
-	Active() bool
-	SetActive(bool)
-	AuthenticationScheme() authentication.SchemeHandler
-	SetAuthenticationScheme(authentication.SchemeHandler)
-
-	GetCustomAttributes(key string) map[string]interface{}
-	SetCustomAttributes(key string, value map[string]interface{})
-}
-
-// -------------------- implementation
-
 type userHandler struct {
 	id           string
 	name         string
 	active       bool
 	authScheme   authentication.SchemeHandler
 	customFields map[string]map[string]interface{}
+}
+
+type UserHandlerOption func(*userHandler) error
+
+func NewUserHandler(id string, authScheme authentication.SchemeHandler, options ...UserHandlerOption) (UserHandler, error) {
+	user := &userHandler{
+		id:           id,
+		name:         id, // default name equals ID unless overridden
+		active:       true,
+		authScheme:   authScheme,
+		customFields: make(map[string]map[string]interface{}),
+	}
+
+	for _, opt := range options {
+		if err := opt(user); err != nil {
+			return nil, err
+		}
+	}
+
+	return user, nil
 }
 
 func (s *userHandler) Id() string {
@@ -70,30 +74,6 @@ func (s *userHandler) SetCustomAttributes(key string, value map[string]interface
 	}
 	s.customFields[key] = value
 }
-
-// -------------------- constructor
-
-func NewUserHandler(id string, authScheme authentication.SchemeHandler, options ...UserHandlerOption) (UserHandler, error) {
-	user := &userHandler{
-		id:           id,
-		name:         id, // default name equals ID unless overridden
-		active:       true,
-		authScheme:   authScheme,
-		customFields: make(map[string]map[string]interface{}),
-	}
-
-	for _, opt := range options {
-		if err := opt(user); err != nil {
-			return nil, err
-		}
-	}
-
-	return user, nil
-}
-
-// -------------------- constructor options
-
-type UserHandlerOption func(*userHandler) error
 
 func WithName(name string) UserHandlerOption {
 	return func(u *userHandler) error {

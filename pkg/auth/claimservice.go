@@ -152,16 +152,45 @@ func (s *claimService) reloadClaims() {
 	s.lastModified = fileInfo.ModTime()
 }
 
+func ReadUserClaims(user usr.UserHandler) (claimDetails, error) {
+	claims := claimDetails{
+		Base:            make(map[string]interface{}),
+		ClientOverrides: make(map[string]map[string]interface{}),
+		ScopeOverrides:  make(map[string]map[string]interface{}),
+	}
+
+	userClaims := user.GetCustomAttributes("claims")
+	if userClaims == nil {
+		return claims, fmt.Errorf("no claims for user %s", user.Name())
+	}
+
+	if userBase, ok := userClaims["base"]; ok {
+		claims.Base = userBase.(map[string]interface{})
+	}
+	if userClientOverrides, ok := userClaims["clientOverrides"]; ok {
+		for clientId, clientOverrides := range userClientOverrides.(map[string]interface{}) {
+			claims.ClientOverrides[clientId] = clientOverrides.(map[string]interface{})
+		}
+	}
+	if userScopeOverrides, ok := userClaims["scopeOverrides"]; ok {
+		for scope, scopeOverrides := range userScopeOverrides.(map[string]interface{}) {
+			claims.ScopeOverrides[scope] = scopeOverrides.(map[string]interface{})
+		}
+	}
+
+	return claims, nil
+}
+
 // GetClaims retrieves claims for a given user and client.
-func (s *claimService) GetUserClaims(subject usr.UserHandler, client ClientHandler, scope []string) (map[string]interface{}, error) {
+func (s *claimService) GetUserClaims(user usr.UserHandler, client ClientHandler, scope []string) (map[string]interface{}, error) {
 	s.claimsMU.RLock()
 	defer s.claimsMU.RUnlock()
 
 	claims := make(map[string]interface{})
 
-	userClaims, ok := s.userClaims[subject.Name()]
-	if !ok {
-		return claims, fmt.Errorf("no claims for subject %s", subject.Name())
+	userClaims, err := ReadUserClaims(user)
+	if err != nil {
+		return claims, err
 	}
 
 	// Add base claims.

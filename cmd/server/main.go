@@ -20,7 +20,7 @@ import (
 
 type Settings struct {
 	DataFile      string `env:"DATAFILE_PATH" default:"assets/config/config.json"`
-	ServerAddress string `env:"SERVER_ADDRESS" default:":8080"`
+	ServerAddress string `env:"SERVER_ADDRESS" default:":8222"`
 	TemplateDir   string `env:"TEMPLATES_PATH" default:"assets/template"`
 
 	UseOrigin bool   `env:"OAUTH2_ISSUER_FROM_ORIGIN" default:"true"`

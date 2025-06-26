@@ -60,12 +60,12 @@
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8080/authorize?response_type=code&client_id=ACME&redirect_uri={{REDIRECT_URL}}&scope=email profile shopping",
+					"raw": "http://localhost:8222/authorize?response_type=code&client_id=ACME&redirect_uri={{REDIRECT_URL}}&scope=email profile shopping",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "8080",
+					"port": "8222",
 					"path": [
 						"authorize"
 					],
@@ -191,12 +191,12 @@
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8080/token",
+					"raw": "http://localhost:8222/token",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "8080",
+					"port": "8222",
 					"path": [
 						"token"
 					]
@@ -266,12 +266,12 @@
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8080/token",
+					"raw": "http://localhost:8222/token",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "8080",
+					"port": "8222",
 					"path": [
 						"token"
 					]
@@ -351,12 +351,12 @@
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8080/token",
+					"raw": "http://localhost:8222/token",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "8080",
+					"port": "8222",
 					"path": [
 						"token"
 					]
@@ -431,12 +431,12 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/beta/scim/users",
+					"raw": "http://localhost:8222/beta/scim/users",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "8080",
+					"port": "8222",
 					"path": [
 						"beta",
 						"scim",
@@ -476,7 +476,7 @@
 		},
 		{
 			"key": "REDIRECT_URL",
-			"value": "http://localhost:8888",
+			"value": "http://localhost:8222",
 			"type": "string"
 		},
 		{
