@@ -1,57 +1,58 @@
 package userservice
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
 	"sync"
 
 	e "github.com/axent-pl/oauth2mock/pkg/errs"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
 )
 
-type FromJSONConfig struct {
-	Users map[string]struct {
+type jsonUserServiceConfig struct {
+	Provider string `json:"provider"`
+	Users    map[string]struct {
 		Username   string                            `json:"username"`
 		Password   string                            `json:"password"`
 		Attributes map[string]map[string]interface{} `json:"attributes"`
 	} `json:"users"`
 }
 
-type userService struct {
+type jsonUserService struct {
 	users   map[string]UserHandler
 	usersMU sync.RWMutex
 }
 
-func (c *FromJSONConfig) Init() (UserServicer, error) {
-	return NewJSONUserService(c)
-}
-
-func NewJSONUserService(usersData *FromJSONConfig) (UserServicer, error) {
-	slog.Info("initializing JSON user service")
-	userStore := userService{
+func NewJSONUserService(rawConfig json.RawMessage) (UserServicer, error) {
+	config := jsonUserServiceConfig{}
+	userService := jsonUserService{
 		users: make(map[string]UserHandler),
 	}
 
-	for username, userData := range usersData.Users {
+	if err := json.Unmarshal(rawConfig, &config); err != nil {
+		return nil, err
+	}
+
+	for username, userData := range config.Users {
 		authScheme, err := authentication.NewScheme(authentication.WithUsernameAndPassword(userData.Username, userData.Password))
 		if err != nil {
-			panic(fmt.Errorf("failed to parse user credentials: %w", err))
+			return nil, fmt.Errorf("failed to parse user credentials for '%s': %w", username, err)
 		}
 		user, err := NewUserHandler(username, authScheme)
 		if err != nil {
-			panic(fmt.Errorf("failed to initialize user: %w", err))
+			return nil, fmt.Errorf("failed to initialize user '%s': %w", username, err)
 		}
 		for k, v := range userData.Attributes {
 			user.SetCustomAttributes(k, v)
 		}
-		userStore.users[username] = user
+		userService.users[username] = user
 	}
 
-	return &userStore, nil
+	return &userService, nil
 }
 
-func (s *userService) Authenticate(inputCredentials authentication.CredentialsHandler) (UserHandler, error) {
+func (s *jsonUserService) Authenticate(inputCredentials authentication.CredentialsHandler) (UserHandler, error) {
 	s.usersMU.RLock()
 	defer s.usersMU.RUnlock()
 
@@ -75,7 +76,7 @@ func (s *userService) Authenticate(inputCredentials authentication.CredentialsHa
 	return nil, e.ErrUserCredsInvalid
 }
 
-func (s *userService) GetUsers() ([]UserHandler, error) {
+func (s *jsonUserService) GetUsers() ([]UserHandler, error) {
 	var users []UserHandler = make([]UserHandler, 0)
 	for _, k := range s.users {
 		users = append(users, k)
@@ -83,7 +84,7 @@ func (s *userService) GetUsers() ([]UserHandler, error) {
 	return users, nil
 }
 
-func (s *userService) AddUser(user UserHandler) error {
+func (s *jsonUserService) AddUser(user UserHandler) error {
 	s.usersMU.RLock()
 	defer s.usersMU.RUnlock()
 
@@ -99,5 +100,5 @@ func (s *userService) AddUser(user UserHandler) error {
 }
 
 func init() {
-	RegisterUserServiceProvider("fromJSON", func() UserServiceProvider { return &FromJSONConfig{} })
+	Register("json", NewJSONUserService)
 }

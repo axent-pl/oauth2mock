@@ -12,7 +12,8 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type FromDBConfig struct {
+type databaseUserServiceConfig struct {
+	Provider string            `json:"provider"`
 	Driver   string            `json:"driver"`
 	User     string            `json:"user"`
 	Password string            `json:"password"`
@@ -22,16 +23,20 @@ type FromDBConfig struct {
 	Options  map[string]string `json:"options"`
 }
 
-type userDBService struct {
+type databaseUserService struct {
 	db *sql.DB
 }
 
-func (c *FromDBConfig) Init() (UserServicer, error) {
-	if c.Driver != "postgres" {
+func NewDatabaseUserService(rawConfig json.RawMessage) (UserServicer, error) {
+	config := databaseUserServiceConfig{}
+	if err := json.Unmarshal(rawConfig, &config); err != nil {
+		return nil, err
+	}
+	if config.Driver != "postgres" {
 		return nil, errors.New("unsupported driver")
 	}
-	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", c.Driver, c.User, c.Password, c.Host, c.Port, c.Database)
-	db, err := sql.Open(c.Driver, connectionString)
+	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", config.Driver, config.User, config.Password, config.Host, config.Port, config.Database)
+	db, err := sql.Open(config.Driver, connectionString)
 	if err != nil {
 		return nil, err
 	}
@@ -39,10 +44,10 @@ func (c *FromDBConfig) Init() (UserServicer, error) {
 }
 
 func NewUserDBService(db *sql.DB) (UserServicer, error) {
-	return &userDBService{db: db}, nil
+	return &databaseUserService{db: db}, nil
 }
 
-func (s *userDBService) Authenticate(creds authentication.CredentialsHandler) (UserHandler, error) {
+func (s *databaseUserService) Authenticate(creds authentication.CredentialsHandler) (UserHandler, error) {
 	username, err := creds.IdentityName()
 	if err != nil {
 		return nil, err
@@ -85,7 +90,7 @@ func (s *userDBService) Authenticate(creds authentication.CredentialsHandler) (U
 	return user, nil
 }
 
-func (s *userDBService) GetUsers() ([]UserHandler, error) {
+func (s *databaseUserService) GetUsers() ([]UserHandler, error) {
 	query := `SELECT username, password, active, custom_attributes FROM users`
 
 	rows, err := s.db.QueryContext(context.Background(), query)
@@ -128,7 +133,7 @@ func (s *userDBService) GetUsers() ([]UserHandler, error) {
 	return users, nil
 }
 
-func (s *userDBService) AddUser(user UserHandler) error {
+func (s *databaseUserService) AddUser(user UserHandler) error {
 	username := user.Name()
 
 	var exists bool
@@ -160,5 +165,5 @@ func (s *userDBService) AddUser(user UserHandler) error {
 }
 
 func init() {
-	RegisterUserServiceProvider("fromDB", func() UserServiceProvider { return &FromDBConfig{} })
+	Register("database", NewDatabaseUserService)
 }

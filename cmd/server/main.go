@@ -62,6 +62,12 @@ func init() {
 func init() {
 	var err error
 
+	data, err := os.ReadFile(settings.DataFile)
+	if err != nil {
+		slog.Error("failed to read config", "error", err)
+		os.Exit(1)
+	}
+
 	authCodeService, err = auth.NewAuthorizationCodeService()
 	if err != nil {
 		slog.Error("failed to initialize authorization code service", "error", err)
@@ -76,12 +82,12 @@ func init() {
 	}
 	slog.Info("client service initialized")
 
-	userService, err = usr.NewUserService(settings.DataFile)
+	userService, err = usr.NewFromConfig(data)
 	if err != nil {
-		slog.Error("failed to initialize subject service", "error", err)
+		slog.Error("failed to initialize user service", "error", err)
 		os.Exit(1)
 	}
-	slog.Info("subject service initialized")
+	slog.Info("user service initialized")
 
 	claimService, err = auth.NewClaimService(settings.DataFile)
 	if err != nil {

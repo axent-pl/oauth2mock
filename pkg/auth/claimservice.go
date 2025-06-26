@@ -65,12 +65,14 @@ func NewClaimService(claimsJSONFilepath string) (ClaimServicer, error) {
 // unmarshalClaimsFromReader reads and parses the JSON file into claim details.
 func unmarshalClaimsFromReader(reader io.Reader) (map[string]claimDetails, map[string]claimDetails, error) {
 	var rawData struct {
-		Users map[string]struct {
-			Claims struct {
-				Base            map[string]interface{}            `json:"base"`
-				ClientOverrides map[string]map[string]interface{} `json:"clientOverrides"`
-				ScopeOverrides  map[string]map[string]interface{} `json:"scopeOverrides"`
-			} `json:"claims"`
+		UsersWrapper struct {
+			Users map[string]struct {
+				Claims struct {
+					Base            map[string]interface{}            `json:"base"`
+					ClientOverrides map[string]map[string]interface{} `json:"clientOverrides"`
+					ScopeOverrides  map[string]map[string]interface{} `json:"scopeOverrides"`
+				} `json:"claims"`
+			} `json:"users"`
 		} `json:"users"`
 		Clients map[string]struct {
 			Claims struct {
@@ -86,7 +88,7 @@ func unmarshalClaimsFromReader(reader io.Reader) (map[string]claimDetails, map[s
 	}
 
 	userClaims := make(map[string]claimDetails)
-	for username, user := range rawData.Users {
+	for username, user := range rawData.UsersWrapper.Users {
 		userClaims[username] = claimDetails{
 			Base:            user.Claims.Base,
 			ClientOverrides: user.Claims.ClientOverrides,
