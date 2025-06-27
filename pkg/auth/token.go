@@ -3,6 +3,7 @@ package auth
 import (
 	"time"
 
+	"github.com/axent-pl/oauth2mock/pkg/service/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/service/signing"
 	"github.com/axent-pl/oauth2mock/pkg/service/userservice"
 )
@@ -14,14 +15,14 @@ type TokenResponse struct {
 	IDToken      string `json:"id_token"`
 }
 
-func getSubClaim(user userservice.UserHandler, client ClientHandler) string {
+func getSubClaim(user userservice.UserHandler, client clientservice.ClientHandler) string {
 	if user != nil {
 		return user.Id()
 	}
 	return client.Id()
 }
 
-func NewTokenReponse(issuer string, user userservice.UserHandler, client ClientHandler, claims map[string]interface{}, keyService signing.SigningServicer) (TokenResponse, error) {
+func NewTokenReponse(issuer string, user userservice.UserHandler, client clientservice.ClientHandler, claims map[string]interface{}, keyService signing.SigningServicer) (TokenResponse, error) {
 	tokenResponse := TokenResponse{Type: "Bearer"}
 
 	access_token_claims := make(map[string]interface{})

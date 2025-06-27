@@ -9,13 +9,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/axent-pl/oauth2mock/pkg/service/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/service/userservice"
 )
 
 // ClaimServicer interface defines a method to retrieve claims for a subject and client.
 type ClaimServicer interface {
-	GetUserClaims(user userservice.UserHandler, client ClientHandler, scope []string) (map[string]interface{}, error)
-	GetClientClaims(client ClientHandler, scope []string) (map[string]interface{}, error)
+	GetUserClaims(user userservice.UserHandler, client clientservice.ClientHandler, scope []string) (map[string]interface{}, error)
+	GetClientClaims(client clientservice.ClientHandler, scope []string) (map[string]interface{}, error)
 }
 
 // claimDetails holds the base claims and client-specific overrides.
@@ -184,7 +185,7 @@ func ReadUserClaims(user userservice.UserHandler) (claimDetails, error) {
 }
 
 // GetClaims retrieves claims for a given user and client.
-func (s *claimService) GetUserClaims(user userservice.UserHandler, client ClientHandler, scope []string) (map[string]interface{}, error) {
+func (s *claimService) GetUserClaims(user userservice.UserHandler, client clientservice.ClientHandler, scope []string) (map[string]interface{}, error) {
 	s.claimsMU.RLock()
 	defer s.claimsMU.RUnlock()
 
@@ -221,7 +222,7 @@ func (s *claimService) GetUserClaims(user userservice.UserHandler, client Client
 }
 
 // GetClaims retrieves claims for a given user and client.
-func (s *claimService) GetClientClaims(client ClientHandler, scope []string) (map[string]interface{}, error) {
+func (s *claimService) GetClientClaims(client clientservice.ClientHandler, scope []string) (map[string]interface{}, error) {
 	s.claimsMU.RLock()
 	defer s.claimsMU.RUnlock()
 

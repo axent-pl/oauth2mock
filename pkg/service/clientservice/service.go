@@ -1,18 +1,13 @@
-package auth
+package clientservice
 
 import (
 	"encoding/json"
 	"fmt"
 	"os"
 
-	e "github.com/axent-pl/oauth2mock/pkg/errs"
+	"github.com/axent-pl/oauth2mock/pkg/errs"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
 )
-
-type ClientServicer interface {
-	GetClient(client_id string) (ClientHandler, error)
-	Authenticate(credentials authentication.CredentialsHandler) (ClientHandler, error)
-}
 
 type clientService struct {
 	clients map[string]client
@@ -59,7 +54,7 @@ func NewClientService(jsonFilepath string) (ClientServicer, error) {
 func (s *clientService) GetClient(client_id string) (ClientHandler, error) {
 	client, ok := s.clients[client_id]
 	if !ok {
-		return nil, e.ErrInvalidClientId
+		return nil, errs.ErrInvalidClientId
 	}
 	return &client, nil
 }
@@ -67,17 +62,17 @@ func (s *clientService) GetClient(client_id string) (ClientHandler, error) {
 func (s *clientService) Authenticate(credentials authentication.CredentialsHandler) (ClientHandler, error) {
 	clientId, err := credentials.IdentityName()
 	if err != nil {
-		return nil, e.ErrUserCredsInvalid
+		return nil, errs.ErrUserCredsInvalid
 	}
 
 	client, ok := s.clients[clientId]
 	if !ok {
-		return nil, e.ErrUserCredsInvalid
+		return nil, errs.ErrUserCredsInvalid
 	}
 
 	authenticated := client.authScheme.Matches(credentials)
 	if !authenticated {
-		return nil, e.ErrUserCredsInvalid
+		return nil, errs.ErrUserCredsInvalid
 	}
 
 	return &client, nil

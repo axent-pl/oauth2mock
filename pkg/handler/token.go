@@ -10,11 +10,12 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
+	"github.com/axent-pl/oauth2mock/pkg/service/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/service/signing"
 	"github.com/axent-pl/oauth2mock/pkg/service/userservice"
 )
 
-func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, authCodeDB auth.AuthorizationCodeServicer, claimsDB auth.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
+func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientDB clientservice.ClientServicer, authCodeDB auth.AuthorizationCodeServicer, claimsDB auth.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requstDTO := &dto.TokenAuthorizationCodeRequestDTO{}
 		requestValidator := request.NewValidator()
@@ -89,7 +90,7 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 	}
 }
 
-func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, claimsDB auth.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
+func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, clientDB clientservice.ClientServicer, claimsDB auth.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requstDTO := &dto.TokenClientCredentialsHandlerRequestDTO{}
 		requestValidator := request.NewValidator()
@@ -145,7 +146,7 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 	}
 }
 
-func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, userDB userservice.UserServicer, claimsDB auth.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
+func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientDB clientservice.ClientServicer, userDB userservice.UserServicer, claimsDB auth.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requstDTO := &dto.TokenPasswrodRequestDTO{}
 		requestValidator := request.NewValidator()

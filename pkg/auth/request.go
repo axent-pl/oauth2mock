@@ -2,6 +2,7 @@ package auth
 
 import (
 	"github.com/axent-pl/oauth2mock/pkg/errs"
+	"github.com/axent-pl/oauth2mock/pkg/service/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/service/userservice"
 )
 
@@ -11,7 +12,7 @@ type AuthorizationRequest struct {
 	Scope        []string
 	State        string
 	Nonce        string
-	Client       ClientHandler
+	Client       clientservice.ClientHandler
 	Subject      userservice.UserHandler
 }
 

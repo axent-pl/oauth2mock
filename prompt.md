@@ -1,9 +1,9 @@
 
-Please review and recommend improvements for the following code.
-It is a user service which might be initiated with different providers based on the definition in a JSON config file.
+Given the golang package code please implement a functionality which will check if ther users table
+is created, has the correct schema and if not will apply required DDL.
 
 ```golang
-// pkg/service/user/provider.go
+// pkg/service/user/factory.go
 package userservice
 
 import (
@@ -13,66 +13,52 @@ import (
 	"sync"
 )
 
-// Configurable interface for construction of UserServicer from configuration
-type Configurable interface {
-	Init() (UserServicer, error)
-}
+type UserServiceFactory func(json.RawMessage) (UserServicer, error)
 
-// map of registered UserServicer sources
-var userServiceProviderRegistryMu sync.RWMutex
-var userServiceProviderRegistry = make(map[string]func() Configurable)
-
-// register provider constructor
-func RegisterUserServiceProvider(name string, constructor func() Configurable) {
-	userServiceProviderRegistryMu.Lock()
-	defer userServiceProviderRegistryMu.Unlock()
-	userServiceProviderRegistry[name] = constructor
-}
-
-// return provider based on the configuration key
-func ProviderFromJSONRawMessage(providerConfig map[string]json.RawMessage) (Configurable, error) {
-	for name, rawProvider := range providerConfig {
-		constructor, ok := userServiceProviderRegistry[name]
-		if !ok {
-			return nil, fmt.Errorf("unsupported user service provider type: %s", name)
-		}
-		instance := constructor()
-		if err := json.Unmarshal(rawProvider, instance); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal %s provider: %w", name, err)
-		}
-		return instance, nil
-	}
-	return nil, errors.New("no provider")
-}
-```
-```golang
-// pkg/service/user/config.go
-package userservice
-
-import (
-	"encoding/json"
+var (
+	userServiceFactoryRegistryMU sync.RWMutex
+	userServiceFactoryRegistry   = map[string]UserServiceFactory{}
 )
 
-type UserServiceConfig struct {
-	Provider Configurable `json:"provider"`
+func Register(name string, f UserServiceFactory) {
+	userServiceFactoryRegistryMU.Lock()
+	defer userServiceFactoryRegistryMU.Unlock()
+	userServiceFactoryRegistry[name] = f
 }
 
-func (cfg *UserServiceConfig) UnmarshalJSON(data []byte) error {
-	var raw struct {
-		Provider map[string]json.RawMessage `json:"provider"`
+type Config struct {
+	UsersConfig json.RawMessage `json:"users"`
+}
+
+func NewFromConfig(rawConfig []byte) (UserServicer, error) {
+	config := Config{}
+	if err := json.Unmarshal(rawConfig, &config); err != nil {
+		return nil, errors.New("failed to unmarshal config")
 	}
 
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
+	var usersMap map[string]json.RawMessage
+	if err := json.Unmarshal(config.UsersConfig, &usersMap); err != nil {
+		return nil, errors.New("failed to parse users config")
 	}
 
-	provider, err := ProviderFromJSONRawMessage(raw.Provider)
-	if err != nil {
-		return err
+	providerRaw, ok := usersMap["provider"]
+	if !ok {
+		return nil, errors.New("missing users.provider")
 	}
-	cfg.Provider = provider
 
-	return nil
+	var provider string
+	if err := json.Unmarshal(providerRaw, &provider); err != nil {
+		return nil, errors.New("invalid users.provider")
+	}
+
+	userServiceFactoryRegistryMU.RLock()
+	factory, ok := userServiceFactoryRegistry[provider]
+	userServiceFactoryRegistryMU.RUnlock()
+	if !ok {
+		return nil, fmt.Errorf("unknown user service provider: %s", provider)
+	}
+
+	return factory(config.UsersConfig)
 }
 ```
 ```golang
@@ -82,31 +68,11 @@ package userservice
 import "github.com/axent-pl/oauth2mock/pkg/service/authentication"
 
 type userHandler struct {
-	id           string
-	name         string
-	active       bool
-	authScheme   authentication.SchemeHandler
-	customFields map[string]map[string]interface{}
-}
-
-type UserHandlerOption func(*userHandler) error
-
-func NewUserHandler(id string, authScheme authentication.SchemeHandler, options ...UserHandlerOption) (UserHandler, error) {
-	user := &userHandler{
-		id:           id,
-		name:         id, // default name equals ID unless overridden
-		active:       true,
-		authScheme:   authScheme,
-		customFields: make(map[string]map[string]interface{}),
-	}
-
-	for _, opt := range options {
-		if err := opt(user); err != nil {
-			return nil, err
-		}
-	}
-
-	return user, nil
+	id         string
+	name       string
+	active     bool
+	authScheme authentication.SchemeHandler
+	attributes map[string]map[string]interface{}
 }
 
 func (s *userHandler) Id() string {
@@ -137,22 +103,50 @@ func (s *userHandler) SetAuthenticationScheme(scheme authentication.SchemeHandle
 	s.authScheme = scheme
 }
 
-func (s *userHandler) GetCustomAttributes(key string) map[string]interface{} {
-	if value, ok := s.customFields[key]; ok {
+func (s *userHandler) GetAllAttributes() map[string]map[string]interface{} {
+	return s.attributes
+}
+
+func (s *userHandler) SetAllAttributes(attributes map[string]map[string]interface{}) {
+	s.attributes = attributes
+}
+
+func (s *userHandler) GetAttributesGroup(key string) map[string]interface{} {
+	if value, ok := s.attributes[key]; ok {
 		return value
 	}
 	return nil
 }
 
-func (s *userHandler) SetCustomAttributes(key string, value map[string]interface{}) {
+func (s *userHandler) SetAttributesGroup(key string, value map[string]interface{}) {
 	if value == nil {
 		return
 	}
-	if s.customFields == nil {
-		s.customFields = make(map[string]map[string]interface{})
+	if s.attributes == nil {
+		s.attributes = make(map[string]map[string]interface{})
 	}
-	s.customFields[key] = value
+	s.attributes[key] = value
 }
+
+func NewUserHandler(id string, authScheme authentication.SchemeHandler, options ...UserHandlerOption) (UserHandler, error) {
+	user := &userHandler{
+		id:         id,
+		name:       id, // default name equals ID unless overridden
+		active:     true,
+		authScheme: authScheme,
+		attributes: make(map[string]map[string]interface{}),
+	}
+
+	for _, opt := range options {
+		if err := opt(user); err != nil {
+			return nil, err
+		}
+	}
+
+	return user, nil
+}
+
+type UserHandlerOption func(*userHandler) error
 
 func WithName(name string) UserHandlerOption {
 	return func(u *userHandler) error {
@@ -170,292 +164,74 @@ func WithActive(active bool) UserHandlerOption {
 
 func WithCustomAttributes(key string, value map[string]interface{}) UserHandlerOption {
 	return func(u *userHandler) error {
-		u.SetCustomAttributes(key, value)
+		u.SetAttributesGroup(key, value)
 		return nil
 	}
 }
 ```
 ```golang
-// pkg/service/user/userservice.go
+// pkg/service/user/jsonuserservice.go
 package userservice
 
 import (
 	"encoding/json"
-	"fmt"
-	"os"
-)
-
-func NewUserService(jsonFilepath string) (UserServicer, error) {
-	type jsonConfigStruct struct {
-		Config UserServiceConfig `json:"users"`
-	}
-	f := jsonConfigStruct{}
-
-	data, err := os.ReadFile(jsonFilepath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read user service config file: %w", err)
-	}
-
-	if err := json.Unmarshal(data, &f); err != nil {
-		return nil, fmt.Errorf("failed to parse user service config file: %w", err)
-	}
-
-	userService, err := f.Config.Provider.Init()
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize user service: %w", err)
-	}
-
-	return userService, nil
-}
-```
-```golang
-// pkg/service/user/interface.go
-package userservice
-
-import "github.com/axent-pl/oauth2mock/pkg/service/authentication"
-
-type UserHandler interface {
-	Id() string
-	Name() string
-	SetName(string)
-	Active() bool
-	SetActive(bool)
-	AuthenticationScheme() authentication.SchemeHandler
-	SetAuthenticationScheme(authentication.SchemeHandler)
-
-	GetCustomAttributes(key string) map[string]interface{}
-	SetCustomAttributes(key string, value map[string]interface{})
-}
-
-type UserServicer interface {
-	Authenticate(credentials authentication.CredentialsHandler) (UserHandler, error)
-	GetUsers() ([]UserHandler, error)
-	AddUser(UserHandler) error
-}
-```
-```golang
-// pkg/service/user/providerfromdb.go
-package userservice
-
-import (
-	"context"
-	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
-
-	"github.com/axent-pl/oauth2mock/pkg/errs"
-	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
-	_ "github.com/lib/pq"
-)
-
-type FromDBConfig struct {
-	Driver   string            `json:"driver"`
-	User     string            `json:"user"`
-	Password string            `json:"password"`
-	Host     string            `json:"host"`
-	Port     string            `json:"port"`
-	Database string            `json:"database"`
-	Options  map[string]string `json:"options"`
-}
-
-type userDBService struct {
-	db *sql.DB
-}
-
-func (c *FromDBConfig) Init() (UserServicer, error) {
-	if c.Driver != "postgres" {
-		return nil, errors.New("unsupported driver")
-	}
-	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", c.Driver, c.User, c.Password, c.Host, c.Port, c.Database)
-	db, err := sql.Open(c.Driver, connectionString)
-	if err != nil {
-		return nil, err
-	}
-	return NewUserDBService(db)
-}
-
-func NewUserDBService(db *sql.DB) (UserServicer, error) {
-	return &userDBService{db: db}, nil
-}
-
-func (s *userDBService) Authenticate(creds authentication.CredentialsHandler) (UserHandler, error) {
-	username, err := creds.IdentityName()
-	if err != nil {
-		return nil, err
-	}
-
-	var password string
-	var active bool
-	var customAttrsBytes []byte
-
-	query := `SELECT password, active, custom_attributes FROM users WHERE username = $1`
-	err = s.db.QueryRowContext(context.Background(), query, username).Scan(&password, &active, &customAttrsBytes)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errs.ErrUserCredsInvalid
-		}
-		return nil, err
-	}
-
-	authScheme, err := authentication.NewScheme(authentication.WithUsernameAndPassword(username, password))
-	if err != nil {
-		return nil, fmt.Errorf("invalid stored credentials: %w", err)
-	}
-
-	if !authScheme.Matches(creds) {
-		return nil, errs.ErrUserCredsInvalid
-	}
-
-	user, err := NewUserHandler(username, authScheme, WithActive(active))
-	if err != nil {
-		return nil, err
-	}
-
-	var custom map[string]map[string]interface{}
-	if err := json.Unmarshal(customAttrsBytes, &custom); err == nil {
-		for k, v := range custom {
-			user.SetCustomAttributes(k, v)
-		}
-	}
-
-	return user, nil
-}
-
-func (s *userDBService) GetUsers() ([]UserHandler, error) {
-	query := `SELECT username, password, active, custom_attributes FROM users`
-
-	rows, err := s.db.QueryContext(context.Background(), query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var users []UserHandler
-
-	for rows.Next() {
-		var username, password string
-		var active bool
-		var customAttrsBytes []byte
-
-		if err := rows.Scan(&username, &password, &active, &customAttrsBytes); err != nil {
-			return nil, err
-		}
-
-		authScheme, err := authentication.NewScheme(authentication.WithUsernameAndPassword(username, password))
-		if err != nil {
-			return nil, err
-		}
-
-		user, err := NewUserHandler(username, authScheme, WithActive(active))
-		if err != nil {
-			return nil, err
-		}
-
-		var custom map[string]map[string]interface{}
-		if err := json.Unmarshal(customAttrsBytes, &custom); err == nil {
-			for k, v := range custom {
-				user.SetCustomAttributes(k, v)
-			}
-		}
-
-		users = append(users, user)
-	}
-
-	return users, nil
-}
-
-func (s *userDBService) AddUser(user UserHandler) error {
-	username := user.Name()
-
-	var exists bool
-	err := s.db.QueryRowContext(context.Background(),
-		`SELECT EXISTS(SELECT 1 FROM users WHERE username = $1)`, username).Scan(&exists)
-	if err != nil {
-		return err
-	}
-	if exists {
-		return errors.New("user already exists")
-	}
-
-	pw := ""
-	if scheme := user.AuthenticationScheme(); scheme != nil {
-		pw = scheme.PasswordHash()
-	}
-
-	customAttrs := user.(*userHandler).customFields
-	customAttrsJSON, err := json.Marshal(customAttrs)
-	if err != nil {
-		return fmt.Errorf("failed to encode custom attributes: %w", err)
-	}
-
-	_, err = s.db.ExecContext(context.Background(),
-		`INSERT INTO users (username, password, active, custom_attributes) VALUES ($1, $2, $3, $4)`,
-		username, pw, user.Active(), customAttrsJSON)
-
-	return err
-}
-
-func init() {
-	RegisterUserServiceProvider("fromDB", func() Configurable { return &FromDBConfig{} })
-}
-```
-```golang
-// pkg/service/user/providerfromjson.go
-package userservice
-
-import (
-	"errors"
-	"fmt"
-	"log/slog"
 	"sync"
 
 	e "github.com/axent-pl/oauth2mock/pkg/errs"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
 )
 
-type FromJSONConfig struct {
-	Users map[string]struct {
+type jsonUserServiceConfig struct {
+	Provider string `json:"provider"`
+	Users    map[string]struct {
 		Username   string                            `json:"username"`
 		Password   string                            `json:"password"`
 		Attributes map[string]map[string]interface{} `json:"attributes"`
 	} `json:"users"`
 }
 
-type userService struct {
-	users   map[string]UserHandler
+type jsonUserHandler struct {
+	userHandler
+}
+
+type jsonUserService struct {
+	users   map[string]jsonUserHandler
 	usersMU sync.RWMutex
 }
 
-func (c *FromJSONConfig) Init() (UserServicer, error) {
-	return NewJSONUserService(c)
-}
-
-func NewJSONUserService(usersData *FromJSONConfig) (UserServicer, error) {
-	slog.Info("initializing JSON user service")
-	userStore := userService{
-		users: make(map[string]UserHandler),
+func NewJSONUserService(rawConfig json.RawMessage) (UserServicer, error) {
+	config := jsonUserServiceConfig{}
+	userService := jsonUserService{
+		users: make(map[string]jsonUserHandler),
 	}
 
-	for username, userData := range usersData.Users {
+	if err := json.Unmarshal(rawConfig, &config); err != nil {
+		return nil, err
+	}
+
+	for username, userData := range config.Users {
 		authScheme, err := authentication.NewScheme(authentication.WithUsernameAndPassword(userData.Username, userData.Password))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse user credentials for '%s': %w", username, err)
 		}
-		user, err := NewUserHandler(username, authScheme)
-		if err != nil {
-			return nil, fmt.Errorf("failed to initialize user '%s': %w", username, err)
+		user := jsonUserHandler{
+			userHandler{
+				id:         username,
+				name:       username,
+				active:     true,
+				authScheme: authScheme,
+				attributes: userData.Attributes,
+			},
 		}
-		for k, v := range userData.Attributes {
-			user.SetCustomAttributes(k, v)
-		}
-		userStore.users[username] = user
+		userService.users[username] = user
 	}
 
-	return &userStore, nil
+	return &userService, nil
 }
 
-func (s *userService) Authenticate(inputCredentials authentication.CredentialsHandler) (UserHandler, error) {
+func (s *jsonUserService) Authenticate(inputCredentials authentication.CredentialsHandler) (UserHandler, error) {
 	s.usersMU.RLock()
 	defer s.usersMU.RUnlock()
 
@@ -473,21 +249,21 @@ func (s *userService) Authenticate(inputCredentials authentication.CredentialsHa
 
 	// check if credentials match
 	if user.AuthenticationScheme().Matches(inputCredentials) {
-		return user, nil
+		return &user, nil
 	}
 
 	return nil, e.ErrUserCredsInvalid
 }
 
-func (s *userService) GetUsers() ([]UserHandler, error) {
+func (s *jsonUserService) GetUsers() ([]UserHandler, error) {
 	var users []UserHandler = make([]UserHandler, 0)
 	for _, k := range s.users {
-		users = append(users, k)
+		users = append(users, &k)
 	}
 	return users, nil
 }
 
-func (s *userService) AddUser(user UserHandler) error {
+func (s *jsonUserService) AddUser(user UserHandler) error {
 	s.usersMU.RLock()
 	defer s.usersMU.RUnlock()
 
@@ -497,12 +273,230 @@ func (s *userService) AddUser(user UserHandler) error {
 		return errors.New("user already exists")
 	}
 
-	s.users[username] = user
+	s.users[username] = jsonUserHandler{
+		userHandler{
+			id:         user.Id(),
+			name:       user.Name(),
+			active:     user.Active(),
+			authScheme: user.AuthenticationScheme(),
+			attributes: user.GetAllAttributes(),
+		},
+	}
 
 	return nil
 }
 
 func init() {
-	RegisterUserServiceProvider("fromJSON", func() Configurable { return &FromJSONConfig{} })
+	Register("json", NewJSONUserService)
+}
+```
+```golang
+// pkg/service/user/databaseuserservice.go
+package userservice
+
+import (
+	"context"
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
+
+	"github.com/axent-pl/oauth2mock/pkg/errs"
+	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
+	_ "github.com/lib/pq"
+)
+
+type databaseUserServiceConfig struct {
+	Provider string            `json:"provider"`
+	Driver   string            `json:"driver"`
+	User     string            `json:"user"`
+	Password string            `json:"password"`
+	Host     string            `json:"host"`
+	Port     string            `json:"port"`
+	Database string            `json:"database"`
+	Options  map[string]string `json:"options"`
+}
+
+type databaseUserHandler struct {
+	userHandler
+}
+
+type databaseUserService struct {
+	db *sql.DB
+}
+
+func NewDatabaseUserService(rawConfig json.RawMessage) (UserServicer, error) {
+	config := databaseUserServiceConfig{}
+	if err := json.Unmarshal(rawConfig, &config); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal user service config: %w", err)
+	}
+	if config.Driver != "postgres" {
+		return nil, fmt.Errorf("unsupported user service database driver: %s", config.Driver)
+	}
+	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", config.Driver, config.User, config.Password, config.Host, config.Port, config.Database)
+	db, err := sql.Open(config.Driver, connectionString)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open user service database connection: %w", err)
+	}
+	return NewUserDBService(db)
+}
+
+func NewUserDBService(db *sql.DB) (UserServicer, error) {
+	return &databaseUserService{db: db}, nil
+}
+
+func (s *databaseUserService) Authenticate(creds authentication.CredentialsHandler) (UserHandler, error) {
+	username, err := creds.IdentityName()
+	if err != nil {
+		return nil, err
+	}
+
+	var password string
+	var active bool
+	var attributesBytes []byte
+	var attributes map[string]map[string]interface{}
+
+	query := `SELECT password, active, custom_attributes FROM users WHERE username = $1`
+	err = s.db.QueryRowContext(context.Background(), query, username).Scan(&password, &active, &attributesBytes)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errs.ErrUserCredsInvalid
+		}
+		return nil, err
+	}
+
+	authScheme, err := authentication.NewScheme(authentication.WithUsernameAndPassword(username, password))
+	if err != nil {
+		return nil, fmt.Errorf("invalid stored credentials: %w", err)
+	}
+
+	if !authScheme.Matches(creds) {
+		return nil, errs.ErrUserCredsInvalid
+	}
+
+	user := databaseUserHandler{
+		userHandler{
+			id:         username,
+			name:       username,
+			active:     true,
+			authScheme: authScheme,
+			attributes: make(map[string]map[string]interface{}),
+		},
+	}
+
+	if err := json.Unmarshal(attributesBytes, &attributes); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal user attributes: %w", err)
+	}
+	user.SetAllAttributes(attributes)
+
+	return &user, nil
+}
+
+func (s *databaseUserService) GetUsers() ([]UserHandler, error) {
+	query := `SELECT username, password, active, custom_attributes FROM users`
+
+	rows, err := s.db.QueryContext(context.Background(), query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []UserHandler
+
+	for rows.Next() {
+		var username, password string
+		var active bool
+		var attributesBytes []byte
+		var attributes map[string]map[string]interface{}
+
+		if err := rows.Scan(&username, &password, &active, &attributesBytes); err != nil {
+			return nil, err
+		}
+
+		authScheme, err := authentication.NewScheme(authentication.WithUsernameAndPassword(username, password))
+		if err != nil {
+			return nil, err
+		}
+
+		user := jsonUserHandler{
+			userHandler{
+				id:         username,
+				name:       username,
+				active:     active,
+				authScheme: authScheme,
+				attributes: make(map[string]map[string]interface{}),
+			},
+		}
+
+		if err := json.Unmarshal(attributesBytes, &attributes); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal user attributes: %w", err)
+		}
+		user.SetAllAttributes(attributes)
+
+		users = append(users, &user)
+	}
+
+	return users, nil
+}
+
+func (s *databaseUserService) AddUser(user UserHandler) error {
+	username := user.Name()
+
+	var exists bool
+	err := s.db.QueryRowContext(context.Background(),
+		`SELECT EXISTS(SELECT 1 FROM users WHERE username = $1)`, username).Scan(&exists)
+	if err != nil {
+		return fmt.Errorf("failed to execute user select exists query: %w", err)
+	}
+	if exists {
+		return fmt.Errorf("failed to add user, user %s already exists", username)
+	}
+
+	pw := ""
+	if scheme := user.AuthenticationScheme(); scheme != nil {
+		pw = scheme.PasswordHash()
+	}
+
+	attributes := user.GetAllAttributes()
+	attributesJSON, err := json.Marshal(attributes)
+	if err != nil {
+		return fmt.Errorf("failed to encode custom attributes: %w", err)
+	}
+
+	_, err = s.db.ExecContext(context.Background(),
+		`INSERT INTO users (username, password, active, custom_attributes) VALUES ($1, $2, $3, $4)`,
+		username, pw, user.Active(), attributesJSON)
+
+	return err
+}
+
+func init() {
+	Register("database", NewDatabaseUserService)
+}
+```
+```golang
+// pkg/service/user/interface.go
+package userservice
+
+import "github.com/axent-pl/oauth2mock/pkg/service/authentication"
+
+type UserHandler interface {
+	Id() string
+	Name() string
+	SetName(string)
+	Active() bool
+	SetActive(bool)
+	AuthenticationScheme() authentication.SchemeHandler
+	SetAuthenticationScheme(authentication.SchemeHandler)
+	GetAllAttributes() map[string]map[string]interface{}
+	SetAllAttributes(map[string]map[string]interface{})
+	GetAttributesGroup(group string) map[string]interface{}
+	SetAttributesGroup(group string, value map[string]interface{})
+}
+
+type UserServicer interface {
+	Authenticate(credentials authentication.CredentialsHandler) (UserHandler, error)
+	GetUsers() ([]UserHandler, error)
+	AddUser(UserHandler) error
 }
 ```

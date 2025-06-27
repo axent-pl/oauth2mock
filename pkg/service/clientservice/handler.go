@@ -1,14 +1,8 @@
-package auth
+package clientservice
 
-import "github.com/axent-pl/oauth2mock/pkg/service/authentication"
-
-type ClientHandler interface {
-	Id() string
-	Name() string
-	RedirectURIPattern() string
-	AuthenticationScheme() authentication.SchemeHandler
-	ValidateRedirectURI(redirectURI string) bool
-}
+import (
+	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
+)
 
 type client struct {
 	id                 string

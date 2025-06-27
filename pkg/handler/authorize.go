@@ -12,12 +12,13 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
+	"github.com/axent-pl/oauth2mock/pkg/service/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/service/template"
 	"github.com/axent-pl/oauth2mock/pkg/service/userservice"
 	"github.com/axent-pl/oauth2mock/pkg/tpl"
 )
 
-func AuthorizeGetHandler(templateDB template.TemplateServicer, clientDB auth.ClientServicer) routing.HandlerFunc {
+func AuthorizeGetHandler(templateDB template.TemplateServicer, clientDB clientservice.ClientServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// authorization request DTO
 		authorizeRequestDTO := &dto.AuthorizeRequestDTO{}
@@ -60,7 +61,7 @@ func AuthorizeGetHandler(templateDB template.TemplateServicer, clientDB auth.Cli
 	}
 }
 
-func AuthorizePostHandler(templateDB template.TemplateServicer, clientDB auth.ClientServicer, userService userservice.UserServicer, authCodeDB auth.AuthorizationCodeServicer) routing.HandlerFunc {
+func AuthorizePostHandler(templateDB template.TemplateServicer, clientDB clientservice.ClientServicer, userService userservice.UserServicer, authCodeDB auth.AuthorizationCodeServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// authorization request DTO
 		authorizeRequestDTO := &dto.AuthorizeRequestDTO{}

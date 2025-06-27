@@ -1,8 +1,8 @@
 import glob
 
 task = """
-Please review and recommend improvements for the following code.
-It is a user service which might be initiated with different providers based on the definition in a JSON config file.
+Given the golang package code please implement a functionality which will check if ther users table
+is created, has the correct schema and if not will apply required DDL.
 """
 
 print(task)
