@@ -19,15 +19,19 @@ type jsonUserServiceConfig struct {
 	} `json:"users"`
 }
 
+type jsonUserHandler struct {
+	userHandler
+}
+
 type jsonUserService struct {
-	users   map[string]UserHandler
+	users   map[string]jsonUserHandler
 	usersMU sync.RWMutex
 }
 
 func NewJSONUserService(rawConfig json.RawMessage) (UserServicer, error) {
 	config := jsonUserServiceConfig{}
 	userService := jsonUserService{
-		users: make(map[string]UserHandler),
+		users: make(map[string]jsonUserHandler),
 	}
 
 	if err := json.Unmarshal(rawConfig, &config); err != nil {
@@ -39,9 +43,14 @@ func NewJSONUserService(rawConfig json.RawMessage) (UserServicer, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse user credentials for '%s': %w", username, err)
 		}
-		user, err := NewUserHandler(username, authScheme)
-		if err != nil {
-			return nil, fmt.Errorf("failed to initialize user '%s': %w", username, err)
+		user := jsonUserHandler{
+			userHandler{
+				id:           username,
+				name:         username,
+				active:       true,
+				authScheme:   authScheme,
+				customFields: make(map[string]map[string]interface{}),
+			},
 		}
 		for k, v := range userData.Attributes {
 			user.SetCustomAttributes(k, v)
@@ -70,7 +79,7 @@ func (s *jsonUserService) Authenticate(inputCredentials authentication.Credentia
 
 	// check if credentials match
 	if user.AuthenticationScheme().Matches(inputCredentials) {
-		return user, nil
+		return &user, nil
 	}
 
 	return nil, e.ErrUserCredsInvalid
@@ -79,7 +88,7 @@ func (s *jsonUserService) Authenticate(inputCredentials authentication.Credentia
 func (s *jsonUserService) GetUsers() ([]UserHandler, error) {
 	var users []UserHandler = make([]UserHandler, 0)
 	for _, k := range s.users {
-		users = append(users, k)
+		users = append(users, &k)
 	}
 	return users, nil
 }
@@ -94,7 +103,15 @@ func (s *jsonUserService) AddUser(user UserHandler) error {
 		return errors.New("user already exists")
 	}
 
-	s.users[username] = user
+	s.users[username] = jsonUserHandler{
+		userHandler{
+			id:           user.Id(),
+			name:         user.Name(),
+			active:       user.Active(),
+			authScheme:   user.AuthenticationScheme(),
+			customFields: user.(*userHandler).customFields,
+		},
+	}
 
 	return nil
 }

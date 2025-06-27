@@ -23,6 +23,10 @@ type databaseUserServiceConfig struct {
 	Options  map[string]string `json:"options"`
 }
 
+type databaseUserHandler struct {
+	userHandler
+}
+
 type databaseUserService struct {
 	db *sql.DB
 }
@@ -75,9 +79,14 @@ func (s *databaseUserService) Authenticate(creds authentication.CredentialsHandl
 		return nil, errs.ErrUserCredsInvalid
 	}
 
-	user, err := NewUserHandler(username, authScheme, WithActive(active))
-	if err != nil {
-		return nil, err
+	user := databaseUserHandler{
+		userHandler{
+			id:           username,
+			name:         username,
+			active:       true,
+			authScheme:   authScheme,
+			customFields: make(map[string]map[string]interface{}),
+		},
 	}
 
 	var custom map[string]map[string]interface{}
@@ -87,7 +96,7 @@ func (s *databaseUserService) Authenticate(creds authentication.CredentialsHandl
 		}
 	}
 
-	return user, nil
+	return &user, nil
 }
 
 func (s *databaseUserService) GetUsers() ([]UserHandler, error) {
@@ -115,9 +124,14 @@ func (s *databaseUserService) GetUsers() ([]UserHandler, error) {
 			return nil, err
 		}
 
-		user, err := NewUserHandler(username, authScheme, WithActive(active))
-		if err != nil {
-			return nil, err
+		user := jsonUserHandler{
+			userHandler{
+				id:           username,
+				name:         username,
+				active:       active,
+				authScheme:   authScheme,
+				customFields: make(map[string]map[string]interface{}),
+			},
 		}
 
 		var custom map[string]map[string]interface{}
@@ -127,7 +141,7 @@ func (s *databaseUserService) GetUsers() ([]UserHandler, error) {
 			}
 		}
 
-		users = append(users, user)
+		users = append(users, &user)
 	}
 
 	return users, nil
@@ -151,7 +165,7 @@ func (s *databaseUserService) AddUser(user UserHandler) error {
 		pw = scheme.PasswordHash()
 	}
 
-	customAttrs := user.(*userHandler).customFields
+	customAttrs := user.(*databaseUserHandler).customFields
 	customAttrsJSON, err := json.Marshal(customAttrs)
 	if err != nil {
 		return fmt.Errorf("failed to encode custom attributes: %w", err)
