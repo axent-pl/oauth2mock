@@ -1,8 +1,8 @@
 package auth
 
 import (
-	e "github.com/axent-pl/oauth2mock/pkg/errs"
-	usr "github.com/axent-pl/oauth2mock/pkg/service/user"
+	"github.com/axent-pl/oauth2mock/pkg/errs"
+	"github.com/axent-pl/oauth2mock/pkg/service/userservice"
 )
 
 type AuthorizationRequest struct {
@@ -12,7 +12,7 @@ type AuthorizationRequest struct {
 	State        string
 	Nonce        string
 	Client       ClientHandler
-	Subject      usr.UserHandler
+	Subject      userservice.UserHandler
 }
 
 func (req *AuthorizationRequest) GetRedirectURI() string {
@@ -25,17 +25,17 @@ func (req *AuthorizationRequest) GetRedirectURI() string {
 func (req *AuthorizationRequest) Valid() error {
 	// Validate required
 	if len(req.ResponseType) == 0 {
-		return e.ErrMissingResponseType
+		return errs.ErrMissingResponseType
 	}
 
 	// Validate ResponseType
 	if req.ResponseType != "code" {
-		return e.ErrInvalidResponseType
+		return errs.ErrInvalidResponseType
 	}
 
 	// Validate RedirectURI
 	if len(req.RedirectURI) > 0 && !MatchesWildcard(req.RedirectURI, req.Client.RedirectURIPattern()) {
-		return e.ErrInvalidClientRedirectURI
+		return errs.ErrInvalidClientRedirectURI
 	}
 
 	return nil

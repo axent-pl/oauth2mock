@@ -48,7 +48,63 @@ func NewDatabaseUserService(rawConfig json.RawMessage) (UserServicer, error) {
 }
 
 func NewUserDBService(db *sql.DB) (UserServicer, error) {
-	return &databaseUserService{db: db}, nil
+	svc := &databaseUserService{db: db}
+	if err := svc.ensureUserTable(); err != nil {
+		return nil, fmt.Errorf("failed to ensure users table schema: %w", err)
+	}
+	return svc, nil
+}
+
+func (s *databaseUserService) ensureUserTable() error {
+	const expectedTable = "users"
+	const checkQuery = `
+		SELECT column_name, data_type
+		FROM information_schema.columns
+		WHERE table_name = $1
+	`
+
+	rows, err := s.db.QueryContext(context.Background(), checkQuery, expectedTable)
+	if err != nil {
+		return s.createUserTable()
+	}
+	defer rows.Close()
+
+	// Map of expected schema
+	expectedSchema := map[string]string{
+		"username":          "text",
+		"password":          "text",
+		"active":            "boolean",
+		"custom_attributes": "jsonb",
+	}
+
+	foundColumns := make(map[string]string)
+	for rows.Next() {
+		var col, dtype string
+		if err := rows.Scan(&col, &dtype); err != nil {
+			return fmt.Errorf("failed to scan table column: %w", err)
+		}
+		foundColumns[col] = dtype
+	}
+
+	for col, expectedType := range expectedSchema {
+		if dtype, ok := foundColumns[col]; !ok || dtype != expectedType {
+			return fmt.Errorf("users table has incorrect schema; expected column '%s' of type '%s'", col, expectedType)
+		}
+	}
+
+	return nil
+}
+
+func (s *databaseUserService) createUserTable() error {
+	const ddl = `
+	CREATE TABLE IF NOT EXISTS users (
+		username TEXT PRIMARY KEY,
+		password TEXT NOT NULL,
+		active BOOLEAN NOT NULL DEFAULT TRUE,
+		custom_attributes JSONB NOT NULL DEFAULT '{}'::jsonb
+	)`
+	_, err := s.db.ExecContext(context.Background(), ddl)
+	return err
 }
 
 func (s *databaseUserService) Authenticate(creds authentication.CredentialsHandler) (UserHandler, error) {

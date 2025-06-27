@@ -15,7 +15,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/http/server"
 	"github.com/axent-pl/oauth2mock/pkg/service/signing"
 	"github.com/axent-pl/oauth2mock/pkg/service/template"
-	usr "github.com/axent-pl/oauth2mock/pkg/service/user"
+	"github.com/axent-pl/oauth2mock/pkg/service/userservice"
 )
 
 type Settings struct {
@@ -32,7 +32,7 @@ var (
 
 	authCodeService auth.AuthorizationCodeServicer
 	clientService   auth.ClientServicer
-	userService     usr.UserServicer
+	userService     userservice.UserServicer
 	claimService    auth.ClaimServicer
 	templateService template.TemplateServicer
 	signingService  signing.SigningServicer
@@ -82,7 +82,7 @@ func init() {
 	}
 	slog.Info("client service initialized")
 
-	userService, err = usr.NewFromConfig(data)
+	userService, err = userservice.NewFromConfig(data)
 	if err != nil {
 		slog.Error("failed to initialize user service", "error", err)
 		os.Exit(1)

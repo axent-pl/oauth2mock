@@ -11,7 +11,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
 	"github.com/axent-pl/oauth2mock/pkg/service/signing"
-	usr "github.com/axent-pl/oauth2mock/pkg/service/user"
+	"github.com/axent-pl/oauth2mock/pkg/service/userservice"
 )
 
 func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, authCodeDB auth.AuthorizationCodeServicer, claimsDB auth.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
@@ -145,7 +145,7 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 	}
 }
 
-func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, userDB usr.UserServicer, claimsDB auth.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
+func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientDB auth.ClientServicer, userDB userservice.UserServicer, claimsDB auth.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requstDTO := &dto.TokenPasswrodRequestDTO{}
 		requestValidator := request.NewValidator()
