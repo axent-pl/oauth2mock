@@ -114,10 +114,10 @@ func SCIMPostHandler(userService usr.UserServicer) routing.HandlerFunc {
 			Active:      newUser.Active(),
 			DisplayName: userDTO.DisplayName,
 		}
-		if customAttributes := newUser.GetCustomAttributes("custom"); customAttributes != nil {
+		if customAttributes := newUser.GetAttributesGroup("custom"); customAttributes != nil {
 			outUserDTO.CustomAttributes = customAttributes
 		}
-		if enterpriseAttributes := newUser.GetCustomAttributes("enterprise"); enterpriseAttributes != nil {
+		if enterpriseAttributes := newUser.GetAttributesGroup("enterprise"); enterpriseAttributes != nil {
 			outUserDTO.EnterpriseAttributes = enterpriseAttributes
 		}
 
@@ -151,10 +151,10 @@ func SCIMGetHandler(userService usr.UserServicer) routing.HandlerFunc {
 				UserName: user.Name(),
 				Active:   user.Active(),
 			}
-			if customAttributes := user.GetCustomAttributes("custom"); customAttributes != nil {
+			if customAttributes := user.GetAttributesGroup("custom"); customAttributes != nil {
 				scimUsers[idx].CustomAttributes = customAttributes
 			}
-			if enterpriseAttributes := user.GetCustomAttributes("enterprise"); enterpriseAttributes != nil {
+			if enterpriseAttributes := user.GetAttributesGroup("enterprise"); enterpriseAttributes != nil {
 				scimUsers[idx].EnterpriseAttributes = enterpriseAttributes
 			}
 		}

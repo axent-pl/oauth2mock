@@ -161,7 +161,7 @@ func ReadUserClaims(user usr.UserHandler) (claimDetails, error) {
 		ScopeOverrides:  make(map[string]map[string]interface{}),
 	}
 
-	userClaims := user.GetCustomAttributes("claims")
+	userClaims := user.GetAttributesGroup("claims")
 	if userClaims == nil {
 		return claims, fmt.Errorf("no claims for user %s", user.Name())
 	}

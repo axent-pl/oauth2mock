@@ -10,9 +10,10 @@ type UserHandler interface {
 	SetActive(bool)
 	AuthenticationScheme() authentication.SchemeHandler
 	SetAuthenticationScheme(authentication.SchemeHandler)
-
-	GetCustomAttributes(key string) map[string]interface{}
-	SetCustomAttributes(key string, value map[string]interface{})
+	GetAllAttributes() map[string]map[string]interface{}
+	SetAllAttributes(map[string]map[string]interface{})
+	GetAttributesGroup(group string) map[string]interface{}
+	SetAttributesGroup(group string, value map[string]interface{})
 }
 
 type UserServicer interface {

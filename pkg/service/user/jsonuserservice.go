@@ -45,15 +45,12 @@ func NewJSONUserService(rawConfig json.RawMessage) (UserServicer, error) {
 		}
 		user := jsonUserHandler{
 			userHandler{
-				id:           username,
-				name:         username,
-				active:       true,
-				authScheme:   authScheme,
-				customFields: make(map[string]map[string]interface{}),
+				id:         username,
+				name:       username,
+				active:     true,
+				authScheme: authScheme,
+				attributes: userData.Attributes,
 			},
-		}
-		for k, v := range userData.Attributes {
-			user.SetCustomAttributes(k, v)
 		}
 		userService.users[username] = user
 	}
@@ -105,11 +102,11 @@ func (s *jsonUserService) AddUser(user UserHandler) error {
 
 	s.users[username] = jsonUserHandler{
 		userHandler{
-			id:           user.Id(),
-			name:         user.Name(),
-			active:       user.Active(),
-			authScheme:   user.AuthenticationScheme(),
-			customFields: user.(*userHandler).customFields,
+			id:         user.Id(),
+			name:       user.Name(),
+			active:     user.Active(),
+			authScheme: user.AuthenticationScheme(),
+			attributes: user.GetAllAttributes(),
 		},
 	}
 

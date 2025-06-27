@@ -34,15 +34,15 @@ type databaseUserService struct {
 func NewDatabaseUserService(rawConfig json.RawMessage) (UserServicer, error) {
 	config := databaseUserServiceConfig{}
 	if err := json.Unmarshal(rawConfig, &config); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal user service config: %w", err)
 	}
 	if config.Driver != "postgres" {
-		return nil, errors.New("unsupported driver")
+		return nil, fmt.Errorf("unsupported user service database driver: %s", config.Driver)
 	}
 	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", config.Driver, config.User, config.Password, config.Host, config.Port, config.Database)
 	db, err := sql.Open(config.Driver, connectionString)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open user service database connection: %w", err)
 	}
 	return NewUserDBService(db)
 }
@@ -59,10 +59,11 @@ func (s *databaseUserService) Authenticate(creds authentication.CredentialsHandl
 
 	var password string
 	var active bool
-	var customAttrsBytes []byte
+	var attributesBytes []byte
+	var attributes map[string]map[string]interface{}
 
 	query := `SELECT password, active, custom_attributes FROM users WHERE username = $1`
-	err = s.db.QueryRowContext(context.Background(), query, username).Scan(&password, &active, &customAttrsBytes)
+	err = s.db.QueryRowContext(context.Background(), query, username).Scan(&password, &active, &attributesBytes)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.ErrUserCredsInvalid
@@ -81,20 +82,18 @@ func (s *databaseUserService) Authenticate(creds authentication.CredentialsHandl
 
 	user := databaseUserHandler{
 		userHandler{
-			id:           username,
-			name:         username,
-			active:       true,
-			authScheme:   authScheme,
-			customFields: make(map[string]map[string]interface{}),
+			id:         username,
+			name:       username,
+			active:     true,
+			authScheme: authScheme,
+			attributes: make(map[string]map[string]interface{}),
 		},
 	}
 
-	var custom map[string]map[string]interface{}
-	if err := json.Unmarshal(customAttrsBytes, &custom); err == nil {
-		for k, v := range custom {
-			user.SetCustomAttributes(k, v)
-		}
+	if err := json.Unmarshal(attributesBytes, &attributes); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal user attributes: %w", err)
 	}
+	user.SetAllAttributes(attributes)
 
 	return &user, nil
 }
@@ -113,9 +112,10 @@ func (s *databaseUserService) GetUsers() ([]UserHandler, error) {
 	for rows.Next() {
 		var username, password string
 		var active bool
-		var customAttrsBytes []byte
+		var attributesBytes []byte
+		var attributes map[string]map[string]interface{}
 
-		if err := rows.Scan(&username, &password, &active, &customAttrsBytes); err != nil {
+		if err := rows.Scan(&username, &password, &active, &attributesBytes); err != nil {
 			return nil, err
 		}
 
@@ -126,20 +126,18 @@ func (s *databaseUserService) GetUsers() ([]UserHandler, error) {
 
 		user := jsonUserHandler{
 			userHandler{
-				id:           username,
-				name:         username,
-				active:       active,
-				authScheme:   authScheme,
-				customFields: make(map[string]map[string]interface{}),
+				id:         username,
+				name:       username,
+				active:     active,
+				authScheme: authScheme,
+				attributes: make(map[string]map[string]interface{}),
 			},
 		}
 
-		var custom map[string]map[string]interface{}
-		if err := json.Unmarshal(customAttrsBytes, &custom); err == nil {
-			for k, v := range custom {
-				user.SetCustomAttributes(k, v)
-			}
+		if err := json.Unmarshal(attributesBytes, &attributes); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal user attributes: %w", err)
 		}
+		user.SetAllAttributes(attributes)
 
 		users = append(users, &user)
 	}
@@ -154,10 +152,10 @@ func (s *databaseUserService) AddUser(user UserHandler) error {
 	err := s.db.QueryRowContext(context.Background(),
 		`SELECT EXISTS(SELECT 1 FROM users WHERE username = $1)`, username).Scan(&exists)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to execute user select exists query: %w", err)
 	}
 	if exists {
-		return errors.New("user already exists")
+		return fmt.Errorf("failed to add user, user %s already exists", username)
 	}
 
 	pw := ""
@@ -165,15 +163,15 @@ func (s *databaseUserService) AddUser(user UserHandler) error {
 		pw = scheme.PasswordHash()
 	}
 
-	customAttrs := user.(*databaseUserHandler).customFields
-	customAttrsJSON, err := json.Marshal(customAttrs)
+	attributes := user.GetAllAttributes()
+	attributesJSON, err := json.Marshal(attributes)
 	if err != nil {
 		return fmt.Errorf("failed to encode custom attributes: %w", err)
 	}
 
 	_, err = s.db.ExecContext(context.Background(),
 		`INSERT INTO users (username, password, active, custom_attributes) VALUES ($1, $2, $3, $4)`,
-		username, pw, user.Active(), customAttrsJSON)
+		username, pw, user.Active(), attributesJSON)
 
 	return err
 }
