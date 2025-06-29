@@ -60,12 +60,10 @@
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8222/authorize?response_type=code&client_id=ACME&redirect_uri={{REDIRECT_URL}}&scope=email profile shopping",
-					"protocol": "http",
+					"raw": "{{SERVER_URL}}/authorize?response_type=code&client_id=ACME&redirect_uri={{REDIRECT_URL}}&scope=email profile shopping&nonce={{AUTH_NONCE}}&state={{AUTH_STATE}}",
 					"host": [
-						"localhost"
+						"{{SERVER_URL}}"
 					],
-					"port": "8222",
 					"path": [
 						"authorize"
 					],
@@ -85,6 +83,14 @@
 						{
 							"key": "scope",
 							"value": "email profile shopping"
+						},
+						{
+							"key": "nonce",
+							"value": "{{AUTH_NONCE}}"
+						},
+						{
+							"key": "state",
+							"value": "{{AUTH_STATE}}"
 						}
 					]
 				}
@@ -136,6 +142,14 @@
 							"    let jwtPayloadJsonString = atob(jwtPayload)",
 							"    let jwtPayloadJson = JSON.parse(jwtPayloadJsonString)",
 							"    pm.expect(jwtPayloadJson).to.have.property(\"exp\")",
+							"});",
+							"pm.test(\"`access_token` has `nonce` claim\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    let jwt = jsonData.access_token",
+							"    let [jwtHeader, jwtPayload, jwtSignature] = jwt.split('.')",
+							"    let jwtPayloadJsonString = atob(jwtPayload)",
+							"    let jwtPayloadJson = JSON.parse(jwtPayloadJsonString)",
+							"    pm.expect(jwtPayloadJson).to.have.property(\"nonce\")",
 							"});",
 							"// additional claims from scopes",
 							"pm.test(\"`access_token` has `email` claim\", function () {",
@@ -191,12 +205,10 @@
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8222/token",
-					"protocol": "http",
+					"raw": "{{SERVER_URL}}/token",
 					"host": [
-						"localhost"
+						"{{SERVER_URL}}"
 					],
-					"port": "8222",
 					"path": [
 						"token"
 					]
@@ -266,12 +278,10 @@
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8222/token",
-					"protocol": "http",
+					"raw": "{{SERVER_URL}}/token",
 					"host": [
-						"localhost"
+						"{{SERVER_URL}}"
 					],
-					"port": "8222",
 					"path": [
 						"token"
 					]
@@ -351,12 +361,10 @@
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8222/token",
-					"protocol": "http",
+					"raw": "{{SERVER_URL}}/token",
 					"host": [
-						"localhost"
+						"{{SERVER_URL}}"
 					],
-					"port": "8222",
 					"path": [
 						"token"
 					]
@@ -431,12 +439,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8222/beta/scim/users",
-					"protocol": "http",
+					"raw": "{{SERVER_URL}}/beta/scim/users",
 					"host": [
-						"localhost"
+						"{{SERVER_URL}}"
 					],
-					"port": "8222",
 					"path": [
 						"beta",
 						"scim",
@@ -472,11 +478,11 @@
 	"variable": [
 		{
 			"key": "AUTHORIZATION_CODE",
-			"value": ""
+			"value": "-"
 		},
 		{
 			"key": "REDIRECT_URL",
-			"value": "http://localhost:8222",
+			"value": "http://localhost:8080",
 			"type": "string"
 		},
 		{
@@ -486,6 +492,21 @@
 		{
 			"key": "USER1_PASSWORD",
 			"value": ""
+		},
+		{
+			"key": "SERVER_URL",
+			"value": "http://localhost:8222",
+			"type": "string"
+		},
+		{
+			"key": "AUTH_NONCE",
+			"value": "my-nonce",
+			"type": "string"
+		},
+		{
+			"key": "AUTH_STATE",
+			"value": "my-state",
+			"type": "string"
 		}
 	]
 }

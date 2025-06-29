@@ -13,6 +13,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/handler"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/http/server"
+	"github.com/axent-pl/oauth2mock/pkg/service/claimservice"
 	"github.com/axent-pl/oauth2mock/pkg/service/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/service/signing"
 	"github.com/axent-pl/oauth2mock/pkg/service/template"
@@ -34,7 +35,7 @@ var (
 	authCodeService auth.AuthorizationCodeServicer
 	clientService   clientservice.ClientServicer
 	userService     userservice.UserServicer
-	claimService    auth.ClaimServicer
+	claimService    claimservice.ClaimServicer
 	templateService template.TemplateServicer
 	signingService  signing.SigningServicer
 
@@ -90,7 +91,7 @@ func init() {
 	}
 	slog.Info("user service initialized")
 
-	claimService, err = auth.NewClaimService(settings.DataFile)
+	claimService, err = claimservice.NewClaimService(settings.DataFile)
 	if err != nil {
 		slog.Error("failed to initialize claim service", "error", err)
 		os.Exit(1)

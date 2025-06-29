@@ -42,28 +42,7 @@ type SCIMListResponseDTO struct {
 	Resources    []SCIMUserDTO `json:"Resources"`
 }
 
-func validateSchemas(schemas []string) (bool, error) {
-	allowed := map[string]bool{
-		"urn:ietf:params:scim:schemas:core:2.0:User":                 true,
-		"urn:example:params:scim:schemas:extension:custom:2.0:User":  true,
-		"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": true,
-	}
-
-	foundCore := false
-	for _, schema := range schemas {
-		if !allowed[schema] {
-			return false, fmt.Errorf("invalid SCIM schema %s", schema)
-		}
-		if schema == "urn:ietf:params:scim:schemas:core:2.0:User" {
-			foundCore = true
-		}
-	}
-	if !foundCore {
-		return false, errors.New("missing urn:ietf:params:scim:schemas:core:2.0:User schema")
-	}
-
-	return true, nil
-}
+// ---------- handlers
 
 func SCIMPostHandler(userService userservice.UserServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -178,4 +157,27 @@ func SCIMGetHandler(userService userservice.UserServicer) routing.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		w.Write(responseBytes)
 	}
+}
+
+func validateSchemas(schemas []string) (bool, error) {
+	allowed := map[string]bool{
+		"urn:ietf:params:scim:schemas:core:2.0:User":                 true,
+		"urn:example:params:scim:schemas:extension:custom:2.0:User":  true,
+		"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": true,
+	}
+
+	foundCore := false
+	for _, schema := range schemas {
+		if !allowed[schema] {
+			return false, fmt.Errorf("invalid SCIM schema %s", schema)
+		}
+		if schema == "urn:ietf:params:scim:schemas:core:2.0:User" {
+			foundCore = true
+		}
+	}
+	if !foundCore {
+		return false, errors.New("missing urn:ietf:params:scim:schemas:core:2.0:User schema")
+	}
+
+	return true, nil
 }
