@@ -91,7 +91,7 @@ func init() {
 	}
 	slog.Info("user service initialized")
 
-	claimService, err = claimservice.NewClaimService(settings.DataFile)
+	claimService, err = claimservice.NewFromConfig(data)
 	if err != nil {
 		slog.Error("failed to initialize claim service", "error", err)
 		os.Exit(1)
