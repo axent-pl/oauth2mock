@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -18,6 +19,7 @@ import (
 
 func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientDB clientservice.ClientServicer, authCodeDB auth.AuthorizationCodeServicer, claimsDB claimservice.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		slog.Info("request handler TokenAuthorizationCodeHandler started")
 		requstDTO := &dto.TokenAuthorizationCodeRequestDTO{}
 		requestValidator := request.NewValidator()
 		request.Unmarshal(r, requstDTO)
@@ -93,6 +95,7 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 
 func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, clientDB clientservice.ClientServicer, claimsDB claimservice.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		slog.Info("request handler TokenClientCredentialsHandler started")
 		requstDTO := &dto.TokenClientCredentialsHandlerRequestDTO{}
 		requestValidator := request.NewValidator()
 		request.Unmarshal(r, requstDTO)
@@ -149,6 +152,7 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 
 func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientDB clientservice.ClientServicer, userDB userservice.UserServicer, claimsDB claimservice.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		slog.Info("request handler TokenPasswordHandler started")
 		requstDTO := &dto.TokenPasswrodRequestDTO{}
 		requestValidator := request.NewValidator()
 		request.Unmarshal(r, requstDTO)

@@ -10,22 +10,31 @@ import (
 	"github.com/google/uuid"
 )
 
+// Types for routing and middleware
 type route struct {
 	method        string
 	path          string
 	postFormValue map[string]string
 	queryValue    map[string]string
-	handler       func(w http.ResponseWriter, r *http.Request)
+	handler       HandlerFunc
 }
 
 type HandlerFunc func(w http.ResponseWriter, r *http.Request)
+type Middleware func(HandlerFunc) HandlerFunc
 
 type Router struct {
-	routes []*route
+	routes      []*route
+	middlewares []Middleware
 }
 
 type RouteOption func(*route) error
 
+// Middleware management
+func (r *Router) Use(m Middleware) {
+	r.middlewares = append(r.middlewares, m)
+}
+
+// Route options
 func WithPath(path string) RouteOption {
 	return func(r *route) error {
 		r.path = path
@@ -69,22 +78,20 @@ func (h *Router) RegisterHandler(handler HandlerFunc, options ...RouteOption) er
 	return nil
 }
 
+// Match logic
 func (r *route) matches(req *http.Request) bool {
 	if len(r.method) > 0 && r.method != req.Method {
 		return false
 	}
-
 	if len(r.path) > 0 && r.path != req.URL.Path {
 		return false
 	}
-
 	queryParams := req.URL.Query()
 	for key, val := range r.queryValue {
 		if queryParams.Get(key) != val {
 			return false
 		}
 	}
-
 	if len(r.postFormValue) > 0 {
 		for key, val := range r.postFormValue {
 			if req.PostFormValue(key) != val {
@@ -92,33 +99,39 @@ func (r *route) matches(req *http.Request) bool {
 			}
 		}
 	}
-
 	return true
 }
 
-func (h *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, "RequestID", uuid.New().String())
-	routedRequest := r.WithContext(ctx)
+// ServeHTTP with middleware chaining
+func (h *Router) ServeHTTP(w http.ResponseWriter, routedRequest *http.Request) {
+	ctx := context.WithValue(routedRequest.Context(), "RequestID", uuid.New().String())
+	routedRequest = routedRequest.WithContext(ctx)
 
 	dump, _ := httputil.DumpRequest(routedRequest, true)
 	slog.Debug(string(dump))
 
-	slog.Info("Routing routing", "RequestID", routedRequest.Context().Value("RequestID"), "RemoteAddr", routedRequest.RemoteAddr, "Method", routedRequest.Method, "Path", routedRequest.URL.Path, "Query", routedRequest.URL.RawQuery)
+	requestLogValue := RequestLogValue(routedRequest)
+
+	slog.Info("request routing started", "request", requestLogValue)
 	for _, route := range h.routes {
 		if route.matches(routedRequest) {
-			slog.Info("Routing routing done", "RequestID", routedRequest.Context().Value("RequestID"))
+			handler := route.handler
 
-			slog.Info("Routing calling handler", "RequestID", routedRequest.Context().Value("RequestID"))
-			start := time.Now()
-			route.handler(w, routedRequest)
-			took := time.Since(start)
-			slog.Info("Routing calling handler done", "RequestID", routedRequest.Context().Value("RequestID"), "tookMS", took)
+			slog.Info("request routing middlewares started", "request", requestLogValue)
+			middlewareStartTime := time.Now()
+			for i := len(h.middlewares) - 1; i >= 0; i-- {
+				handler = h.middlewares[i](handler)
+			}
+			slog.Info("request routing middlewares done", "request", requestLogValue, "took", time.Since(middlewareStartTime))
+
+			slog.Info("request routing handler started", "request", requestLogValue)
+			handlerStartTime := time.Now()
+			handler(w, routedRequest)
+			slog.Info("request routing handler done", "request", requestLogValue, "took", time.Since(handlerStartTime))
 
 			return
 		}
 	}
-	slog.Warn("Routing routing failed", "RequestID", routedRequest.Context().Value("RequestID"))
-
-	http.NotFound(w, r)
+	slog.Warn("request routing not found", "request", requestLogValue)
+	http.NotFound(w, routedRequest)
 }

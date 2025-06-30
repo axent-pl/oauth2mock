@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/axent-pl/oauth2mock/pkg/auth"
@@ -10,6 +11,7 @@ import (
 
 func WellKnownHandler(openidConfig auth.OpenIDConfiguration) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		slog.Info("request handler WellKnownHandler started")
 		openidConfigCopy := openidConfig
 
 		if openidConfig.UseOrigin {

@@ -46,6 +46,7 @@ type SCIMListResponseDTO struct {
 
 func SCIMPostHandler(userService userservice.UserServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		slog.Info("request handler SCIMPostHandler started")
 		var userDTO = &SCIMUserCreateRequestDTO{}
 		if err := json.NewDecoder(r.Body).Decode(&userDTO); err != nil {
 			http.Error(w, "invalid request payload", http.StatusBadRequest)

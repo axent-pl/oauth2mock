@@ -20,6 +20,7 @@ import (
 
 func AuthorizeGetHandler(templateDB template.TemplateServicer, clientDB clientservice.ClientServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		slog.Info("request handler AuthorizeGetHandler started")
 		// authorization request DTO
 		authorizeRequestDTO := &dto.AuthorizeRequestDTO{}
 		if valid, validator := request.UnmarshalAndValidate(r, authorizeRequestDTO); !valid {
@@ -63,6 +64,7 @@ func AuthorizeGetHandler(templateDB template.TemplateServicer, clientDB clientse
 
 func AuthorizePostHandler(templateDB template.TemplateServicer, clientDB clientservice.ClientServicer, userService userservice.UserServicer, authCodeDB auth.AuthorizationCodeServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		slog.Info("request handler AuthorizePostHandler started")
 		// authorization request DTO
 		authorizeRequestDTO := &dto.AuthorizeRequestDTO{}
 		if valid, validator := request.UnmarshalAndValidate(r, authorizeRequestDTO); !valid {
