@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/axent-pl/oauth2mock/pkg/service/clientservice"
-	"github.com/axent-pl/oauth2mock/pkg/service/userservice"
+	"github.com/axent-pl/oauth2mock/pkg/clientservice"
+	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
 type jsonClaimServiceConfig struct {

@@ -8,14 +8,14 @@ import (
 	"time"
 
 	"github.com/axent-pl/oauth2mock/pkg/auth"
+	"github.com/axent-pl/oauth2mock/pkg/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/dto"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
-	"github.com/axent-pl/oauth2mock/pkg/service/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/service/template"
-	"github.com/axent-pl/oauth2mock/pkg/service/userservice"
 	"github.com/axent-pl/oauth2mock/pkg/tpl"
+	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
 func AuthorizeGetHandler(templateDB template.TemplateServicer, clientDB clientservice.ClientServicer) routing.HandlerFunc {

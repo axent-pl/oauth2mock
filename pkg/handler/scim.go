@@ -10,7 +10,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
-	"github.com/axent-pl/oauth2mock/pkg/service/userservice"
+	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
 // ---------- DTO

@@ -1,9 +1,9 @@
 package auth
 
 import (
+	"github.com/axent-pl/oauth2mock/pkg/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/errs"
-	"github.com/axent-pl/oauth2mock/pkg/service/clientservice"
-	"github.com/axent-pl/oauth2mock/pkg/service/userservice"
+	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
 type AuthorizationRequest struct {

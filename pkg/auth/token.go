@@ -3,9 +3,9 @@ package auth
 import (
 	"time"
 
-	"github.com/axent-pl/oauth2mock/pkg/service/clientservice"
+	"github.com/axent-pl/oauth2mock/pkg/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/service/signing"
-	"github.com/axent-pl/oauth2mock/pkg/service/userservice"
+	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
 type TokenResponse struct {

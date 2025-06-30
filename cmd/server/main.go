@@ -9,15 +9,15 @@ import (
 	"syscall"
 
 	"github.com/axent-pl/oauth2mock/pkg/auth"
+	"github.com/axent-pl/oauth2mock/pkg/claimservice"
+	"github.com/axent-pl/oauth2mock/pkg/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/config"
 	"github.com/axent-pl/oauth2mock/pkg/handler"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/http/server"
-	"github.com/axent-pl/oauth2mock/pkg/service/claimservice"
-	"github.com/axent-pl/oauth2mock/pkg/service/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/service/signing"
 	"github.com/axent-pl/oauth2mock/pkg/service/template"
-	"github.com/axent-pl/oauth2mock/pkg/service/userservice"
+	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
 type Settings struct {

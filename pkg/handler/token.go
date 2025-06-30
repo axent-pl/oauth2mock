@@ -7,14 +7,14 @@ import (
 	"strings"
 
 	"github.com/axent-pl/oauth2mock/pkg/auth"
+	"github.com/axent-pl/oauth2mock/pkg/claimservice"
+	"github.com/axent-pl/oauth2mock/pkg/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/dto"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
-	"github.com/axent-pl/oauth2mock/pkg/service/claimservice"
-	"github.com/axent-pl/oauth2mock/pkg/service/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/service/signing"
-	"github.com/axent-pl/oauth2mock/pkg/service/userservice"
+	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
 func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientDB clientservice.ClientServicer, authCodeDB auth.AuthorizationCodeServicer, claimsDB claimservice.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
