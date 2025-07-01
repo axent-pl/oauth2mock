@@ -3,6 +3,7 @@ package claimservice
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/axent-pl/oauth2mock/pkg/clientservice"
@@ -36,6 +37,7 @@ type jsonClaimService struct {
 }
 
 func NewJSONClaimsService(rawClaimsConfig json.RawMessage, rawConfig json.RawMessage) (ClaimServicer, error) {
+	slog.Info("claimservice factory NewJSONClaimsService started")
 	config := jsonClaimServiceConfig{}
 	service := jsonClaimService{
 		userClaims:   make(map[string]jsonClaims),

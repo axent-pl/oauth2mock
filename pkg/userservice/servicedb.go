@@ -21,6 +21,13 @@ type databaseUserServiceConfig struct {
 	Port     string            `json:"port"`
 	Database string            `json:"database"`
 	Options  map[string]string `json:"options"`
+
+	Queries struct {
+		GetUser    string `json:"get_user,omitempty"`
+		GetUsers   string `json:"get_users,omitempty"`
+		AddUser    string `json:"add_user,omitempty"`
+		UserExists string `json:"user_exists,omitempty"`
+	} `json:"queries,omitempty"`
 }
 
 type databaseUserHandler struct {
@@ -28,7 +35,13 @@ type databaseUserHandler struct {
 }
 
 type databaseUserService struct {
-	db *sql.DB
+	db      *sql.DB
+	queries struct {
+		GetUser    string
+		GetUsers   string
+		AddUser    string
+		UserExists string
+	}
 }
 
 func NewDatabaseUserService(rawConfig json.RawMessage) (UserServicer, error) {
@@ -39,72 +52,33 @@ func NewDatabaseUserService(rawConfig json.RawMessage) (UserServicer, error) {
 	if config.Driver != "postgres" {
 		return nil, fmt.Errorf("unsupported user service database driver: %s", config.Driver)
 	}
-	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", config.Driver, config.User, config.Password, config.Host, config.Port, config.Database)
+
+	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable",
+		config.Driver, config.User, config.Password, config.Host, config.Port, config.Database)
 	db, err := sql.Open(config.Driver, connectionString)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open user service database connection: %w", err)
 	}
-	return NewUserDBService(db)
-}
 
-func NewUserDBService(db *sql.DB) (UserServicer, error) {
 	svc := &databaseUserService{db: db}
-	if err := svc.ensureUserTable(); err != nil {
-		return nil, fmt.Errorf("failed to ensure users table schema: %w", err)
+	svc.queries.GetUser = config.Queries.GetUser
+	if svc.queries.GetUser == "" {
+		svc.queries.GetUser = `SELECT password, active, custom_attributes FROM users WHERE username = $1`
 	}
+	svc.queries.GetUsers = config.Queries.GetUsers
+	if svc.queries.GetUsers == "" {
+		svc.queries.GetUsers = `SELECT username, password, active, custom_attributes FROM users`
+	}
+	svc.queries.AddUser = config.Queries.AddUser
+	if svc.queries.AddUser == "" {
+		svc.queries.AddUser = `INSERT INTO users (username, password, active, custom_attributes) VALUES ($1, $2, $3, $4)`
+	}
+	svc.queries.UserExists = config.Queries.UserExists
+	if svc.queries.UserExists == "" {
+		svc.queries.UserExists = `SELECT EXISTS(SELECT 1 FROM users WHERE username = $1)`
+	}
+
 	return svc, nil
-}
-
-func (s *databaseUserService) ensureUserTable() error {
-	const expectedTable = "users"
-	const checkQuery = `
-		SELECT column_name, data_type
-		FROM information_schema.columns
-		WHERE table_name = $1
-	`
-
-	rows, err := s.db.QueryContext(context.Background(), checkQuery, expectedTable)
-	if err != nil {
-		return s.createUserTable()
-	}
-	defer rows.Close()
-
-	// Map of expected schema
-	expectedSchema := map[string]string{
-		"username":          "text",
-		"password":          "text",
-		"active":            "boolean",
-		"custom_attributes": "jsonb",
-	}
-
-	foundColumns := make(map[string]string)
-	for rows.Next() {
-		var col, dtype string
-		if err := rows.Scan(&col, &dtype); err != nil {
-			return fmt.Errorf("failed to scan table column: %w", err)
-		}
-		foundColumns[col] = dtype
-	}
-
-	for col, expectedType := range expectedSchema {
-		if dtype, ok := foundColumns[col]; !ok || dtype != expectedType {
-			return fmt.Errorf("users table has incorrect schema; expected column '%s' of type '%s'", col, expectedType)
-		}
-	}
-
-	return nil
-}
-
-func (s *databaseUserService) createUserTable() error {
-	const ddl = `
-	CREATE TABLE IF NOT EXISTS users (
-		username TEXT PRIMARY KEY,
-		password TEXT NOT NULL,
-		active BOOLEAN NOT NULL DEFAULT TRUE,
-		custom_attributes JSONB NOT NULL DEFAULT '{}'::jsonb
-	)`
-	_, err := s.db.ExecContext(context.Background(), ddl)
-	return err
 }
 
 func (s *databaseUserService) Authenticate(creds authentication.CredentialsHandler) (UserHandler, error) {
@@ -118,8 +92,7 @@ func (s *databaseUserService) Authenticate(creds authentication.CredentialsHandl
 	var attributesBytes []byte
 	var attributes map[string]map[string]interface{}
 
-	query := `SELECT password, active, custom_attributes FROM users WHERE username = $1`
-	err = s.db.QueryRowContext(context.Background(), query, username).Scan(&password, &active, &attributesBytes)
+	err = s.db.QueryRowContext(context.Background(), s.queries.GetUser, username).Scan(&password, &active, &attributesBytes)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.ErrUserCredsInvalid
@@ -155,9 +128,7 @@ func (s *databaseUserService) Authenticate(creds authentication.CredentialsHandl
 }
 
 func (s *databaseUserService) GetUsers() ([]UserHandler, error) {
-	query := `SELECT username, password, active, custom_attributes FROM users`
-
-	rows, err := s.db.QueryContext(context.Background(), query)
+	rows, err := s.db.QueryContext(context.Background(), s.queries.GetUsers)
 	if err != nil {
 		return nil, err
 	}
@@ -205,8 +176,7 @@ func (s *databaseUserService) AddUser(user UserHandler) error {
 	username := user.Name()
 
 	var exists bool
-	err := s.db.QueryRowContext(context.Background(),
-		`SELECT EXISTS(SELECT 1 FROM users WHERE username = $1)`, username).Scan(&exists)
+	err := s.db.QueryRowContext(context.Background(), s.queries.UserExists, username).Scan(&exists)
 	if err != nil {
 		return fmt.Errorf("failed to execute user select exists query: %w", err)
 	}
@@ -225,9 +195,7 @@ func (s *databaseUserService) AddUser(user UserHandler) error {
 		return fmt.Errorf("failed to encode custom attributes: %w", err)
 	}
 
-	_, err = s.db.ExecContext(context.Background(),
-		`INSERT INTO users (username, password, active, custom_attributes) VALUES ($1, $2, $3, $4)`,
-		username, pw, user.Active(), attributesJSON)
+	_, err = s.db.ExecContext(context.Background(), s.queries.AddUser, username, pw, user.Active(), attributesJSON)
 
 	return err
 }

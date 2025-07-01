@@ -4,20 +4,21 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sync"
 )
 
 type ClaimServiceFactory func(json.RawMessage, json.RawMessage) (ClaimServicer, error)
 
 var (
-	userServiceFactoryRegistryMU sync.RWMutex
-	userServiceFactoryRegistry   = map[string]ClaimServiceFactory{}
+	claimServiceFactoryRegistryMU sync.RWMutex
+	claimServiceFactoryRegistry   = map[string]ClaimServiceFactory{}
 )
 
 func Register(name string, f ClaimServiceFactory) {
-	userServiceFactoryRegistryMU.Lock()
-	defer userServiceFactoryRegistryMU.Unlock()
-	userServiceFactoryRegistry[name] = f
+	claimServiceFactoryRegistryMU.Lock()
+	defer claimServiceFactoryRegistryMU.Unlock()
+	claimServiceFactoryRegistry[name] = f
 }
 
 type Config struct {
@@ -25,6 +26,7 @@ type Config struct {
 }
 
 func NewFromConfig(rawConfig []byte) (ClaimServicer, error) {
+	slog.Info("init started", "module", "claimservice")
 	config := Config{}
 	if err := json.Unmarshal(rawConfig, &config); err != nil {
 		return nil, errors.New("failed to unmarshal config")
@@ -45,12 +47,20 @@ func NewFromConfig(rawConfig []byte) (ClaimServicer, error) {
 		return nil, errors.New("invalid claims.provider")
 	}
 
-	userServiceFactoryRegistryMU.RLock()
-	factory, ok := userServiceFactoryRegistry[provider]
-	userServiceFactoryRegistryMU.RUnlock()
+	slog.Info("claimservice factory registry search", "provider", provider)
+	claimServiceFactoryRegistryMU.RLock()
+	factory, ok := claimServiceFactoryRegistry[provider]
+	claimServiceFactoryRegistryMU.RUnlock()
 	if !ok {
 		return nil, fmt.Errorf("unknown claims service provider: %s", provider)
 	}
 
-	return factory(config.ClaimsConfig, rawConfig)
+	service, err := factory(config.ClaimsConfig, rawConfig)
+	if err != nil {
+		slog.Error("init failed", "module", "claimservice", "error", err)
+	} else {
+		slog.Info("init done", "module", "claimservice")
+	}
+
+	return service, err
 }

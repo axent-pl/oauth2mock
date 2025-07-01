@@ -96,7 +96,7 @@ func init() {
 		slog.Error("failed to initialize claim service", "error", err)
 		os.Exit(1)
 	}
-	slog.Info("claim service initialized")
+	slog.Info("claimservice initialization done")
 
 	templateService, err = template.NewDefaultTemplateService(settings.TemplateDir)
 	if err != nil {

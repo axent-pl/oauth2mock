@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	e "github.com/axent-pl/oauth2mock/pkg/errs"
+	"github.com/axent-pl/oauth2mock/pkg/errs"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
 )
 
@@ -71,7 +71,7 @@ func (s *jsonUserService) Authenticate(inputCredentials authentication.Credentia
 	// find user
 	user, ok := s.users[username]
 	if !ok {
-		return nil, e.ErrUserCredsInvalid
+		return nil, errs.ErrUserCredsInvalid
 	}
 
 	// check if credentials match
@@ -79,7 +79,7 @@ func (s *jsonUserService) Authenticate(inputCredentials authentication.Credentia
 		return &user, nil
 	}
 
-	return nil, e.ErrUserCredsInvalid
+	return nil, errs.ErrUserCredsInvalid
 }
 
 func (s *jsonUserService) GetUsers() ([]UserHandler, error) {
