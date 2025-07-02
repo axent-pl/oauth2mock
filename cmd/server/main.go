@@ -12,6 +12,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/claimservice"
 	"github.com/axent-pl/oauth2mock/pkg/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/config"
+	"github.com/axent-pl/oauth2mock/pkg/consentservice"
 	"github.com/axent-pl/oauth2mock/pkg/handler"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/http/server"
@@ -36,6 +37,7 @@ var (
 	clientService   clientservice.ClientServicer
 	userService     userservice.UserServicer
 	claimService    claimservice.ClaimServicer
+	consentService  consentservice.ConsentServicer
 	templateService template.TemplateServicer
 	signingService  signing.SigningServicer
 
@@ -96,7 +98,14 @@ func init() {
 		slog.Error("failed to initialize claim service", "error", err)
 		os.Exit(1)
 	}
-	slog.Info("claimservice initialization done")
+	slog.Info("claimservice initialized")
+
+	consentService, err = consentservice.NewFromConfig(data)
+	if err != nil {
+		slog.Error("failed to initialize consent service", "error", err)
+		os.Exit(1)
+	}
+	slog.Info("consentservice initialized")
 
 	templateService, err = template.NewDefaultTemplateService(settings.TemplateDir)
 	if err != nil {

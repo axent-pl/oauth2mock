@@ -113,3 +113,7 @@ func (s *jsonConsentService) ClearConsents(user userservice.UserHandler, client 
 	s.userConsents[username] = make(map[string]bool)
 	return nil
 }
+
+func init() {
+	Register("json", NewJSONConsentsService)
+}

@@ -15,6 +15,12 @@ var (
 	consentServiceFactoryRegistry   = map[string]ConsentServiceFactory{}
 )
 
+func Register(name string, f ConsentServiceFactory) {
+	consentServiceFactoryRegistryMU.Lock()
+	defer consentServiceFactoryRegistryMU.Unlock()
+	consentServiceFactoryRegistry[name] = f
+}
+
 type Config struct {
 	ConsentsConfig json.RawMessage `json:"consents"`
 }

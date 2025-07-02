@@ -82,6 +82,11 @@
                             "email": "John.Demo@acme.com"
                         }
                     }
+                },
+                "consents": {
+                    "profile": true,
+                    "email": true,
+                    "photos::read": false
                 }
             },
             "admin": {
@@ -108,6 +113,11 @@
                             "email": "John.Demo@acme.com"
                         }
                     }
+                },
+                "consents": {
+                    "profile": true,
+                    "email": true,
+                    "photos::read": false
                 }
             }
         }
@@ -132,5 +142,13 @@
                 "azp": "ACME2"
             }
         }
+    },
+    "consents": {
+        "provider": "json",
+        "scopes": [
+            "profile",
+            "email",
+            "photos::read"
+        ]
     }
 }
