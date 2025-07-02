@@ -1,26 +1,16 @@
 package consentservice
 
 import (
-	"time"
-
 	"github.com/axent-pl/oauth2mock/pkg/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
 type ConsentHandler interface {
 	GetScope() string
-	IsGranted() bool // returns true if currently usable
-	IsRevoked() bool // returns true if explicitly denied
-	IsOneTime() bool // true if granted once only
-	IsExpired() bool // true if time-based and expired
-
-	GrantPersistent() error
-	GrantOnce() error
-	GrantForDuration(time.Duration) error
-	GrantUntil(time.Time) error
-
+	IsGranted() bool
+	IsRevoked() bool
+	Grant() error
 	Revoke() error
-	LastUpdated() time.Time
 }
 
 type ConsentServicer interface {

@@ -2,11 +2,9 @@ package consentservice
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"sync"
-	"time"
 
 	"github.com/axent-pl/oauth2mock/pkg/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/userservice"
@@ -23,44 +21,7 @@ type jsonConsentServiceConfig struct {
 }
 
 type jsonConsentHandler struct {
-	scope   string
-	granted bool
-}
-
-func (h *jsonConsentHandler) GetScope() string {
-	return h.scope
-}
-func (h *jsonConsentHandler) IsGranted() bool {
-	return h.granted
-}
-func (h *jsonConsentHandler) IsRevoked() bool {
-	return !h.granted
-}
-func (h *jsonConsentHandler) IsOneTime() bool {
-	return false
-}
-func (h *jsonConsentHandler) IsExpired() bool {
-	return false
-}
-func (h *jsonConsentHandler) GrantPersistent() error {
-	h.granted = true
-	return nil
-}
-func (h *jsonConsentHandler) GrantOnce() error {
-	return errors.New("not implemented")
-}
-func (h *jsonConsentHandler) GrantForDuration(time.Duration) error {
-	return errors.New("not implemented")
-}
-func (h *jsonConsentHandler) GrantUntil(time.Time) error {
-	return errors.New("not implemented")
-}
-func (h *jsonConsentHandler) Revoke() error {
-	h.granted = false
-	return nil
-}
-func (h *jsonConsentHandler) LastUpdated() time.Time {
-	return time.Now()
+	defaultConsentHandler
 }
 
 type jsonConsentService struct {
@@ -104,21 +65,30 @@ func (s *jsonConsentService) GetConsents(user userservice.UserHandler, client cl
 		for _, scope := range scopes {
 			if scopeConsentGranted, okUS := userConsents[scope]; okUS {
 				consents[scope] = &jsonConsentHandler{
-					scope:   scope,
-					granted: scopeConsentGranted,
+					defaultConsentHandler{
+						scope:   scope,
+						granted: scopeConsentGranted,
+						revoked: !scopeConsentGranted,
+					},
 				}
 			} else {
 				consents[scope] = &jsonConsentHandler{
-					scope:   scope,
-					granted: false,
+					defaultConsentHandler{
+						scope:   scope,
+						granted: false,
+						revoked: false,
+					},
 				}
 			}
 		}
 	} else {
 		for _, scope := range scopes {
 			consents[scope] = &jsonConsentHandler{
-				scope:   scope,
-				granted: false,
+				defaultConsentHandler{
+					scope:   scope,
+					granted: false,
+					revoked: false,
+				},
 			}
 		}
 	}
