@@ -17,7 +17,9 @@ type jsonConsentServiceConfig struct {
 			Consents map[string]bool `json:"consents"`
 		} `json:"users"`
 	} `json:"users"`
-	Scopes []string `json:"scopes"`
+	Consents struct {
+		Scopes []string `json:"scopes"`
+	} `json:"consents"`
 }
 
 type jsonConsentHandler struct {
@@ -51,7 +53,7 @@ func NewJSONConsentsService(rawConsentsConfig json.RawMessage, rawConfig json.Ra
 
 	service.scopesMU.Lock()
 	defer service.scopesMU.Unlock()
-	for _, scope := range config.Scopes {
+	for _, scope := range config.Consents.Scopes {
 		service.scopes[scope] = scope
 	}
 
