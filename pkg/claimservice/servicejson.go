@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"strings"
 	"sync"
 
 	"github.com/axent-pl/oauth2mock/pkg/clientservice"
@@ -124,6 +125,7 @@ func (s *jsonClaimService) GetUserClaims(user userservice.UserHandler, client cl
 		}
 	}
 
+	grantedScopes := make([]string, 0)
 	for _, scope := range scopes {
 		scopeConsent, ok := consents[scope]
 		if !ok {
@@ -131,11 +133,13 @@ func (s *jsonClaimService) GetUserClaims(user userservice.UserHandler, client cl
 		}
 		scopeOverrides, ok := userClaims.ScopeOverrides[scope]
 		if ok && scopeConsent.IsGranted() {
+			grantedScopes = append(grantedScopes, scope)
 			for c, v := range scopeOverrides {
 				claims[c] = v
 			}
 		}
 	}
+	claims["scope"] = strings.Join(grantedScopes, " ")
 
 	return claims, nil
 }

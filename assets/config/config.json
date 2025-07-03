@@ -86,7 +86,7 @@
                 "consents": {
                     "profile": true,
                     "email": true,
-                    "photos::read": false
+                    "shopping": false
                 }
             },
             "admin": {
@@ -117,7 +117,7 @@
                 "consents": {
                     "profile": true,
                     "email": true,
-                    "photos::read": false
+                    "shopping": false
                 }
             }
         }
