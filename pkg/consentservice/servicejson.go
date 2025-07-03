@@ -18,18 +18,20 @@ type jsonConsentServiceConfig struct {
 		} `json:"users"`
 	} `json:"users"`
 	Consents struct {
-		Scopes []string `json:"scopes"`
+		Scopes map[string]struct {
+			RequireConsent bool `json:"requireConsent"`
+		} `json:"scopes"`
 	} `json:"consents"`
 }
 
-type jsonConsentHandler struct {
-	defaultConsentHandler
+type jsonConsentServiceScopeMeta struct {
+	requireConsent bool
 }
 
 type jsonConsentService struct {
 	userConsents   map[string]map[string]bool
 	userConsentsMU sync.RWMutex
-	scopes         map[string]string
+	scopes         map[string]jsonConsentServiceScopeMeta
 	scopesMU       sync.RWMutex
 }
 
@@ -38,7 +40,7 @@ func NewJSONConsentsService(rawConsentsConfig json.RawMessage, rawConfig json.Ra
 	config := jsonConsentServiceConfig{}
 	service := jsonConsentService{
 		userConsents: make(map[string]map[string]bool),
-		scopes:       make(map[string]string),
+		scopes:       make(map[string]jsonConsentServiceScopeMeta),
 	}
 
 	if err := json.Unmarshal(rawConfig, &config); err != nil {
@@ -53,47 +55,58 @@ func NewJSONConsentsService(rawConsentsConfig json.RawMessage, rawConfig json.Ra
 
 	service.scopesMU.Lock()
 	defer service.scopesMU.Unlock()
-	for _, scope := range config.Consents.Scopes {
-		service.scopes[scope] = scope
+	for scope, meta := range config.Consents.Scopes {
+		service.scopes[scope] = jsonConsentServiceScopeMeta{requireConsent: meta.RequireConsent}
 	}
 
 	return &service, nil
 }
 
+func (s *jsonConsentService) getUserConsent(username string, scope string) ConsentHandler {
+	if _, ok := s.userConsents[username]; !ok {
+		return &defaultConsentHandler{
+			scope:    scope,
+			required: s.scopes[scope].requireConsent,
+			granted:  false,
+			revoked:  false,
+		}
+	}
+	if _, ok := s.userConsents[username][scope]; !ok {
+		return &defaultConsentHandler{
+			scope:    scope,
+			required: s.scopes[scope].requireConsent,
+			granted:  false,
+			revoked:  false,
+		}
+	}
+	return &defaultConsentHandler{
+		scope:    scope,
+		required: s.scopes[scope].requireConsent,
+		granted:  s.userConsents[username][scope],
+		revoked:  !s.userConsents[username][scope],
+	}
+}
+
 func (s *jsonConsentService) GetConsents(user userservice.UserHandler, client clientservice.ClientHandler, scopes []string) (map[string]ConsentHandler, error) {
 	consents := make(map[string]ConsentHandler)
 	username := user.Id()
-	if userConsents, okUC := s.userConsents[username]; okUC {
-		for _, scope := range scopes {
-			if scopeConsentGranted, okUS := userConsents[scope]; okUS {
-				consents[scope] = &jsonConsentHandler{
-					defaultConsentHandler{
-						scope:   scope,
-						granted: scopeConsentGranted,
-						revoked: !scopeConsentGranted,
-					},
-				}
-			} else {
-				consents[scope] = &jsonConsentHandler{
-					defaultConsentHandler{
-						scope:   scope,
-						granted: false,
-						revoked: false,
-					},
-				}
-			}
+
+	for _, scope := range scopes {
+		if _, ok := s.scopes[scope]; !ok {
+			return consents, fmt.Errorf("undefined scope %s", scope)
 		}
-	} else {
-		for _, scope := range scopes {
-			consents[scope] = &jsonConsentHandler{
-				defaultConsentHandler{
-					scope:   scope,
-					granted: false,
-					revoked: false,
-				},
+		if s.scopes[scope].requireConsent {
+			consents[scope] = s.getUserConsent(username, scope)
+		} else {
+			consents[scope] = &defaultConsentHandler{
+				scope:    scope,
+				required: s.scopes[scope].requireConsent,
+				granted:  true,
+				revoked:  false,
 			}
 		}
 	}
+
 	return consents, nil
 }
 

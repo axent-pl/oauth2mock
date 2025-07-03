@@ -145,10 +145,10 @@
     },
     "consents": {
         "provider": "json",
-        "scopes": [
-            "profile",
-            "email",
-            "photos::read"
-        ]
+        "scopes": {
+            "profile": { "requireConsent": false },
+            "email": { "requireConsent": true },
+            "shopping": { "requireConsent": true }
+        }
     }
 }

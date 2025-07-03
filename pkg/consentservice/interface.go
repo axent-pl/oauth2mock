@@ -9,6 +9,7 @@ type ConsentHandler interface {
 	GetScope() string
 	IsGranted() bool
 	IsRevoked() bool
+	IsRequired() bool
 	Grant() error
 	Revoke() error
 }

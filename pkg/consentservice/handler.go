@@ -1,22 +1,27 @@
 package consentservice
 
 type defaultConsentHandler struct {
-	scope   string
-	granted bool
-	revoked bool
+	scope    string
+	required bool // true if user consent is required for the scope
+	granted  bool
+	revoked  bool
 }
 
 func NewConsentHandler(scope string) (ConsentHandler, error) {
 	h := &defaultConsentHandler{
-		scope:   scope,
-		granted: false,
-		revoked: false,
+		scope:    scope,
+		required: true,
+		granted:  false,
+		revoked:  false,
 	}
 	return h, nil
 }
 
 func (h *defaultConsentHandler) GetScope() string {
 	return h.scope
+}
+func (h *defaultConsentHandler) IsRequired() bool {
+	return h.required
 }
 func (h *defaultConsentHandler) IsGranted() bool {
 	return h.granted

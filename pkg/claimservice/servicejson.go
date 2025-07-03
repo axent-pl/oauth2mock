@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/axent-pl/oauth2mock/pkg/clientservice"
+	"github.com/axent-pl/oauth2mock/pkg/consentservice"
 	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
@@ -97,11 +98,15 @@ func (s *jsonClaimService) GetClientClaims(client clientservice.ClientHandler, s
 	return claims, nil
 }
 
-func (s *jsonClaimService) GetUserClaims(user userservice.UserHandler, client clientservice.ClientHandler, scope []string) (map[string]interface{}, error) {
+func (s *jsonClaimService) GetUserClaims(user userservice.UserHandler, client clientservice.ClientHandler, consentService consentservice.ConsentServicer, scopes []string) (map[string]interface{}, error) {
 	s.userClaimsMU.RLock()
 	defer s.userClaimsMU.RUnlock()
 
 	claims := make(map[string]interface{})
+	consents, err := consentService.GetConsents(user, client, scopes)
+	if err != nil {
+		return nil, fmt.Errorf("could not get consents: %w", err)
+	}
 
 	userClaims, ok := s.userClaims[user.Id()]
 	if !ok {
@@ -119,9 +124,13 @@ func (s *jsonClaimService) GetUserClaims(user userservice.UserHandler, client cl
 		}
 	}
 
-	for _, scopeItem := range scope {
-		scopeOverrides, ok := userClaims.ScopeOverrides[scopeItem]
-		if ok {
+	for _, scope := range scopes {
+		scopeConsent, ok := consents[scope]
+		if !ok {
+			return nil, fmt.Errorf("undefined scope %s", scope)
+		}
+		scopeOverrides, ok := userClaims.ScopeOverrides[scope]
+		if ok && scopeConsent.IsGranted() {
 			for c, v := range scopeOverrides {
 				claims[c] = v
 			}

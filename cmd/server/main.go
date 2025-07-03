@@ -167,7 +167,7 @@ func init() {
 		routing.ForQueryValue("response_type", "code"))
 
 	router.RegisterHandler(
-		handler.TokenAuthorizationCodeHandler(openidConfiguration, clientService, authCodeService, claimService, signingService),
+		handler.TokenAuthorizationCodeHandler(openidConfiguration, clientService, consentService, authCodeService, claimService, signingService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "authorization_code"))
@@ -179,7 +179,7 @@ func init() {
 		routing.ForPostFormValue("grant_type", "client_credentials"))
 
 	router.RegisterHandler(
-		handler.TokenPasswordHandler(openidConfiguration, clientService, userService, claimService, signingService),
+		handler.TokenPasswordHandler(openidConfiguration, clientService, userService, claimService, consentService, signingService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "password"))
