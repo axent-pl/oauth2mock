@@ -62,55 +62,38 @@ func NewJSONConsentsService(rawConsentsConfig json.RawMessage, rawConfig json.Ra
 	return &service, nil
 }
 
-func (s *jsonConsentService) getUserConsent(username string, scope string) ConsentHandler {
+func (s *jsonConsentService) getUserConsentState(username string, scope string) (bool, bool) {
 	if _, ok := s.userConsents[username]; !ok {
-		return &defaultConsentHandler{
-			scope:    scope,
-			required: s.scopes[scope].requireConsent,
-			granted:  false,
-			revoked:  false,
-		}
+		return false, false
 	}
 	if _, ok := s.userConsents[username][scope]; !ok {
-		return &defaultConsentHandler{
-			scope:    scope,
-			required: s.scopes[scope].requireConsent,
-			granted:  false,
-			revoked:  false,
-		}
+		return false, false
 	}
-	return &defaultConsentHandler{
-		scope:    scope,
-		required: s.scopes[scope].requireConsent,
-		granted:  s.userConsents[username][scope],
-		revoked:  !s.userConsents[username][scope],
-	}
+	return true, s.userConsents[username][scope]
 }
 
-func (s *jsonConsentService) GetConsents(user userservice.UserHandler, client clientservice.ClientHandler, scopes []string) (map[string]ConsentHandler, error) {
-	consents := make(map[string]ConsentHandler)
+func (s *jsonConsentService) GetConsents(user userservice.UserHandler, client clientservice.ClientHandler, scopes []string) (map[string]Consenter, error) {
+	consents := make(map[string]Consenter)
 	username := user.Id()
 
 	for _, scope := range scopes {
 		if _, ok := s.scopes[scope]; !ok {
 			return consents, fmt.Errorf("undefined scope %s", scope)
 		}
-		if s.scopes[scope].requireConsent {
-			consents[scope] = s.getUserConsent(username, scope)
-		} else {
-			consents[scope] = &defaultConsentHandler{
-				scope:    scope,
-				required: s.scopes[scope].requireConsent,
-				granted:  true,
-				revoked:  false,
-			}
+		consent, err := NewConsent(scope, WithRequired(s.scopes[scope].requireConsent))
+		if err != nil {
+			return consents, fmt.Errorf("could not initialize consent for scope %s: %w", scope, err)
 		}
+		if exists, state := s.getUserConsentState(username, scope); exists {
+			consent.SetState(state)
+		}
+		consents[scope] = consent
 	}
 
 	return consents, nil
 }
 
-func (s *jsonConsentService) SaveConsents(user userservice.UserHandler, client clientservice.ClientHandler, consents []ConsentHandler) error {
+func (s *jsonConsentService) SaveConsents(user userservice.UserHandler, client clientservice.ClientHandler, consents []Consenter) error {
 	username := user.Id()
 	if _, ok := s.userConsents[username]; !ok {
 		s.userConsents[username] = make(map[string]bool)

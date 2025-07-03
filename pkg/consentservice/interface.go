@@ -5,17 +5,19 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
-type ConsentHandler interface {
+type Consenter interface {
 	GetScope() string
 	IsGranted() bool
 	IsRevoked() bool
 	IsRequired() bool
+
 	Grant() error
 	Revoke() error
+	SetState(bool) error
 }
 
 type ConsentServicer interface {
-	GetConsents(user userservice.UserHandler, client clientservice.ClientHandler, scopes []string) (map[string]ConsentHandler, error)
-	SaveConsents(user userservice.UserHandler, client clientservice.ClientHandler, consents []ConsentHandler) error
+	GetConsents(user userservice.UserHandler, client clientservice.ClientHandler, scopes []string) (map[string]Consenter, error)
+	SaveConsents(user userservice.UserHandler, client clientservice.ClientHandler, consents []Consenter) error
 	ClearConsents(user userservice.UserHandler, client clientservice.ClientHandler) error
 }
