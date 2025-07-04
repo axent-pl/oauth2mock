@@ -80,13 +80,16 @@
                     "scopeOverrides": {
                         "email": {
                             "email": "John.Demo@acme.com"
+                        },
+                        "products::read": {
+                            "products": ["A", "B"]
                         }
                     }
                 },
                 "consents": {
                     "profile": true,
                     "email": true,
-                    "shopping": false
+                    "products::read": false
                 }
             },
             "admin": {
@@ -111,13 +114,16 @@
                     "scopeOverrides": {
                         "email": {
                             "email": "John.Demo@acme.com"
+                        },
+                        "products::read": {
+                            "products": ["A", "B","C"]
                         }
                     }
                 },
                 "consents": {
                     "profile": true,
                     "email": true,
-                    "shopping": false
+                    "products::read": true
                 }
             }
         }
@@ -148,7 +154,8 @@
         "scopes": {
             "profile": { "requireConsent": false },
             "email": { "requireConsent": true },
-            "shopping": { "requireConsent": true }
+            "products::read": { "requireConsent": true },
+            "avatar": { "requireConsent": false }
         }
     }
 }

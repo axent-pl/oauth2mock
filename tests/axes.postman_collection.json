@@ -7,7 +7,7 @@
 	},
 	"item": [
 		{
-			"name": "Authorize",
+			"name": "Authorize (user:demo)",
 			"event": [
 				{
 					"listen": "test",
@@ -60,7 +60,7 @@
 					]
 				},
 				"url": {
-					"raw": "{{SERVER_URL}}/authorize?response_type=code&client_id=ACME&redirect_uri={{REDIRECT_URL}}&scope=email profile shopping&nonce={{AUTH_NONCE}}&state={{AUTH_STATE}}",
+					"raw": "{{SERVER_URL}}/authorize?response_type=code&client_id=ACME&redirect_uri={{REDIRECT_URL}}&scope=email profile products::read&nonce={{AUTH_NONCE}}&state={{AUTH_STATE}}",
 					"host": [
 						"{{SERVER_URL}}"
 					],
@@ -82,7 +82,7 @@
 						},
 						{
 							"key": "scope",
-							"value": "email profile shopping"
+							"value": "email profile products::read"
 						},
 						{
 							"key": "nonce",
@@ -98,7 +98,7 @@
 			"response": []
 		},
 		{
-			"name": "Token (authorization_code)",
+			"name": "Token (user:demo authorization_code)",
 			"event": [
 				{
 					"listen": "test",
@@ -159,6 +159,14 @@
 							"    let jwtPayloadJsonString = atob(jwtPayload)",
 							"    let jwtPayloadJson = JSON.parse(jwtPayloadJsonString)",
 							"    pm.expect(jwtPayloadJson).to.have.property(\"email\")",
+							"});",
+							"pm.test(\"`access_token` does not have `products` claim\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    let jwt = jsonData.access_token",
+							"    let [jwtHeader, jwtPayload, jwtSignature] = jwt.split('.')",
+							"    let jwtPayloadJsonString = atob(jwtPayload)",
+							"    let jwtPayloadJson = JSON.parse(jwtPayloadJsonString)",
+							"    pm.expect(jwtPayloadJson).to.not.have.property(\"products\")",
 							"});"
 						],
 						"type": "text/javascript",
