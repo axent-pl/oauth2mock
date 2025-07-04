@@ -51,26 +51,26 @@
                 <div class="card login-card shadow border-0">
                     <div class="card-body">
                         <form method="POST" action="{{ .FormAction }}" enctype="multipart/form-data" class="needs-validation" novalidate>
-                            {{ if .AuthenticationError }}
+                            {{ if .FormErrorMessage }}
                             <div class="alert alert-danger" role="alert">
-                                {{ .AuthenticationError }}
+                                {{ .FormErrorMessage }}
                             </div>
                             {{ end }}
                             <div class="mb-4">
                                 <label for="username" class="form-label">Email address</label>
-                                <input name="username" value="{{ .Credentials.Username }}" type="text" class="form-control {{ if .ValidationErrors.Username }}is-invalid{{ end }}" id="username" aria-describedby="validationFeedbackUsername">
-                                {{ if .ValidationErrors.Username }}
+                                <input name="username" value="{{ .Username }}" type="text" class="form-control {{ if .UsernameError }}is-invalid{{ end }}" id="username" aria-describedby="validationFeedbackUsername">
+                                {{ if .UsernameError }}
                                 <div id="validationFeedbackUsername" class="invalid-feedback">
-                                    {{ .ValidationErrors.Username.ErrorMessage }}
+                                    {{ .UsernameError }}
                                 </div>
                                 {{ end }}
                             </div>
                             <div class="mb-4">
                                 <label for="password" class="form-label">Password</label>
-                                <input name="password" type="password" class="form-control {{ if .ValidationErrors.Password }}is-invalid{{ end }}" id="password" aria-describedby="validationFeedbackPassword">
-                                {{ if .ValidationErrors.Password }}
+                                <input name="password" type="password" class="form-control {{ if .PasswordError }}is-invalid{{ end }}" id="password" aria-describedby="validationFeedbackPassword">
+                                {{ if .PasswordError }}
                                 <div id="validationFeedbackPassword" class="invalid-feedback">
-                                    {{ .ValidationErrors.Password.ErrorMessage }}
+                                    {{ .PasswordError }}
                                 </div>
                                 {{ end }}
                             </div>

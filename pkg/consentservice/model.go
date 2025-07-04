@@ -10,13 +10,18 @@ type defaultConsent struct {
 type NewConsentOption func(*defaultConsent) error
 
 func NewConsent(scope string, options ...NewConsentOption) (Consenter, error) {
-	h := &defaultConsent{
+	c := &defaultConsent{
 		scope:    scope,
 		required: true,
 		granted:  false,
 		revoked:  false,
 	}
-	return h, nil
+	for _, opt := range options {
+		if err := opt(c); err != nil {
+			return nil, err
+		}
+	}
+	return c, nil
 }
 
 func WithRequired(required bool) NewConsentOption {

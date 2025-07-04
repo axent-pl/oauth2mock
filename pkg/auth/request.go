@@ -13,7 +13,7 @@ type AuthorizationRequest struct {
 	State        string
 	Nonce        string
 	Client       clientservice.ClientHandler
-	Subject      userservice.UserHandler
+	User         userservice.UserHandler
 }
 
 func (req *AuthorizationRequest) GetRedirectURI() string {

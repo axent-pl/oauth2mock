@@ -157,5 +157,10 @@
             "products::read": { "requireConsent": true },
             "avatar": { "requireConsent": false }
         }
+    },
+    "authorization": {
+        "provider": "memory",
+        "authorizationCodeLength": 16,
+        "authorizationRequestTTLSeconds": 60
     }
 }

@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/axent-pl/oauth2mock/pkg/auth"
+	"github.com/axent-pl/oauth2mock/pkg/authorizationservice"
 	"github.com/axent-pl/oauth2mock/pkg/claimservice"
 	"github.com/axent-pl/oauth2mock/pkg/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/config"
@@ -33,13 +34,13 @@ type Settings struct {
 var (
 	settings Settings
 
-	authCodeService auth.AuthorizationCodeServicer
-	clientService   clientservice.ClientServicer
-	userService     userservice.UserServicer
-	claimService    claimservice.ClaimServicer
-	consentService  consentservice.ConsentServicer
-	templateService template.TemplateServicer
-	signingService  signing.SigningServicer
+	clientService        clientservice.ClientServicer
+	userService          userservice.UserServicer
+	claimService         claimservice.ClaimServicer
+	consentService       consentservice.ConsentServicer
+	authorizationService authorizationservice.AuthorizationServicer
+	templateService      template.TemplateServicer
+	signingService       signing.SigningServicer
 
 	router     routing.Router
 	httpServer server.Serverer
@@ -72,13 +73,6 @@ func init() {
 		os.Exit(1)
 	}
 
-	authCodeService, err = auth.NewAuthorizationCodeService()
-	if err != nil {
-		slog.Error("failed to initialize authorization code service", "error", err)
-		os.Exit(1)
-	}
-	slog.Info("authorization code service initialized")
-
 	clientService, err = clientservice.NewClientService(settings.DataFile)
 	if err != nil {
 		slog.Error("failed to initialize client service", "error", err)
@@ -99,6 +93,13 @@ func init() {
 		os.Exit(1)
 	}
 	slog.Info("claimservice initialized")
+
+	authorizationService, err = authorizationservice.NewFromConfig(data)
+	if err != nil {
+		slog.Error("failed to initialize authorization service", "error", err)
+		os.Exit(1)
+	}
+	slog.Info("authorizationservice initialized")
 
 	consentService, err = consentservice.NewFromConfig(data)
 	if err != nil {
@@ -161,13 +162,13 @@ func init() {
 		routing.ForQueryValue("response_type", "code"))
 
 	router.RegisterHandler(
-		handler.AuthorizePostHandler(templateService, clientService, userService, authCodeService),
+		handler.AuthorizePostHandler(templateService, clientService, userService, authorizationService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.AuthorizationEndpoint),
 		routing.ForQueryValue("response_type", "code"))
 
 	router.RegisterHandler(
-		handler.TokenAuthorizationCodeHandler(openidConfiguration, clientService, consentService, authCodeService, claimService, signingService),
+		handler.TokenAuthorizationCodeHandler(openidConfiguration, clientService, consentService, authorizationService, claimService, signingService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "authorization_code"))

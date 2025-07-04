@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/axent-pl/oauth2mock/pkg/auth"
+	"github.com/axent-pl/oauth2mock/pkg/authorizationservice"
 	"github.com/axent-pl/oauth2mock/pkg/claimservice"
 	"github.com/axent-pl/oauth2mock/pkg/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/consentservice"
@@ -18,7 +19,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
-func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientSvc clientservice.ClientServicer, consentSvc consentservice.ConsentServicer, authCodeSvc auth.AuthorizationCodeServicer, claimSvc claimservice.ClaimServicer, keySvc signing.SigningServicer) routing.HandlerFunc {
+func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientSvc clientservice.ClientServicer, consentSvc consentservice.ConsentServicer, authCodeSvc authorizationservice.AuthorizationServicer, claimSvc claimservice.ClaimServicer, keySvc signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("request handler TokenAuthorizationCodeHandler started")
 		requstDTO := &dto.TokenAuthorizationCodeRequestDTO{}
@@ -46,32 +47,32 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 		}
 
 		// Get authorization request data
-		authCodeData, ok := authCodeSvc.GetCode(requstDTO.Code)
-		if !ok {
+		authorizationRequest, err := authCodeSvc.Get(requstDTO.Code)
+		if err != nil {
 			http.Error(w, "invalid code", http.StatusBadRequest)
 			return
 		}
 
 		// Validate request DTO with authCodeData
-		if requstDTO.ClientId != authCodeData.Request.Client.Id() {
+		if requstDTO.ClientId != authorizationRequest.GetClient().Id() {
 			http.Error(w, "invalid code", http.StatusBadRequest)
 			return
 		}
-		if requstDTO.RedirectURI != authCodeData.Request.RedirectURI {
+		if requstDTO.RedirectURI != authorizationRequest.GetRedirectURI() {
 			http.Error(w, "invalid code", http.StatusBadRequest)
 			return
 		}
 
-		subject := authCodeData.Request.Subject
-		scope := authCodeData.Request.Scope
-		claims, err := claimSvc.GetUserClaims(subject, client, consentSvc, scope)
+		subject := authorizationRequest.GetUser()
+		scopes := authorizationRequest.GetScopes()
+		claims, err := claimSvc.GetUserClaims(subject, client, consentSvc, scopes)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		if authCodeData.Request.Nonce != "" {
-			claims["nonce"] = authCodeData.Request.Nonce
+		if authorizationRequest.GetNonce() != "" {
+			claims["nonce"] = authorizationRequest.GetNonce()
 		}
 
 		issuer := openidConfig.Issuer
