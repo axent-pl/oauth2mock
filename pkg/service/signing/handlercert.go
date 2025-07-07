@@ -174,7 +174,7 @@ func (kh *certSigningKey) Save(paths ...string) error {
 	certPath, keyPath := paths[0], paths[1]
 
 	// Save the certificate to the specified path
-	certOut, err := os.Create(certPath)
+	certOut, err := os.OpenFile(certPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return fmt.Errorf("creating cert file: %w", err)
 	}
@@ -186,7 +186,7 @@ func (kh *certSigningKey) Save(paths ...string) error {
 	}
 
 	// Save the private key to the specified path
-	keyOut, err := os.Create(keyPath)
+	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return fmt.Errorf("creating key file: %w", err)
 	}

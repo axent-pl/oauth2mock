@@ -129,12 +129,16 @@ func (kh *rsaSigningKey) Save(paths ...string) error {
 		Bytes: privateKeyBytes,
 	}
 
-	file, err := os.Create(path)
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
-	return pem.Encode(file, block)
+	err = pem.Encode(file, block)
+	closeErr := file.Close()
+	if err != nil {
+		return err
+	}
+	return closeErr
 }
 
 func (kh *rsaSigningKey) GetJWK() JSONWebKey {

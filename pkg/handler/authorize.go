@@ -129,7 +129,7 @@ func AuthorizePostHandler(templateDB template.TemplateServicer, clientSrv client
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		if authZSrv.Validate(authorizationRequest); err != nil {
+		if err := authZSrv.Validate(authorizationRequest); err != nil {
 			slog.Error("invalid authorize request", "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -142,7 +142,12 @@ func AuthorizePostHandler(templateDB template.TemplateServicer, clientSrv client
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		redirectURL, _ := url.Parse(authorizationRequest.GetRedirectURI())
+		redirectURL, err := url.Parse(authorizationRequest.GetRedirectURI())
+		if err != nil {
+			slog.Error("invalid redirect uel format", "error", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		redirectURLQuery := redirectURL.Query()
 		redirectURLQuery.Add("code", code)
 		redirectURLQuery.Add("state", authorizationRequest.GetState())
