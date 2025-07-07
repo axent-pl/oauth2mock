@@ -17,22 +17,17 @@ type route struct {
 	postFormValue map[string]string
 	queryValue    map[string]string
 	handler       HandlerFunc
+	middlewares   []Middleware
 }
 
 type HandlerFunc func(w http.ResponseWriter, r *http.Request)
 type Middleware func(HandlerFunc) HandlerFunc
 
 type Router struct {
-	routes      []*route
-	middlewares []Middleware
+	routes []*route
 }
 
 type RouteOption func(*route) error
-
-// Middleware management
-func (r *Router) Use(m Middleware) {
-	r.middlewares = append(r.middlewares, m)
-}
 
 // Route options
 func WithPath(path string) RouteOption {
@@ -59,6 +54,14 @@ func ForPostFormValue(key string, val string) RouteOption {
 func ForQueryValue(key string, val string) RouteOption {
 	return func(r *route) error {
 		r.queryValue[key] = val
+		return nil
+	}
+}
+
+// New: RouteOption to attach middlewares per-route
+func WithMiddleware(mws ...Middleware) RouteOption {
+	return func(r *route) error {
+		r.middlewares = append(r.middlewares, mws...)
 		return nil
 	}
 }
@@ -102,7 +105,7 @@ func (r *route) matches(req *http.Request) bool {
 	return true
 }
 
-// ServeHTTP with middleware chaining
+// ServeHTTP with per-route middleware chaining
 func (h *Router) ServeHTTP(w http.ResponseWriter, routedRequest *http.Request) {
 	ctx := context.WithValue(routedRequest.Context(), "RequestID", uuid.New().String())
 	routedRequest = routedRequest.WithContext(ctx)
@@ -117,12 +120,16 @@ func (h *Router) ServeHTTP(w http.ResponseWriter, routedRequest *http.Request) {
 		if route.matches(routedRequest) {
 			handler := route.handler
 
-			slog.Info("request routing middlewares started", "request", requestLogValue)
-			middlewareStartTime := time.Now()
-			for i := len(h.middlewares) - 1; i >= 0; i-- {
-				handler = h.middlewares[i](handler)
+			if len(route.middlewares) > 0 {
+				slog.Info("request routing middlewares started", "request", requestLogValue)
+				middlewareStartTime := time.Now()
+
+				for i := len(route.middlewares) - 1; i >= 0; i-- {
+					handler = route.middlewares[i](handler)
+				}
+
+				slog.Info("request routing middlewares done", "request", requestLogValue, "took", time.Since(middlewareStartTime))
 			}
-			slog.Info("request routing middlewares done", "request", requestLogValue, "took", time.Since(middlewareStartTime))
 
 			slog.Info("request routing handler started", "request", requestLogValue)
 			handlerStartTime := time.Now()

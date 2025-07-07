@@ -171,19 +171,22 @@ func init() {
 		handler.TokenAuthorizationCodeHandler(openidConfiguration, clientService, consentService, authorizationService, claimService, signingService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
-		routing.ForPostFormValue("grant_type", "authorization_code"))
+		routing.ForPostFormValue("grant_type", "authorization_code"),
+		routing.WithMiddleware(routing.RateLimitMiddleware(10, 2)))
 
 	router.RegisterHandler(
 		handler.TokenClientCredentialsHandler(openidConfiguration, clientService, claimService, signingService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
-		routing.ForPostFormValue("grant_type", "client_credentials"))
+		routing.ForPostFormValue("grant_type", "client_credentials"),
+		routing.WithMiddleware(routing.RateLimitMiddleware(10, 2)))
 
 	router.RegisterHandler(
 		handler.TokenPasswordHandler(openidConfiguration, clientService, userService, claimService, consentService, signingService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
-		routing.ForPostFormValue("grant_type", "password"))
+		routing.ForPostFormValue("grant_type", "password"),
+		routing.WithMiddleware(routing.RateLimitMiddleware(10, 2)))
 
 	router.RegisterHandler(
 		handler.SCIMGetHandler(userService),
