@@ -91,6 +91,8 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Pragma", "no-cache")
 		w.Write(tokenResponseBytes)
 	}
 }
@@ -148,6 +150,8 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Pragma", "no-cache")
 		w.Write(tokenResponseBytes)
 	}
 }
@@ -217,6 +221,8 @@ func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientSvc clien
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Pragma", "no-cache")
 		w.Write(tokenResponseBytes)
 	}
 }
