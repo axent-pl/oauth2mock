@@ -12,7 +12,6 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/dto"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
-	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
 	"github.com/axent-pl/oauth2mock/pkg/service/template"
 	"github.com/axent-pl/oauth2mock/pkg/tpl"
 	"github.com/axent-pl/oauth2mock/pkg/userservice"
@@ -88,30 +87,9 @@ func AuthorizePostHandler(templateDB template.TemplateServicer, clientSrv client
 		}
 
 		// user
-		credentialsDTO := &dto.AuthorizeCredentialsDTO{}
-		if valid, validator := request.UnmarshalAndValidate(r, credentialsDTO); !valid {
-			slog.Error("invalid authorize request user credentials", "validationErrors", validator.Errors)
-			templateData.FormErrorMessage = "invalid credentials"
-			templateData.Username = credentialsDTO.Username
-			templateData.PasswordError = validator.Errors["password"].ErrorMessage
-			templateData.UsernameError = validator.Errors["username"].ErrorMessage
-			templateDB.Render(w, "login", templateData)
-			return
-		}
-		credentials, err := authentication.NewCredentials(authentication.FromUsernameAndPassword(credentialsDTO.Username, credentialsDTO.Password))
-		if err != nil {
-			slog.Error("invalid authorize request credentials", "error", err)
-			templateData.FormErrorMessage = "invalid credentials"
-			templateData.Username = credentialsDTO.Username
-			templateDB.Render(w, "login", templateData)
-			return
-		}
-		user, err := userSrv.Authenticate(credentials)
-		if err != nil {
-			slog.Error("invalid authorize request credentials", "error", err)
-			templateData.FormErrorMessage = "invalid credentials"
-			templateData.Username = credentialsDTO.Username
-			templateDB.Render(w, "login", templateData)
+		user, ok := r.Context().Value(routing.CTX_USER).(userservice.UserHandler)
+		if !ok {
+			http.Error(w, "authentication failure", http.StatusInternalServerError)
 			return
 		}
 

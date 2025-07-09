@@ -10,7 +10,7 @@ import (
 
 func RequestLogValue(r *http.Request) slog.Value {
 	requestID := ""
-	if id, ok := r.Context().Value("RequestID").(string); ok {
+	if id, ok := r.Context().Value(CTX_REQUEST_ID).(string); ok {
 		requestID = id
 	}
 

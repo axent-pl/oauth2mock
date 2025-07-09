@@ -107,7 +107,7 @@ func (r *route) matches(req *http.Request) bool {
 
 // ServeHTTP with per-route middleware chaining
 func (h *Router) ServeHTTP(w http.ResponseWriter, routedRequest *http.Request) {
-	ctx := context.WithValue(routedRequest.Context(), "RequestID", uuid.New().String())
+	ctx := context.WithValue(routedRequest.Context(), CTX_REQUEST_ID, uuid.New().String())
 	routedRequest = routedRequest.WithContext(ctx)
 
 	dump, _ := httputil.DumpRequest(routedRequest, true)

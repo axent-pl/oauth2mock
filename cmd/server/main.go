@@ -19,6 +19,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/http/server"
 	"github.com/axent-pl/oauth2mock/pkg/service/signing"
 	"github.com/axent-pl/oauth2mock/pkg/service/template"
+	"github.com/axent-pl/oauth2mock/pkg/sessionservice"
 	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
@@ -41,6 +42,7 @@ var (
 	authorizationService authorizationservice.AuthorizationServicer
 	templateService      template.TemplateServicer
 	signingService       signing.SigningServicer
+	sessionService       sessionservice.SessionService
 
 	router     routing.Router
 	httpServer server.Serverer
@@ -72,6 +74,13 @@ func init() {
 		slog.Error("failed to read config", "error", err)
 		os.Exit(1)
 	}
+
+	sessionService, err = sessionservice.NewSessionMemoryService()
+	if err != nil {
+		slog.Error("failed to initialize session service", "error", err)
+		os.Exit(1)
+	}
+	slog.Info("session service initialized")
 
 	clientService, err = clientservice.NewClientService(settings.DataFile)
 	if err != nil {
@@ -165,7 +174,9 @@ func init() {
 		handler.AuthorizePostHandler(templateService, clientService, userService, authorizationService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.AuthorizationEndpoint),
-		routing.ForQueryValue("response_type", "code"))
+		routing.ForQueryValue("response_type", "code"),
+		routing.WithMiddleware(routing.SessionMiddleware(sessionService)),
+		routing.WithMiddleware(routing.UserAuthenticationMiddleware(templateService, userService, sessionService)))
 
 	router.RegisterHandler(
 		handler.TokenAuthorizationCodeHandler(openidConfiguration, clientService, consentService, authorizationService, claimService, signingService),
