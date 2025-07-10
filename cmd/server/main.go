@@ -165,14 +165,7 @@ func init() {
 		routing.WithPath(openidConfiguration.JWKSEndpoint))
 
 	router.RegisterHandler(
-		handler.AuthorizeGetHandler(templateService, clientService),
-		routing.WithMethod(http.MethodGet),
-		routing.WithPath(openidConfiguration.AuthorizationEndpoint),
-		routing.ForQueryValue("response_type", "code"))
-
-	router.RegisterHandler(
-		handler.AuthorizePostHandler(templateService, clientService, userService, authorizationService),
-		routing.WithMethod(http.MethodPost),
+		handler.AuthorizeResponseTypeCodeHandler(templateService, clientService, userService, authorizationService),
 		routing.WithPath(openidConfiguration.AuthorizationEndpoint),
 		routing.ForQueryValue("response_type", "code"),
 		routing.WithMiddleware(routing.SessionMiddleware(sessionService)),

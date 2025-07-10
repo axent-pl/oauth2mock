@@ -3,7 +3,6 @@ package routing
 import (
 	"context"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
@@ -17,15 +16,10 @@ import (
 
 func RateLimitMiddleware(rps float64, burst int) Middleware {
 	limiter := rate.NewLimiter(rate.Limit(rps), burst)
-	var mu sync.Mutex
 
 	return func(next HandlerFunc) HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			mu.Lock()
-			ok := limiter.Allow()
-			mu.Unlock()
-
-			if !ok {
+			if !limiter.Allow() {
 				http.Error(w, http.StatusText(http.StatusTooManyRequests), http.StatusTooManyRequests)
 				return
 			}

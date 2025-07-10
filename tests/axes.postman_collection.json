@@ -475,6 +475,77 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Authorize (user:demo, expected auth from session)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Location is present\", function () {",
+							"    pm.response.to.have.header(\"Location\");",
+							"});",
+							"",
+							"pm.test(\"Location header contains 'code' query parameter\", function () {",
+							"    let locationHeader = pm.response.headers.get(\"Location\");",
+							"    let codeMatch = locationHeader.match(/[?&]code=([^&]+)/);",
+							"    pm.expect(codeMatch).to.not.be.null;",
+							"    if (codeMatch) {",
+							"        let code = codeMatch[1]; ",
+							"        pm.collectionVariables.set(\"AUTHORIZATION_CODE\", code);",
+							"        console.log(\"Saved code:\", code);",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"followRedirects": false
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{SERVER_URL}}/authorize?response_type=code&client_id=ACME&redirect_uri={{REDIRECT_URL}}&scope=email profile products::read&nonce={{AUTH_NONCE}}&state={{AUTH_STATE}}",
+					"host": [
+						"{{SERVER_URL}}"
+					],
+					"path": [
+						"authorize"
+					],
+					"query": [
+						{
+							"key": "response_type",
+							"value": "code"
+						},
+						{
+							"key": "client_id",
+							"value": "ACME"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "{{REDIRECT_URL}}"
+						},
+						{
+							"key": "scope",
+							"value": "email profile products::read"
+						},
+						{
+							"key": "nonce",
+							"value": "{{AUTH_NONCE}}"
+						},
+						{
+							"key": "state",
+							"value": "{{AUTH_STATE}}"
+						}
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"event": [
