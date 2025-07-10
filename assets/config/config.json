@@ -162,5 +162,11 @@
         "provider": "memory",
         "authorizationCodeLength": 16,
         "authorizationRequestTTLSeconds": 60
+    },
+    "session": {
+        "provider": "memory",
+        "config": {
+            "ttlSeconds": 60
+        }
     }
 }

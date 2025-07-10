@@ -75,7 +75,7 @@ func init() {
 		os.Exit(1)
 	}
 
-	sessionService, err = sessionservice.NewSessionMemoryService()
+	sessionService, err = sessionservice.NewFromConfig(data)
 	if err != nil {
 		slog.Error("failed to initialize session service", "error", err)
 		os.Exit(1)

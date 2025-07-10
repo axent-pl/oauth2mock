@@ -1,12 +1,36 @@
 package sessionservice
 
-import "sync"
+import (
+	"encoding/json"
+	"sync"
+	"time"
+)
 
 // sessionMemoryService is an in-memory implementation of SessionService.
 // It uses a sync.RWMutex to allow concurrent safe access to the session data.
 type sessionMemoryService struct {
 	dataMU sync.RWMutex
 	data   map[string]SessionData
+	ttl    time.Duration
+}
+
+type sessionMemoryServiceConfig struct {
+	Provider string `json:"provider"`
+	Config   struct {
+		TTLSeconds int `json:"ttlSeconds"`
+	} `json:"config"`
+}
+
+func NewSessionMemoryServiceFromConfig(rawConfig json.RawMessage) (SessionService, error) {
+	config := sessionMemoryServiceConfig{}
+	if err := json.Unmarshal(rawConfig, &config); err != nil {
+		return nil, err
+	}
+	s := &sessionMemoryService{
+		data: make(map[string]SessionData),
+		ttl:  time.Second * time.Duration(config.Config.TTLSeconds),
+	}
+	return s, nil
 }
 
 // NewSessionMemoryService creates and returns a new in-memory session service.
@@ -37,4 +61,8 @@ func (s *sessionMemoryService) Put(sessionID string, data SessionData) {
 	s.dataMU.Lock()
 	defer s.dataMU.Unlock()
 	s.data[sessionID] = data
+}
+
+func init() {
+	Register("memory", NewSessionMemoryServiceFromConfig)
 }
