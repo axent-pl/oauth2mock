@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/axent-pl/oauth2mock/pkg/di"
 	"github.com/axent-pl/oauth2mock/pkg/errs"
 )
 
@@ -32,7 +33,7 @@ type authorizationServiceItem struct {
 func NewMemoryAuthorizationService(rawAuthorizationConfig json.RawMessage, rawConfig json.RawMessage) (AuthorizationServicer, error) {
 	slog.Info("authorizationservice factory NewAuthorizationServiceMemory started")
 	config := memoryAuthorizationServiceConfig{}
-	service := memoryAuthorizationService{
+	service := &memoryAuthorizationService{
 		requests: make(map[string]authorizationServiceItem),
 	}
 
@@ -46,7 +47,9 @@ func NewMemoryAuthorizationService(rawAuthorizationConfig json.RawMessage, rawCo
 
 	go service.cleanupExpiredCodes()
 
-	return &service, nil
+	di.Register(service)
+
+	return service, nil
 }
 
 func (s *memoryAuthorizationService) Validate(authRequest AuthorizationRequester) error {

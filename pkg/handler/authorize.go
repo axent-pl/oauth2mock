@@ -8,6 +8,7 @@ import (
 
 	"github.com/axent-pl/oauth2mock/pkg/authorizationservice"
 	"github.com/axent-pl/oauth2mock/pkg/clientservice"
+	"github.com/axent-pl/oauth2mock/pkg/di"
 	"github.com/axent-pl/oauth2mock/pkg/dto"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
@@ -16,7 +17,28 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
-func AuthorizeResponseTypeCodeHandler(templateDB template.TemplateServicer, clientSrv clientservice.ClientServicer, userSrv userservice.UserServicer, authZSrv authorizationservice.AuthorizationServicer) routing.HandlerFunc {
+func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
+	var wired bool
+	var templateDB template.TemplateServicer
+	var clientSrv clientservice.ClientServicer
+	var authZSrv authorizationservice.AuthorizationServicer
+
+	templateDB, wired = di.GiveMeInterface(templateDB)
+	if !wired {
+		slog.Error("could not wire template service")
+		return nil
+	}
+	clientSrv, wired = di.GiveMeInterface(clientSrv)
+	if !wired {
+		slog.Error("could not wire client service")
+		return nil
+	}
+	authZSrv, wired = di.GiveMeInterface(authZSrv)
+	if !wired {
+		slog.Error("could not wire client service")
+		return nil
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("request handler AuthorizePostHandler started")
 

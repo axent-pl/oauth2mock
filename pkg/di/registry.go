@@ -69,6 +69,28 @@ func Wire() error {
 	return nil
 }
 
+// GiveMeInterface takes a nil interface variable of the desired type (e.g. (*MyInterface)(nil))
+// and returns the first provider implementing it, already type-asserted to that interface.
+// You must declare the variable of the correct type and pass it in, even if nil.
+func GiveMeInterface[T any](iface T) (T, bool) {
+	var zero T
+
+	ifaceType := reflect.TypeOf((*T)(nil)).Elem()
+
+	di.providersMU.RLock()
+	defer di.providersMU.RUnlock()
+
+	for _, p := range di.providers {
+		pType := reflect.TypeOf(p)
+		if pType.Implements(ifaceType) {
+			slog.Debug("GiveMeInterface found provider", "interface", ifaceType.String(), "provider", fmt.Sprintf("%T", p))
+			return p.(T), true
+		}
+	}
+	slog.Warn("GiveMeInterface: no provider found for interface", "interface", ifaceType.String())
+	return zero, false
+}
+
 // injectInto injects dependencies from deps into the target consumer.
 // It looks for methods named "InjectXXX" that take exactly one argument,
 // and calls them with the first matching provider whose type is assignable.
