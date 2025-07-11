@@ -70,7 +70,7 @@ func SessionMiddleware(sessionSrv sessionservice.SessionService) Middleware {
 func UserAuthenticationMiddleware(templateSrv template.TemplateServicer, userSrv userservice.UserServicer, sessionSrv sessionservice.SessionService) Middleware {
 	return func(next HandlerFunc) HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			templateData := tpl.AuthorizeTemplateData{
+			templateData := tpl.LoginTemplateData{
 				FormAction: r.URL.String(),
 			}
 
