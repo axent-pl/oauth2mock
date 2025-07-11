@@ -2,6 +2,7 @@ package di
 
 import (
 	"fmt"
+	"log/slog"
 	"reflect"
 	"strings"
 	"sync"
@@ -23,15 +24,15 @@ var di dependencyInjectionRegistry = dependencyInjectionRegistry{}
 // Register registers an object as both a provider and a consumer.
 // Thread-safe.
 func Register(s interface{}) {
-	// Add to providers
 	di.providersMU.Lock()
 	di.providers = append(di.providers, s)
 	di.providersMU.Unlock()
+	slog.Debug("registered as dependency injection provider", "type", fmt.Sprintf("%T", s))
 
-	// Add to consumers
 	di.consumersMU.Lock()
 	di.consumers = append(di.consumers, s)
 	di.consumersMU.Unlock()
+	slog.Debug("registered as dependency injection consumer", "type", fmt.Sprintf("%T", s))
 }
 
 // RegisterProvider registers an object as a provider only.
@@ -40,6 +41,7 @@ func RegisterProvider(p interface{}) {
 	di.providersMU.Lock()
 	di.providers = append(di.providers, p)
 	di.providersMU.Unlock()
+	slog.Debug("registered as dependency injection provider", "type", fmt.Sprintf("%T", p))
 }
 
 // RegisterConsumer registers an object as a consumer only.
@@ -48,17 +50,22 @@ func RegisterConsumer(c interface{}) {
 	di.consumersMU.Lock()
 	di.consumers = append(di.consumers, c)
 	di.consumersMU.Unlock()
+	slog.Debug("registered as dependency injection consumer", "type", fmt.Sprintf("%T", c))
 }
 
 // Wire injects dependencies into all registered consumers by calling their
 // InjectXXX(*ProviderType) methods for matching provider types.
 // Returns an error if a consumer is invalid.
 func Wire() error {
+	slog.Info("dependency wiring started")
 	for _, consumer := range di.consumers {
+		slog.Debug("Wiring consumer", "type", fmt.Sprintf("%T", consumer))
 		if err := injectInto(consumer, di.providers); err != nil {
+			slog.Error("failed to wire consumer", "type", fmt.Sprintf("%T", consumer), "error", err)
 			return err
 		}
 	}
+	slog.Info("dependency wiring done")
 	return nil
 }
 
@@ -68,7 +75,6 @@ func Wire() error {
 func injectInto(target interface{}, deps []interface{}) error {
 	v := reflect.ValueOf(target)
 	if v.Kind() != reflect.Ptr {
-		// Consumer must be a pointer to receive injections.
 		return fmt.Errorf("inject target must be a pointer, got %T", target)
 	}
 	t := reflect.TypeOf(target)
@@ -82,13 +88,15 @@ func injectInto(target interface{}, deps []interface{}) error {
 			continue
 		}
 
-		// Expected parameter type for this method
 		paramType := m.Type.In(1)
-
-		// Find a matching provider
 		for _, dep := range deps {
 			if reflect.TypeOf(dep).AssignableTo(paramType) {
-				// Call the InjectXXX method with the matching provider
+				slog.Debug("injecting dependency",
+					"consumer", fmt.Sprintf("%T", target),
+					"method", m.Name,
+					"dependency", fmt.Sprintf("%T", dep),
+				)
+
 				v.MethodByName(m.Name).Call([]reflect.Value{reflect.ValueOf(dep)})
 			}
 		}

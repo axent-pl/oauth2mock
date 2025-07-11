@@ -51,7 +51,9 @@ var (
 
 // Configure logger
 func init() {
-	jsonHandler := slog.NewJSONHandler(os.Stdout, nil)
+	jsonHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	})
 	jsonLogger := slog.New(jsonHandler)
 	slog.SetDefault(jsonLogger)
 }
