@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/axent-pl/oauth2mock/pkg/di"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
@@ -44,7 +45,14 @@ type SCIMListResponseDTO struct {
 
 // ---------- handlers
 
-func SCIMPostHandler(userService userservice.UserServicer) routing.HandlerFunc {
+func SCIMPostHandler() routing.HandlerFunc {
+	var wired bool
+	var userService userservice.UserServicer
+	userService, wired = di.GiveMeInterface(userService)
+	if !wired {
+		slog.Error("could not wire user service")
+		return nil
+	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("request handler SCIMPostHandler started")
 		var userDTO = &SCIMUserCreateRequestDTO{}
@@ -113,7 +121,14 @@ func SCIMPostHandler(userService userservice.UserServicer) routing.HandlerFunc {
 	}
 }
 
-func SCIMGetHandler(userService userservice.UserServicer) routing.HandlerFunc {
+func SCIMGetHandler() routing.HandlerFunc {
+	var wired bool
+	var userService userservice.UserServicer
+	userService, wired = di.GiveMeInterface(userService)
+	if !wired {
+		slog.Error("could not wire user service")
+		return nil
+	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		// get users from service
 		users, err := userService.GetUsers()

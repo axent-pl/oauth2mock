@@ -35,7 +35,7 @@ func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 	}
 	authZSrv, wired = di.GiveMeInterface(authZSrv)
 	if !wired {
-		slog.Error("could not wire client service")
+		slog.Error("could not wire authorization service")
 		return nil
 	}
 

@@ -169,7 +169,7 @@ func init() {
 		routing.WithPath(openidConfiguration.WellKnownEndpoint))
 
 	router.RegisterHandler(
-		handler.JWKSGetHandler(signingService),
+		handler.JWKSGetHandler(),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath(openidConfiguration.JWKSEndpoint))
 
@@ -202,11 +202,11 @@ func init() {
 		routing.WithMiddleware(routing.RateLimitMiddleware(10, 2)))
 
 	router.RegisterHandler(
-		handler.SCIMGetHandler(userService),
+		handler.SCIMGetHandler(),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath("/beta/scim/users"))
 	router.RegisterHandler(
-		handler.SCIMPostHandler(userService),
+		handler.SCIMPostHandler(),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath("/beta/scim/users"))
 
