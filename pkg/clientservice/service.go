@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/axent-pl/oauth2mock/pkg/di"
 	"github.com/axent-pl/oauth2mock/pkg/errs"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
 )
@@ -33,7 +34,7 @@ func NewClientService(jsonFilepath string) (ClientServicer, error) {
 		return nil, fmt.Errorf("failed to parse clients config file: %w", err)
 	}
 
-	clientStore := clientService{
+	clientStore := &clientService{
 		clients: make(map[string]client),
 	}
 	for k, v := range f.Clients {
@@ -48,7 +49,9 @@ func NewClientService(jsonFilepath string) (ClientServicer, error) {
 		}
 	}
 
-	return &clientStore, nil
+	di.Register(clientStore)
+
+	return clientStore, nil
 }
 
 func (s *clientService) GetClient(client_id string) (ClientHandler, error) {

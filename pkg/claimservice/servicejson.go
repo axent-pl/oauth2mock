@@ -9,6 +9,7 @@ import (
 
 	"github.com/axent-pl/oauth2mock/pkg/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/consentservice"
+	"github.com/axent-pl/oauth2mock/pkg/di"
 	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
@@ -32,6 +33,7 @@ type jsonClaims struct {
 }
 
 type jsonClaimService struct {
+	consentService consentservice.ConsentServicer
 	userClaims     map[string]jsonClaims
 	userClaimsMU   sync.RWMutex
 	clientClaims   map[string]jsonClaims
@@ -41,7 +43,7 @@ type jsonClaimService struct {
 func NewJSONClaimsService(rawClaimsConfig json.RawMessage, rawConfig json.RawMessage) (ClaimServicer, error) {
 	slog.Info("claimservice factory NewJSONClaimsService started")
 	config := jsonClaimServiceConfig{}
-	service := jsonClaimService{
+	service := &jsonClaimService{
 		userClaims:   make(map[string]jsonClaims),
 		clientClaims: make(map[string]jsonClaims),
 	}
@@ -62,7 +64,13 @@ func NewJSONClaimsService(rawClaimsConfig json.RawMessage, rawConfig json.RawMes
 		service.clientClaims[clientId] = clientData.Claims
 	}
 
-	return &service, nil
+	di.Register(service)
+
+	return service, nil
+}
+
+func (s *jsonClaimService) InjectConsentService(cs consentservice.ConsentServicer) {
+	s.consentService = cs
 }
 
 func (s *jsonClaimService) GetClientClaims(client clientservice.ClientHandler, scope []string) (map[string]interface{}, error) {
@@ -99,12 +107,12 @@ func (s *jsonClaimService) GetClientClaims(client clientservice.ClientHandler, s
 	return claims, nil
 }
 
-func (s *jsonClaimService) GetUserClaims(user userservice.UserHandler, client clientservice.ClientHandler, consentService consentservice.ConsentServicer, scopes []string) (map[string]interface{}, error) {
+func (s *jsonClaimService) GetUserClaims(user userservice.UserHandler, client clientservice.ClientHandler, scopes []string) (map[string]interface{}, error) {
 	s.userClaimsMU.RLock()
 	defer s.userClaimsMU.RUnlock()
 
 	claims := make(map[string]interface{})
-	consents, err := consentService.GetConsents(user, client, scopes)
+	consents, err := s.consentService.GetConsents(user, client, scopes)
 	if err != nil {
 		return nil, fmt.Errorf("could not get consents: %w", err)
 	}

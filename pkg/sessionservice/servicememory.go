@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"sync"
 	"time"
+
+	"github.com/axent-pl/oauth2mock/pkg/di"
 )
 
 // sessionMemoryService is an in-memory implementation of SessionService.
@@ -43,6 +45,7 @@ func NewSessionMemoryService() (SessionService, error) {
 	s := &sessionMemoryService{
 		data: make(map[string]SessionData),
 	}
+	di.Register(s)
 	return s, nil
 }
 

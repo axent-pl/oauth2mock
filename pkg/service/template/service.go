@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	templateEngine "text/template"
+
+	"github.com/axent-pl/oauth2mock/pkg/di"
 )
 
 type DefaultTemplateService struct {
@@ -51,6 +53,8 @@ func NewDefaultTemplateService(templatesPath string) (TemplateServicer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("can not read templates from %s: %w", templatesPath, err)
 	}
+
+	di.Register(ts)
 
 	return ts, nil
 }

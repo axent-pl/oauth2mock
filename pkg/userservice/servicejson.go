@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/axent-pl/oauth2mock/pkg/di"
 	"github.com/axent-pl/oauth2mock/pkg/errs"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
 )
@@ -30,7 +31,7 @@ type jsonUserService struct {
 
 func NewJSONUserService(rawConfig json.RawMessage) (UserServicer, error) {
 	config := jsonUserServiceConfig{}
-	userService := jsonUserService{
+	userService := &jsonUserService{
 		users: make(map[string]jsonUserHandler),
 	}
 
@@ -55,7 +56,9 @@ func NewJSONUserService(rawConfig json.RawMessage) (UserServicer, error) {
 		userService.users[username] = user
 	}
 
-	return &userService, nil
+	di.Register(userService)
+
+	return userService, nil
 }
 
 func (s *jsonUserService) Authenticate(inputCredentials authentication.CredentialsHandler) (UserHandler, error) {

@@ -14,6 +14,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/config"
 	"github.com/axent-pl/oauth2mock/pkg/consentservice"
+	"github.com/axent-pl/oauth2mock/pkg/di"
 	"github.com/axent-pl/oauth2mock/pkg/handler"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/http/server"
@@ -130,6 +131,12 @@ func init() {
 		os.Exit(1)
 	}
 	slog.Info("signing initialized")
+
+	err = di.Wire()
+	if err != nil {
+		slog.Error("failed to wire dependencies", "error", err)
+		os.Exit(1)
+	}
 }
 
 // Configure HTTP router and server

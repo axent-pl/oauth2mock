@@ -65,7 +65,7 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 
 		subject := authorizationRequest.GetUser()
 		scopes := authorizationRequest.GetScopes()
-		claims, err := claimSvc.GetUserClaims(subject, client, consentSvc, scopes)
+		claims, err := claimSvc.GetUserClaims(subject, client, scopes)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -199,7 +199,7 @@ func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientSvc clien
 		if len(requstDTO.Scope) > 0 {
 			scope = strings.Split(requstDTO.Scope, " ")
 		}
-		claims, err := claimSvc.GetUserClaims(user, client, consentSvc, scope)
+		claims, err := claimSvc.GetUserClaims(user, client, scope)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

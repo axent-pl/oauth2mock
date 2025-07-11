@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/axent-pl/oauth2mock/pkg/clientservice"
+	"github.com/axent-pl/oauth2mock/pkg/di"
 	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
@@ -38,7 +39,7 @@ type jsonConsentService struct {
 func NewJSONConsentsService(rawConsentsConfig json.RawMessage, rawConfig json.RawMessage) (ConsentServicer, error) {
 	slog.Info("claimservice factory NewJSONConsentsService started")
 	config := jsonConsentServiceConfig{}
-	service := jsonConsentService{
+	service := &jsonConsentService{
 		userConsents: make(map[string]map[string]bool),
 		scopes:       make(map[string]jsonConsentServiceScopeMeta),
 	}
@@ -59,7 +60,9 @@ func NewJSONConsentsService(rawConsentsConfig json.RawMessage, rawConfig json.Ra
 		service.scopes[scope] = jsonConsentServiceScopeMeta{requireConsent: meta.RequireConsent}
 	}
 
-	return &service, nil
+	di.Register(service)
+
+	return service, nil
 }
 
 func (s *jsonConsentService) getUserConsentState(username string, scope string) (bool, bool) {

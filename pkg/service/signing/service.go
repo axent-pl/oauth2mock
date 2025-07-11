@@ -7,6 +7,7 @@ import (
 	"maps"
 	"os"
 
+	"github.com/axent-pl/oauth2mock/pkg/di"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -46,6 +47,8 @@ func NewSigningService(jsonFilepath string) (SigningServicer, error) {
 		}
 		s.keys = append(s.keys, signingServiceKey{config: keyConfig, handler: signingKey})
 	}
+
+	di.Register(s)
 
 	return s, nil
 }
