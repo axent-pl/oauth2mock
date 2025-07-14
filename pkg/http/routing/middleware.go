@@ -2,9 +2,11 @@ package routing
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"time"
 
+	"github.com/axent-pl/oauth2mock/pkg/di"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
 	"github.com/axent-pl/oauth2mock/pkg/service/template"
 	"github.com/axent-pl/oauth2mock/pkg/sessionservice"
@@ -67,7 +69,28 @@ func SessionMiddleware(sessionSrv sessionservice.SessionService) Middleware {
 	}
 }
 
-func UserAuthenticationMiddleware(templateSrv template.TemplateServicer, userSrv userservice.UserServicer, sessionSrv sessionservice.SessionService) Middleware {
+func UserAuthenticationMiddleware() Middleware {
+	var wired bool
+	var templateSrv template.TemplateServicer
+	var userSrv userservice.UserServicer
+	var sessionSrv sessionservice.SessionService
+
+	templateSrv, wired = di.GiveMeInterface(templateSrv)
+	if !wired {
+		slog.Error("could not wire template service")
+		return nil
+	}
+	userSrv, wired = di.GiveMeInterface(userSrv)
+	if !wired {
+		slog.Error("could not wire user service")
+		return nil
+	}
+	sessionSrv, wired = di.GiveMeInterface(sessionSrv)
+	if !wired {
+		slog.Error("could not wire session service")
+		return nil
+	}
+
 	return func(next HandlerFunc) HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			templateData := tpl.LoginTemplateData{

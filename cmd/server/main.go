@@ -178,7 +178,7 @@ func init() {
 		routing.WithPath(openidConfiguration.AuthorizationEndpoint),
 		routing.ForQueryValue("response_type", "code"),
 		routing.WithMiddleware(routing.SessionMiddleware(sessionService)),
-		routing.WithMiddleware(routing.UserAuthenticationMiddleware(templateService, userService, sessionService)))
+		routing.WithMiddleware(routing.UserAuthenticationMiddleware()))
 
 	router.RegisterHandler(
 		handler.TokenAuthorizationCodeHandler(openidConfiguration, clientService, consentService, authorizationService, claimService, signingService),
