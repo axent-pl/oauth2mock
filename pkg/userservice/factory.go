@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-type UserServiceFactory func(json.RawMessage) (UserServicer, error)
+type UserServiceFactory func(json.RawMessage) (Service, error)
 
 var (
 	userServiceFactoryRegistryMU sync.RWMutex
@@ -24,7 +24,7 @@ type Config struct {
 	UsersConfig json.RawMessage `json:"users"`
 }
 
-func NewFromConfig(rawConfig []byte) (UserServicer, error) {
+func NewFromConfig(rawConfig []byte) (Service, error) {
 	config := Config{}
 	if err := json.Unmarshal(rawConfig, &config); err != nil {
 		return nil, errors.New("failed to unmarshal config")

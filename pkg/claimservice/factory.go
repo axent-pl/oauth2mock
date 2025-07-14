@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-type ClaimServiceFactory func(json.RawMessage, json.RawMessage) (ClaimServicer, error)
+type ClaimServiceFactory func(json.RawMessage, json.RawMessage) (Service, error)
 
 var (
 	claimServiceFactoryRegistryMU sync.RWMutex
@@ -25,7 +25,7 @@ type Config struct {
 	ClaimsConfig json.RawMessage `json:"claims"`
 }
 
-func NewFromConfig(rawConfig []byte) (ClaimServicer, error) {
+func NewFromConfig(rawConfig []byte) (Service, error) {
 	slog.Info("init started", "module", "claimservice")
 	config := Config{}
 	if err := json.Unmarshal(rawConfig, &config); err != nil {

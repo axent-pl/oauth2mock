@@ -14,7 +14,7 @@ type clientService struct {
 	clients map[string]client
 }
 
-func NewClientService(jsonFilepath string) (ClientServicer, error) {
+func NewClientService(jsonFilepath string) (Service, error) {
 	type jsonStruct struct {
 		Id          string `json:"client_id"`
 		Secret      string `json:"client_secret"`
@@ -54,7 +54,7 @@ func NewClientService(jsonFilepath string) (ClientServicer, error) {
 	return clientStore, nil
 }
 
-func (s *clientService) GetClient(client_id string) (ClientHandler, error) {
+func (s *clientService) GetClient(client_id string) (Entity, error) {
 	client, ok := s.clients[client_id]
 	if !ok {
 		return nil, errs.ErrInvalidClientId
@@ -62,7 +62,7 @@ func (s *clientService) GetClient(client_id string) (ClientHandler, error) {
 	return &client, nil
 }
 
-func (s *clientService) Authenticate(credentials authentication.CredentialsHandler) (ClientHandler, error) {
+func (s *clientService) Authenticate(credentials authentication.CredentialsHandler) (Entity, error) {
 	clientId, err := credentials.IdentityName()
 	if err != nil {
 		return nil, errs.ErrUserCredsInvalid

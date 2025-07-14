@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-type ConsentServiceFactory func(rawConsentConfig json.RawMessage, rawConfig json.RawMessage) (ConsentServicer, error)
+type ConsentServiceFactory func(rawConsentConfig json.RawMessage, rawConfig json.RawMessage) (Service, error)
 
 var (
 	consentServiceFactoryRegistryMU sync.RWMutex
@@ -25,7 +25,7 @@ type Config struct {
 	ConsentsConfig json.RawMessage `json:"consents"`
 }
 
-func NewFromConfig(rawConfig []byte) (ConsentServicer, error) {
+func NewFromConfig(rawConfig []byte) (Service, error) {
 	slog.Info("init started", "module", "consentservice")
 	config := Config{}
 	if err := json.Unmarshal(rawConfig, &config); err != nil {

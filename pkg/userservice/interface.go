@@ -2,7 +2,7 @@ package userservice
 
 import "github.com/axent-pl/oauth2mock/pkg/service/authentication"
 
-type UserHandler interface {
+type Entity interface {
 	Id() string
 	Name() string
 	SetName(string)
@@ -16,8 +16,8 @@ type UserHandler interface {
 	SetAttributesGroup(group string, value map[string]interface{})
 }
 
-type UserServicer interface {
-	Authenticate(credentials authentication.CredentialsHandler) (UserHandler, error)
-	GetUsers() ([]UserHandler, error)
-	AddUser(UserHandler) error
+type Service interface {
+	Authenticate(credentials authentication.CredentialsHandler) (Entity, error)
+	GetUsers() ([]Entity, error)
+	AddUser(Entity) error
 }

@@ -47,7 +47,7 @@ type SCIMListResponseDTO struct {
 
 func SCIMPostHandler() routing.HandlerFunc {
 	var wired bool
-	var userService userservice.UserServicer
+	var userService userservice.Service
 	userService, wired = di.GiveMeInterface(userService)
 	if !wired {
 		slog.Error("could not wire user service")
@@ -123,7 +123,7 @@ func SCIMPostHandler() routing.HandlerFunc {
 
 func SCIMGetHandler() routing.HandlerFunc {
 	var wired bool
-	var userService userservice.UserServicer
+	var userService userservice.Service
 	userService, wired = di.GiveMeInterface(userService)
 	if !wired {
 		slog.Error("could not wire user service")

@@ -12,8 +12,8 @@ type AuthorizationRequest struct {
 	Scope        []string
 	State        string
 	Nonce        string
-	Client       clientservice.ClientHandler
-	User         userservice.UserHandler
+	Client       clientservice.Entity
+	User         userservice.Entity
 }
 
 func (req *AuthorizationRequest) GetRedirectURI() string {

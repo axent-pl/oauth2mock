@@ -32,6 +32,9 @@ func NewSessionMemoryServiceFromConfig(rawConfig json.RawMessage) (SessionServic
 		data: make(map[string]SessionData),
 		ttl:  time.Second * time.Duration(config.Config.TTLSeconds),
 	}
+
+	di.Register(s)
+
 	return s, nil
 }
 

@@ -63,7 +63,7 @@ func (s *userHandler) SetAttributesGroup(key string, value map[string]interface{
 	s.attributes[key] = value
 }
 
-func NewUserHandler(id string, authScheme authentication.SchemeHandler, options ...UserHandlerOption) (UserHandler, error) {
+func NewUserHandler(id string, authScheme authentication.SchemeHandler, options ...UserHandlerOption) (Entity, error) {
 	user := &userHandler{
 		id:         id,
 		name:       id, // default name equals ID unless overridden

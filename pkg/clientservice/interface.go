@@ -2,7 +2,7 @@ package clientservice
 
 import "github.com/axent-pl/oauth2mock/pkg/service/authentication"
 
-type ClientHandler interface {
+type Entity interface {
 	Id() string
 	Name() string
 	RedirectURIPattern() string
@@ -10,7 +10,7 @@ type ClientHandler interface {
 	ValidateRedirectURI(redirectURI string) bool
 }
 
-type ClientServicer interface {
-	GetClient(client_id string) (ClientHandler, error)
-	Authenticate(credentials authentication.CredentialsHandler) (ClientHandler, error)
+type Service interface {
+	GetClient(client_id string) (Entity, error)
+	Authenticate(credentials authentication.CredentialsHandler) (Entity, error)
 }

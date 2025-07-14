@@ -11,8 +11,8 @@ type authorizationRequest struct {
 	Scopes       []string
 	State        string
 	Nonce        string
-	Client       clientservice.ClientHandler
-	User         userservice.UserHandler
+	Client       clientservice.Entity
+	User         userservice.Entity
 }
 
 type NewAuthorizationRequestOption func(*authorizationRequest) error
@@ -38,14 +38,14 @@ func WithNonce(nonce string) NewAuthorizationRequestOption {
 	}
 }
 
-func WithUser(user userservice.UserHandler) NewAuthorizationRequestOption {
+func WithUser(user userservice.Entity) NewAuthorizationRequestOption {
 	return func(req *authorizationRequest) error {
 		req.User = user
 		return nil
 	}
 }
 
-func NewAuthorizationRequest(responseType string, scopes []string, client clientservice.ClientHandler, options ...NewAuthorizationRequestOption) (AuthorizationRequester, error) {
+func NewAuthorizationRequest(responseType string, scopes []string, client clientservice.Entity, options ...NewAuthorizationRequestOption) (AuthorizationRequester, error) {
 	req := &authorizationRequest{
 		ResponseType: responseType,
 		Scopes:       scopes,
@@ -82,10 +82,10 @@ func (req *authorizationRequest) GetNonce() string {
 	return req.Nonce
 }
 
-func (req *authorizationRequest) GetClient() clientservice.ClientHandler {
+func (req *authorizationRequest) GetClient() clientservice.Entity {
 	return req.Client
 }
 
-func (req *authorizationRequest) GetUser() userservice.UserHandler {
+func (req *authorizationRequest) GetUser() userservice.Entity {
 	return req.User
 }

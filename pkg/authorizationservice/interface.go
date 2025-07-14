@@ -12,8 +12,8 @@ type AuthorizationRequester interface {
 	GetState() string
 	GetNonce() string
 
-	GetClient() clientservice.ClientHandler
-	GetUser() userservice.UserHandler
+	GetClient() clientservice.Entity
+	GetUser() userservice.Entity
 }
 
 type AuthorizationServicer interface {

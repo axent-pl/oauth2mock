@@ -30,7 +30,14 @@ func RateLimitMiddleware(rps float64, burst int) Middleware {
 	}
 }
 
-func SessionMiddleware(sessionSrv sessionservice.SessionService) Middleware {
+func SessionMiddleware() Middleware {
+	var wired bool
+	var sessionSrv sessionservice.SessionService
+	sessionSrv, wired = di.GiveMeInterface(sessionSrv)
+	if !wired {
+		slog.Error("could not wire session service")
+		return nil
+	}
 	return func(next HandlerFunc) HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			const (
@@ -72,7 +79,7 @@ func SessionMiddleware(sessionSrv sessionservice.SessionService) Middleware {
 func UserAuthenticationMiddleware() Middleware {
 	var wired bool
 	var templateSrv template.TemplateServicer
-	var userSrv userservice.UserServicer
+	var userSrv userservice.Service
 	var sessionSrv sessionservice.SessionService
 
 	templateSrv, wired = di.GiveMeInterface(templateSrv)
@@ -111,7 +118,7 @@ func UserAuthenticationMiddleware() Middleware {
 				return
 			}
 			if userRaw, ok := sessionData["user"]; ok {
-				user, casted := userRaw.(userservice.UserHandler)
+				user, casted := userRaw.(userservice.Entity)
 				if !casted {
 					http.Error(w, "could not fetch user from session", http.StatusInternalServerError)
 					return

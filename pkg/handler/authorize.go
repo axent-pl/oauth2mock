@@ -20,7 +20,7 @@ import (
 func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 	var wired bool
 	var templateDB template.TemplateServicer
-	var clientSrv clientservice.ClientServicer
+	var clientSrv clientservice.Service
 	var authZSrv authorizationservice.AuthorizationServicer
 
 	templateDB, wired = di.GiveMeInterface(templateDB)
@@ -65,7 +65,7 @@ func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 		}
 
 		// user
-		user, ok := r.Context().Value(routing.CTX_USER).(userservice.UserHandler)
+		user, ok := r.Context().Value(routing.CTX_USER).(userservice.Entity)
 		if !ok {
 			http.Error(w, "authentication failure", http.StatusInternalServerError)
 			return

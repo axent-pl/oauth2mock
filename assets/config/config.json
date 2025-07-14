@@ -1,4 +1,22 @@
 {
+    "interfaces": {
+        "authorization": {
+            "enabled": true,
+            "provider": "default",
+            "endpoint": "/authorize",
+            "responseTypes": [
+                "code"
+            ]
+        },
+        "token": {
+            "enabled": true,
+            "provider": "default",
+            "endpoint": "/token",
+            "grantTypes": [
+                "authorization_code", "client_credentials", "password"
+            ]
+        }
+    },
     "signing": {
         "keys": [
             {

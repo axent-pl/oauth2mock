@@ -29,7 +29,7 @@ type jsonUserService struct {
 	usersMU sync.RWMutex
 }
 
-func NewJSONUserService(rawConfig json.RawMessage) (UserServicer, error) {
+func NewJSONUserService(rawConfig json.RawMessage) (Service, error) {
 	config := jsonUserServiceConfig{}
 	userService := &jsonUserService{
 		users: make(map[string]jsonUserHandler),
@@ -61,7 +61,7 @@ func NewJSONUserService(rawConfig json.RawMessage) (UserServicer, error) {
 	return userService, nil
 }
 
-func (s *jsonUserService) Authenticate(inputCredentials authentication.CredentialsHandler) (UserHandler, error) {
+func (s *jsonUserService) Authenticate(inputCredentials authentication.CredentialsHandler) (Entity, error) {
 	s.usersMU.RLock()
 	defer s.usersMU.RUnlock()
 
@@ -85,15 +85,15 @@ func (s *jsonUserService) Authenticate(inputCredentials authentication.Credentia
 	return nil, errs.ErrUserCredsInvalid
 }
 
-func (s *jsonUserService) GetUsers() ([]UserHandler, error) {
-	var users []UserHandler = make([]UserHandler, 0)
+func (s *jsonUserService) GetUsers() ([]Entity, error) {
+	var users []Entity = make([]Entity, 0)
 	for _, k := range s.users {
 		users = append(users, &k)
 	}
 	return users, nil
 }
 
-func (s *jsonUserService) AddUser(user UserHandler) error {
+func (s *jsonUserService) AddUser(user Entity) error {
 	s.usersMU.RLock()
 	defer s.usersMU.RUnlock()
 

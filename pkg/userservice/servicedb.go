@@ -44,7 +44,7 @@ type databaseUserService struct {
 	}
 }
 
-func NewDatabaseUserService(rawConfig json.RawMessage) (UserServicer, error) {
+func NewDatabaseUserService(rawConfig json.RawMessage) (Service, error) {
 	config := databaseUserServiceConfig{}
 	if err := json.Unmarshal(rawConfig, &config); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal user service config: %w", err)
@@ -81,7 +81,7 @@ func NewDatabaseUserService(rawConfig json.RawMessage) (UserServicer, error) {
 	return svc, nil
 }
 
-func (s *databaseUserService) Authenticate(creds authentication.CredentialsHandler) (UserHandler, error) {
+func (s *databaseUserService) Authenticate(creds authentication.CredentialsHandler) (Entity, error) {
 	username, err := creds.IdentityName()
 	if err != nil {
 		return nil, err
@@ -127,14 +127,14 @@ func (s *databaseUserService) Authenticate(creds authentication.CredentialsHandl
 	return &user, nil
 }
 
-func (s *databaseUserService) GetUsers() ([]UserHandler, error) {
+func (s *databaseUserService) GetUsers() ([]Entity, error) {
 	rows, err := s.db.QueryContext(context.Background(), s.queries.GetUsers)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var users []UserHandler
+	var users []Entity
 
 	for rows.Next() {
 		var username, password string
@@ -172,7 +172,7 @@ func (s *databaseUserService) GetUsers() ([]UserHandler, error) {
 	return users, nil
 }
 
-func (s *databaseUserService) AddUser(user UserHandler) error {
+func (s *databaseUserService) AddUser(user Entity) error {
 	username := user.Name()
 
 	var exists bool

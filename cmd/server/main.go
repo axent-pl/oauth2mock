@@ -36,10 +36,10 @@ type Settings struct {
 var (
 	settings Settings
 
-	clientService        clientservice.ClientServicer
-	userService          userservice.UserServicer
-	claimService         claimservice.ClaimServicer
-	consentService       consentservice.ConsentServicer
+	clientService        clientservice.Service
+	userService          userservice.Service
+	claimService         claimservice.Service
+	consentService       consentservice.Service
 	authorizationService authorizationservice.AuthorizationServicer
 	templateService      template.TemplateServicer
 	signingService       signing.SigningServicer
@@ -177,7 +177,7 @@ func init() {
 		handler.AuthorizeResponseTypeCodeHandler(),
 		routing.WithPath(openidConfiguration.AuthorizationEndpoint),
 		routing.ForQueryValue("response_type", "code"),
-		routing.WithMiddleware(routing.SessionMiddleware(sessionService)),
+		routing.WithMiddleware(routing.SessionMiddleware()),
 		routing.WithMiddleware(routing.UserAuthenticationMiddleware()))
 
 	router.RegisterHandler(

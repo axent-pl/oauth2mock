@@ -9,7 +9,7 @@ type defaultConsent struct {
 
 type NewConsentOption func(*defaultConsent) error
 
-func NewConsent(scope string, options ...NewConsentOption) (Consenter, error) {
+func NewConsent(scope string, options ...NewConsentOption) (Entity, error) {
 	c := &defaultConsent{
 		scope:    scope,
 		required: true,

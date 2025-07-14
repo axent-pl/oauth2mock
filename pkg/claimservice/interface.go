@@ -5,7 +5,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
-type ClaimServicer interface {
-	GetUserClaims(user userservice.UserHandler, client clientservice.ClientHandler, scope []string) (map[string]interface{}, error)
-	GetClientClaims(client clientservice.ClientHandler, scope []string) (map[string]interface{}, error)
+type Service interface {
+	GetUserClaims(user userservice.Entity, client clientservice.Entity, scope []string) (map[string]interface{}, error)
+	GetClientClaims(client clientservice.Entity, scope []string) (map[string]interface{}, error)
 }

@@ -33,14 +33,14 @@ type jsonClaims struct {
 }
 
 type jsonClaimService struct {
-	consentService consentservice.ConsentServicer
+	consentService consentservice.Service
 	userClaims     map[string]jsonClaims
 	userClaimsMU   sync.RWMutex
 	clientClaims   map[string]jsonClaims
 	clientClaimsMU sync.RWMutex
 }
 
-func NewJSONClaimsService(rawClaimsConfig json.RawMessage, rawConfig json.RawMessage) (ClaimServicer, error) {
+func NewJSONClaimsService(rawClaimsConfig json.RawMessage, rawConfig json.RawMessage) (Service, error) {
 	slog.Info("claimservice factory NewJSONClaimsService started")
 	config := jsonClaimServiceConfig{}
 	service := &jsonClaimService{
@@ -69,11 +69,11 @@ func NewJSONClaimsService(rawClaimsConfig json.RawMessage, rawConfig json.RawMes
 	return service, nil
 }
 
-func (s *jsonClaimService) InjectConsentService(cs consentservice.ConsentServicer) {
+func (s *jsonClaimService) InjectConsentService(cs consentservice.Service) {
 	s.consentService = cs
 }
 
-func (s *jsonClaimService) GetClientClaims(client clientservice.ClientHandler, scope []string) (map[string]interface{}, error) {
+func (s *jsonClaimService) GetClientClaims(client clientservice.Entity, scope []string) (map[string]interface{}, error) {
 	s.clientClaimsMU.RLock()
 	defer s.clientClaimsMU.RUnlock()
 
@@ -107,7 +107,7 @@ func (s *jsonClaimService) GetClientClaims(client clientservice.ClientHandler, s
 	return claims, nil
 }
 
-func (s *jsonClaimService) GetUserClaims(user userservice.UserHandler, client clientservice.ClientHandler, scopes []string) (map[string]interface{}, error) {
+func (s *jsonClaimService) GetUserClaims(user userservice.Entity, client clientservice.Entity, scopes []string) (map[string]interface{}, error) {
 	s.userClaimsMU.RLock()
 	defer s.userClaimsMU.RUnlock()
 

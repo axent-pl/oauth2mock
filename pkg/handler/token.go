@@ -19,7 +19,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
-func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientSvc clientservice.ClientServicer, consentSvc consentservice.ConsentServicer, authCodeSvc authorizationservice.AuthorizationServicer, claimSvc claimservice.ClaimServicer, keySvc signing.SigningServicer) routing.HandlerFunc {
+func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientSvc clientservice.Service, consentSvc consentservice.Service, authCodeSvc authorizationservice.AuthorizationServicer, claimSvc claimservice.Service, keySvc signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("request handler TokenAuthorizationCodeHandler started")
 		requstDTO := &dto.TokenAuthorizationCodeRequestDTO{}
@@ -97,7 +97,7 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 	}
 }
 
-func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, clientDB clientservice.ClientServicer, claimsDB claimservice.ClaimServicer, keyService signing.SigningServicer) routing.HandlerFunc {
+func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, clientDB clientservice.Service, claimsDB claimservice.Service, keyService signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("request handler TokenClientCredentialsHandler started")
 		requstDTO := &dto.TokenClientCredentialsHandlerRequestDTO{}
@@ -156,7 +156,7 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 	}
 }
 
-func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientSvc clientservice.ClientServicer, userSvc userservice.UserServicer, claimSvc claimservice.ClaimServicer, consentSvc consentservice.ConsentServicer, keySvc signing.SigningServicer) routing.HandlerFunc {
+func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientSvc clientservice.Service, userSvc userservice.Service, claimSvc claimservice.Service, consentSvc consentservice.Service, keySvc signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("request handler TokenPasswordHandler started")
 		requstDTO := &dto.TokenPasswrodRequestDTO{}

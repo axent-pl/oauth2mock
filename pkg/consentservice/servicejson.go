@@ -36,7 +36,7 @@ type jsonConsentService struct {
 	scopesMU       sync.RWMutex
 }
 
-func NewJSONConsentsService(rawConsentsConfig json.RawMessage, rawConfig json.RawMessage) (ConsentServicer, error) {
+func NewJSONConsentsService(rawConsentsConfig json.RawMessage, rawConfig json.RawMessage) (Service, error) {
 	slog.Info("claimservice factory NewJSONConsentsService started")
 	config := jsonConsentServiceConfig{}
 	service := &jsonConsentService{
@@ -75,8 +75,8 @@ func (s *jsonConsentService) getUserConsentState(username string, scope string) 
 	return true, s.userConsents[username][scope]
 }
 
-func (s *jsonConsentService) GetConsents(user userservice.UserHandler, client clientservice.ClientHandler, scopes []string) (map[string]Consenter, error) {
-	consents := make(map[string]Consenter)
+func (s *jsonConsentService) GetConsents(user userservice.Entity, client clientservice.Entity, scopes []string) (map[string]Entity, error) {
+	consents := make(map[string]Entity)
 	username := user.Id()
 
 	for _, scope := range scopes {
@@ -96,7 +96,7 @@ func (s *jsonConsentService) GetConsents(user userservice.UserHandler, client cl
 	return consents, nil
 }
 
-func (s *jsonConsentService) SaveConsents(user userservice.UserHandler, client clientservice.ClientHandler, consents []Consenter) error {
+func (s *jsonConsentService) SaveConsents(user userservice.Entity, client clientservice.Entity, consents []Entity) error {
 	username := user.Id()
 	if _, ok := s.userConsents[username]; !ok {
 		s.userConsents[username] = make(map[string]bool)
@@ -109,7 +109,7 @@ func (s *jsonConsentService) SaveConsents(user userservice.UserHandler, client c
 	}
 	return nil
 }
-func (s *jsonConsentService) ClearConsents(user userservice.UserHandler, client clientservice.ClientHandler) error {
+func (s *jsonConsentService) ClearConsents(user userservice.Entity, client clientservice.Entity) error {
 	username := user.Id()
 	s.userConsents[username] = make(map[string]bool)
 	return nil
