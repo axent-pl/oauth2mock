@@ -19,7 +19,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
-func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientSvc clientservice.Service, consentSvc consentservice.Service, authCodeSvc authorizationservice.AuthorizationServicer, claimSvc claimservice.Service, keySvc signing.SigningServicer) routing.HandlerFunc {
+func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientSvc clientservice.Service, consentSvc consentservice.Service, authCodeSvc authorizationservice.Service, claimSvc claimservice.Service, keySvc signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("request handler TokenAuthorizationCodeHandler started")
 		requstDTO := &dto.TokenAuthorizationCodeRequestDTO{}

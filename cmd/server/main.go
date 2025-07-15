@@ -40,10 +40,10 @@ var (
 	userService          userservice.Service
 	claimService         claimservice.Service
 	consentService       consentservice.Service
-	authorizationService authorizationservice.AuthorizationServicer
-	templateService      template.TemplateServicer
+	authorizationService authorizationservice.Service
+	templateService      template.Service
 	signingService       signing.SigningServicer
-	sessionService       sessionservice.SessionService
+	sessionService       sessionservice.Service
 
 	router     routing.Router
 	httpServer server.Serverer

@@ -23,7 +23,7 @@ type sessionMemoryServiceConfig struct {
 	} `json:"config"`
 }
 
-func NewSessionMemoryServiceFromConfig(rawConfig json.RawMessage) (SessionService, error) {
+func NewSessionMemoryServiceFromConfig(rawConfig json.RawMessage) (Service, error) {
 	config := sessionMemoryServiceConfig{}
 	if err := json.Unmarshal(rawConfig, &config); err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func NewSessionMemoryServiceFromConfig(rawConfig json.RawMessage) (SessionServic
 // Currently, this function always returns a non-nil error value (nil), but
 // the signature reserves the possibility of returning an error in future
 // implementations (for example, if initialization fails).
-func NewSessionMemoryService() (SessionService, error) {
+func NewSessionMemoryService() (Service, error) {
 	s := &sessionMemoryService{
 		data: make(map[string]SessionData),
 	}

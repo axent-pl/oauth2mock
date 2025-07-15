@@ -19,9 +19,9 @@ import (
 
 func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 	var wired bool
-	var templateDB template.TemplateServicer
+	var templateDB template.Service
 	var clientSrv clientservice.Service
-	var authZSrv authorizationservice.AuthorizationServicer
+	var authZSrv authorizationservice.Service
 
 	templateDB, wired = di.GiveMeInterface(templateDB)
 	if !wired {

@@ -32,7 +32,7 @@ func RateLimitMiddleware(rps float64, burst int) Middleware {
 
 func SessionMiddleware() Middleware {
 	var wired bool
-	var sessionSrv sessionservice.SessionService
+	var sessionSrv sessionservice.Service
 	sessionSrv, wired = di.GiveMeInterface(sessionSrv)
 	if !wired {
 		slog.Error("could not wire session service")
@@ -78,9 +78,9 @@ func SessionMiddleware() Middleware {
 
 func UserAuthenticationMiddleware() Middleware {
 	var wired bool
-	var templateSrv template.TemplateServicer
+	var templateSrv template.Service
 	var userSrv userservice.Service
-	var sessionSrv sessionservice.SessionService
+	var sessionSrv sessionservice.Service
 
 	templateSrv, wired = di.GiveMeInterface(templateSrv)
 	if !wired {

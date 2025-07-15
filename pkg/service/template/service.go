@@ -15,7 +15,7 @@ type DefaultTemplateService struct {
 	templates map[string]templateEngine.Template
 }
 
-func NewDefaultTemplateService(templatesPath string) (TemplateServicer, error) {
+func NewDefaultTemplateService(templatesPath string) (Service, error) {
 	ts := &DefaultTemplateService{
 		templates: make(map[string]templateEngine.Template),
 	}

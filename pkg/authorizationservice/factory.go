@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-type AuthorizationServiceFactory func(rawAuthorizationConfig json.RawMessage, rawConfig json.RawMessage) (AuthorizationServicer, error)
+type AuthorizationServiceFactory func(rawAuthorizationConfig json.RawMessage, rawConfig json.RawMessage) (Service, error)
 
 var (
 	authorizationServiceFactoryRegistryMU sync.RWMutex
@@ -25,7 +25,7 @@ type Config struct {
 	AuthorizationConfig json.RawMessage `json:"authorization"`
 }
 
-func NewFromConfig(rawConfig []byte) (AuthorizationServicer, error) {
+func NewFromConfig(rawConfig []byte) (Service, error) {
 	slog.Info("init started", "module", "authorizationservice")
 	config := Config{}
 	if err := json.Unmarshal(rawConfig, &config); err != nil {

@@ -1,11 +1,11 @@
 package sessionservice
 
-// SessionService defines methods for retrieving and storing session data
+// Service defines methods for retrieving and storing session data
 // by a unique session identifier.
 //
 // Implementations may choose different storage backends (in-memory, database,
 // distributed cache, etc.).
-type SessionService interface {
+type Service interface {
 	// Get retrieves the session data associated with the given sessionID.
 	// It returns the SessionData and a boolean flag indicating whether the
 	// session was found.

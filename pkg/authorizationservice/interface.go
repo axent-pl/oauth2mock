@@ -16,7 +16,7 @@ type AuthorizationRequester interface {
 	GetUser() userservice.Entity
 }
 
-type AuthorizationServicer interface {
+type Service interface {
 	Validate(AuthorizationRequester) error
 	Store(AuthorizationRequester) (string, error)
 	Get(string) (AuthorizationRequester, error)

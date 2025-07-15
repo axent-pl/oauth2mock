@@ -30,7 +30,7 @@ type authorizationServiceItem struct {
 	request   AuthorizationRequester
 }
 
-func NewMemoryAuthorizationService(rawAuthorizationConfig json.RawMessage, rawConfig json.RawMessage) (AuthorizationServicer, error) {
+func NewMemoryAuthorizationService(rawAuthorizationConfig json.RawMessage, rawConfig json.RawMessage) (Service, error) {
 	slog.Info("authorizationservice factory NewAuthorizationServiceMemory started")
 	config := memoryAuthorizationServiceConfig{}
 	service := &memoryAuthorizationService{
