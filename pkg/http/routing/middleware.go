@@ -129,6 +129,12 @@ func UserAuthenticationMiddleware() Middleware {
 				return
 			}
 
+			// login form
+			if r.Method == http.MethodGet {
+				templateSrv.Render(w, "login", templateData)
+				return
+			}
+
 			// form validation
 			username := r.PostFormValue("username")
 			if username == "" {
