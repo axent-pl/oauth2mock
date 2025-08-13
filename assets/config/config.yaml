@@ -1,0 +1,141 @@
+authorization:
+    authorizationCodeLength: 16
+    authorizationRequestTTLSeconds: 60
+    provider: memory
+claims:
+    provider: json
+clients:
+    ACME:
+        claims:
+            default:
+                azp: ACME
+        client_id: ACME
+        client_secret: acme-secret
+        redirect_uri: http*//localhost*
+    ACME2:
+        claims:
+            default:
+                azp: ACME2
+        client_id: ACME2
+        client_secret: secret-acme-pass
+        redirect_uri: http*//localhost*
+consents:
+    provider: json
+    scopes:
+        avatar:
+            requireConsent: false
+        email:
+            requireConsent: true
+        openid:
+            requireConsent: false
+        products::read:
+            requireConsent: true
+        profile:
+            requireConsent: false
+interfaces:
+    authorization:
+        enabled: true
+        endpoint: /authorize
+        provider: default
+        responseTypes:
+            - code
+    token:
+        enabled: true
+        endpoint: /token
+        grantTypes:
+            - authorization_code
+            - client_credentials
+            - password
+        provider: default
+proxy:
+    authorization:
+        fromOAuth:
+            client_id: ACME
+            client_secret: acme-secret
+            grant_type: client_credentials
+            tokenEndpoint: http://localhost:8080/token
+        fromSelfSignedAssertion:
+            key:
+                method: RS256
+                provider:
+                    fromCertPEM:
+                        certPath: assets/key/cert.cert.rsa512.pem
+                        keyPath: assets/key/cert.key.rsa512.pem
+session:
+    config:
+        ttlSeconds: 60
+    provider: memory
+signing:
+    keys:
+        - active: false
+          method: PS256
+          provider:
+            fromPEM:
+                path: assets/key/key.rsa256.pem
+        - active: false
+          method: RS256
+          provider:
+            fromPEM:
+                path: assets/key/key.rsa256.pem
+        - active: true
+          method: ES256
+          provider:
+            fromRandom:
+                deterministic: true
+                seed: abc
+                type: P-256
+        - active: false
+          method: RS256
+          provider:
+            fromCertPEM:
+                certPath: assets/key/cert.cert.rsa512.pem
+                keyPath: assets/key/cert.key.rsa512.pem
+users:
+    provider: json
+    users:
+        admin:
+            claims:
+                default:
+                    base:
+                        preferred_username: John.Demo@acme.com
+                        realm_roles:
+                            - ADMIN
+                    clientOverrides:
+                        ACME:
+                            client_roles:
+                                - DEMO
+                                - ADMIN
+                    scopeOverrides:
+                        email:
+                            email: John.Demo@acme.com
+                        products::read:
+                            products:
+                                - A
+                                - B
+                                - C
+            consents:
+                email: true
+                products::read: true
+                profile: true
+            password: admin
+            username: admin
+        demo:
+            claims:
+                default:
+                    base:
+                        preferred_username: John.Demo@acme.com
+                        realm_roles:
+                            - DEMO
+                    scopeOverrides:
+                        email:
+                            email: John.Demo@acme.com
+                        products::read:
+                            products:
+                                - A
+                                - B
+            consents:
+                email: true
+                products::read: false
+                profile: true
+            password: demo
+            username: demo
