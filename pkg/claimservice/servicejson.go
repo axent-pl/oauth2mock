@@ -16,9 +16,7 @@ import (
 type jsonClaimServiceConfig struct {
 	UsersWrapper struct {
 		Users map[string]struct {
-			Username string     `json:"username"`
-			Password string     `json:"password"`
-			Claims   jsonClaims `json:"claims"`
+			Claims jsonClaims `json:"claims"`
 		} `json:"users"`
 	} `json:"users"`
 	Clients map[string]struct {

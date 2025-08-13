@@ -9,31 +9,16 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <style>
-        .left-column {
-            background: linear-gradient(135deg, #007bff, #6610f2);
-            color: white;
+        .content-wrapper {
             display: flex;
             align-items: center;
-            justify-content: right;
-            padding: 4rem;
-            text-align: center;
-        }
-
-        .left-column h1 {
-            font-size: 2.5rem;
-            font-weight: bold;
-        }
-
-        .right-column {
-            display: flex;
-            align-items: center;
-            justify-content: left;
-            background-color: #f8f9fa;
+            justify-content: center;
+            
             padding: 4rem;
         }
 
         .login-card {
-            width: 50%;
+            width: 30%;
         }
     </style>
 </head>
@@ -41,14 +26,9 @@
 <body class="vh-100">
     <div class="container-fluid h-100">
         <div class="row h-100">
-            <!-- Left column -->
-            <div class="col-md-4 left-column">
-                <h1>Axes Authorization Server</h1>
-            </div>
-
-            <!-- Right column -->
-            <div class="col-md-8 right-column">
+            <div class="content-wrapper">
                 <div class="card login-card shadow border-0">
+                <div class="card-header"><h2 class="text-muted">Axxes Authorization Server</h2></div>
                     <div class="card-body">
                         <form method="POST" action="{{ .FormAction }}" enctype="multipart/form-data" class="needs-validation" novalidate>
                             {{ if .FormErrorMessage }}
