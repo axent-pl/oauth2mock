@@ -6,6 +6,6 @@ import (
 )
 
 type Service interface {
-	GetUserClaims(user userservice.Entity, client clientservice.Entity, scope []string) (map[string]interface{}, error)
-	GetClientClaims(client clientservice.Entity, scope []string) (map[string]interface{}, error)
+	GetUserClaims(user userservice.Entity, client clientservice.Entity, scope []string, purpose string) (map[string]interface{}, error)
+	GetClientClaims(client clientservice.Entity, scope []string, purpose string) (map[string]interface{}, error)
 }

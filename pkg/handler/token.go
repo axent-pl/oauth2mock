@@ -72,7 +72,7 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 
 		subject := authorizationRequest.GetUser()
 		scopes := authorizationRequest.GetScopes()
-		claims, err := claimSvc.GetUserClaims(subject, client, scopes)
+		claims, err := claimSvc.GetUserClaims(subject, client, scopes, "access")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			slog.Error("failed to construct user claims", "error", err)
@@ -140,7 +140,7 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 		if len(requstDTO.Scope) > 0 {
 			scope = strings.Split(requstDTO.Scope, " ")
 		}
-		claims, err := claimsDB.GetClientClaims(client, scope)
+		claims, err := claimsDB.GetClientClaims(client, scope, "access")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -211,7 +211,7 @@ func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientSvc clien
 		if len(requstDTO.Scope) > 0 {
 			scope = strings.Split(requstDTO.Scope, " ")
 		}
-		claims, err := claimSvc.GetUserClaims(user, client, scope)
+		claims, err := claimSvc.GetUserClaims(user, client, scope, "access")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
