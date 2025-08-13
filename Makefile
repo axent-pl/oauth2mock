@@ -4,6 +4,8 @@ build:
 	go mod download
 	go build -o bin/keygen cmd/keygen/main.go
 	go build -o bin/server cmd/server/main.go
+	go build -o bin/yaml2json cmd/yaml2json/main.go
+	go build -o bin/json2yaml cmd/json2yaml/main.go
 
 run-keygen:
 	go mod download
