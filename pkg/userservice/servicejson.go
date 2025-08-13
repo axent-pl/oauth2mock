@@ -93,6 +93,14 @@ func (s *jsonUserService) GetUsers() ([]Entity, error) {
 	return users, nil
 }
 
+func (s *jsonUserService) GetUser(username string) (Entity, error) {
+	user, ok := s.users[username]
+	if ok {
+		return &user, nil
+	}
+	return nil, errors.New("user does not exist")
+}
+
 func (s *jsonUserService) AddUser(user Entity) error {
 	s.usersMU.RLock()
 	defer s.usersMU.RUnlock()

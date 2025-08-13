@@ -149,6 +149,7 @@ func init() {
 		WellKnownEndpoint:                "/.well-known/openid-configuration",
 		AuthorizationEndpoint:            "/authorize",
 		TokenEndpoint:                    "/token",
+		UserInfoEndpoint:                 "/userinfo",
 		JWKSEndpoint:                     "/.well-known/jwks.json",
 		GrantTypesSupported:              []string{"authorization_code", "client_credentials", "password"},
 		ResponseTypesSupported:           []string{"code"},
@@ -200,6 +201,12 @@ func init() {
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "password"),
 		routing.WithMiddleware(routing.RateLimitMiddleware(100, 20)))
+
+	router.RegisterHandler(
+		handler.UserinfoHandler(userService, clientService, claimService, signingService),
+		routing.WithMethod(http.MethodGet),
+		routing.WithPath(openidConfiguration.UserInfoEndpoint),
+	)
 
 	router.RegisterHandler(
 		handler.SCIMGetHandler(),

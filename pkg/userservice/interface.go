@@ -20,4 +20,5 @@ type Service interface {
 	Authenticate(credentials authentication.CredentialsHandler) (Entity, error)
 	GetUsers() ([]Entity, error)
 	AddUser(Entity) error
+	GetUser(string) (Entity, error)
 }

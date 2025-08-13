@@ -172,6 +172,10 @@ func (s *databaseUserService) GetUsers() ([]Entity, error) {
 	return users, nil
 }
 
+func (s *databaseUserService) GetUser(username string) (Entity, error) {
+	return nil, errors.New("not implemented")
+}
+
 func (s *databaseUserService) AddUser(user Entity) error {
 	username := user.Name()
 

@@ -90,7 +90,6 @@
                 "claims": {
                     "default" : {
                         "base": {
-                            "sub": "Demo",
                             "preferred_username": "John.Demo@acme.com",
                             "realm_roles": [
                                 "DEMO"
@@ -118,7 +117,6 @@
                 "claims": {
                     "default": {
                         "base": {
-                            "sub": "Demo",
                             "preferred_username": "John.Demo@acme.com",
                             "realm_roles": [
                                 "ADMIN"

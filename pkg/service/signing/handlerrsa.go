@@ -117,6 +117,10 @@ func (kh *rsaSigningKey) GetKey() any {
 	return kh.privateKey
 }
 
+func (kh *rsaSigningKey) GetPublicKey() any {
+	return &kh.privateKey.PublicKey
+}
+
 func (kh *rsaSigningKey) Save(paths ...string) error {
 	if len(paths) != 1 {
 		return errors.New("exactly one path is required: keyPath")

@@ -167,6 +167,10 @@ func (kh *certSigningKey) GetKey() any {
 	return kh.privateKey
 }
 
+func (kh *certSigningKey) GetPublicKey() any {
+	return &kh.certificate.PublicKey
+}
+
 func (kh *certSigningKey) Save(paths ...string) error {
 	if len(paths) != 2 {
 		return errors.New("exactly two paths are required: certPath and keyPath")

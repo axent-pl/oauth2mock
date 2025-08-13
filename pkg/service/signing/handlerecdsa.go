@@ -121,6 +121,10 @@ func (kh *ecdsaSigningKey) GetKey() any {
 	return kh.privateKey
 }
 
+func (kh *ecdsaSigningKey) GetPublicKey() any {
+	return &kh.privateKey.PublicKey
+}
+
 func (kh *ecdsaSigningKey) Save(paths ...string) error {
 	if len(paths) != 1 {
 		return errors.New("exactly one path is required: keyPath")

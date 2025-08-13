@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"maps"
 	"os"
 
@@ -115,6 +116,24 @@ func (s *signingService) Sign(payload map[string]any) ([]byte, error) {
 	}
 
 	return []byte(tokenString), nil
+}
+
+func (s *signingService) Valid(tokenBytes []byte) bool {
+	tokenString := string(tokenBytes)
+	for _, key := range s.keys {
+		if !key.config.Active {
+			continue
+		}
+
+		parsedToken, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			return key.handler.GetPublicKey(), nil
+		})
+		if err == nil && parsedToken != nil && parsedToken.Valid {
+			return true
+		}
+		slog.Error("invalid signature", "error", err)
+	}
+	return false
 }
 
 func (s *signingService) SignWithMethod(payload map[string]any, method SigningMethod) ([]byte, error) {
