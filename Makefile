@@ -27,23 +27,35 @@ run:
 	go mod download
 	go run cmd/server/main.go
 
-run-all: run-keygen run
-
 test:
 	go test ./...
+
 test-e2e:
 	newman run tests/axes.postman_collection.json
 
+run-test:
+	go mod download
+	go run cmd/server/main.go &
+	sleep 2
+	$(MAKE) test-e2e
+	$(MAKE) kill-server
+
+kill-server:
+	lsof -ti:8222 | xargs kill -9
 
 container-build: run-keygen
 	docker build . -t prond/axes:$(TAG)
+
 container-scan:
 	docker scout quickview
+
 container-cves:
 	docker scout cves local://prond/axes:$(TAG)
+
 container-build-push: run-keygen
 	docker build . -t prond/axes:$(TAG)
 	docker push prond/axes:$(TAG)
+
 container-push:
 	docker push prond/axes:$(TAG)
 
