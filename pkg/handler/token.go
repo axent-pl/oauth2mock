@@ -27,10 +27,12 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 		request.Unmarshal(r, requstDTO)
 		if !requestValidator.Validate(requstDTO) {
 			http.Error(w, "bad request", http.StatusBadRequest)
+			slog.Warn("request validation failed", "validationErrors", requestValidator.Errors)
 			return
 		}
 		if requstDTO.GrantType != "authorization_code" {
 			http.Error(w, "invalid grant type", http.StatusBadRequest)
+			slog.Warn("invalid grant_type")
 			return
 		}
 
@@ -38,11 +40,13 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 		credentials, err := authentication.NewCredentials(authentication.FromCliendIdAndSecret(requstDTO.ClientId, requstDTO.ClientSecret))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Warn("could not read client credentials", "ClientId", requstDTO.ClientId)
 			return
 		}
 		client, err := clientSvc.Authenticate(credentials)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Warn("invalid client credentials", "ClientId", requstDTO.ClientId)
 			return
 		}
 
@@ -50,16 +54,19 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 		authorizationRequest, err := authCodeSvc.Get(requstDTO.Code)
 		if err != nil {
 			http.Error(w, "invalid code", http.StatusBadRequest)
+			slog.Warn("invalid authorization code", "ClientId", requstDTO.Code)
 			return
 		}
 
 		// Validate request DTO with authCodeData
 		if requstDTO.ClientId != authorizationRequest.GetClient().Id() {
 			http.Error(w, "invalid code", http.StatusBadRequest)
+			slog.Warn("authorization code client does not match", "ClientId", requstDTO.Code)
 			return
 		}
 		if requstDTO.RedirectURI != authorizationRequest.GetRedirectURI() {
 			http.Error(w, "invalid code", http.StatusBadRequest)
+			slog.Warn("authorization code redirect URI does not match", "ClientId", requstDTO.Code)
 			return
 		}
 
@@ -68,6 +75,7 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 		claims, err := claimSvc.GetUserClaims(subject, client, scopes)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Error("failed to construct user claims", "error", err)
 			return
 		}
 
@@ -83,17 +91,21 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 		tokenResponse, err := auth.NewTokenReponse(issuer, subject, client, claims, keySvc)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Error("failed to construct token response")
 			return
 		}
 		tokenResponseBytes, err := json.Marshal(tokenResponse)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Error("failed to marshal token response")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("Pragma", "no-cache")
 		w.Write(tokenResponseBytes)
+
+		slog.Info("token response successful")
 	}
 }
 

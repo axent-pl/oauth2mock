@@ -9,7 +9,8 @@ import (
 )
 
 type TokenResponse struct {
-	Type         string `json:"type"`
+	TokenType    string `json:"token_type"`
+	Expires      int    `json:"expires_in"`
 	RefreshToken string `json:"refresh_token"`
 	AccessToken  string `json:"access_token"`
 	IDToken      string `json:"id_token"`
@@ -23,7 +24,7 @@ func getSubClaim(user userservice.Entity, client clientservice.Entity) string {
 }
 
 func NewTokenReponse(issuer string, user userservice.Entity, client clientservice.Entity, claims map[string]interface{}, keyService signing.SigningServicer) (TokenResponse, error) {
-	tokenResponse := TokenResponse{Type: "Bearer"}
+	tokenResponse := TokenResponse{TokenType: "Bearer", Expires: 3600}
 
 	access_token_claims := make(map[string]interface{})
 	access_token_claims["iss"] = issuer

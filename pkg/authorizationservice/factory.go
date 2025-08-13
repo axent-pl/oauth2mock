@@ -29,12 +29,14 @@ func NewFromConfig(rawConfig []byte) (Service, error) {
 	slog.Info("init started", "module", "authorizationservice")
 	config := Config{}
 	if err := json.Unmarshal(rawConfig, &config); err != nil {
-		return nil, errors.New("failed to unmarshal config")
+		slog.Error("failed to unmarshal config", "module", "authorizationservice", "error", err)
+		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
 	var authorizationsConfig map[string]json.RawMessage
 	if err := json.Unmarshal(config.AuthorizationConfig, &authorizationsConfig); err != nil {
-		return nil, errors.New("failed to parse authorization service config")
+		slog.Error("failed to unmarshal authorization service config", "module", "authorizationservice", "error", err)
+		return nil, fmt.Errorf("failed to unmarshal authorization service config: %w", err)
 	}
 
 	providerRaw, ok := authorizationsConfig["provider"]
