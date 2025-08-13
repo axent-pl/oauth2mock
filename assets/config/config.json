@@ -178,6 +178,7 @@
     "consents": {
         "provider": "json",
         "scopes": {
+            "openid": { "requireConsent": false },
             "profile": { "requireConsent": false },
             "email": { "requireConsent": true },
             "products::read": { "requireConsent": true },
