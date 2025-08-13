@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/axent-pl/oauth2mock/pkg/auth"
 	"github.com/axent-pl/oauth2mock/pkg/authorizationservice"
@@ -18,6 +19,98 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/service/signing"
 	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
+
+func subClaim(user userservice.Entity, client clientservice.Entity) string {
+	if user != nil {
+		return user.Id()
+	}
+	return client.Id()
+}
+
+func userOrClientClaims(claimSvc claimservice.Service, user userservice.Entity, client clientservice.Entity, scopes []string, purpose string) (map[string]interface{}, error) {
+	if user != nil {
+		return claimSvc.GetUserClaims(user, client, scopes, purpose)
+	}
+	return claimSvc.GetClientClaims(client, scopes, purpose)
+}
+
+func tokenReponse(issuer string, user userservice.Entity, client clientservice.Entity, scopes []string, extraClaims map[string]interface{}, claimSvc claimservice.Service, keyService signing.SigningServicer) (dto.TokenResponseDTO, error) {
+	tokenResponse := dto.TokenResponseDTO{TokenType: "Bearer", Expires: 3600}
+
+	// access token
+	access_claims, err := userOrClientClaims(claimSvc, user, client, scopes, "access")
+	if err != nil {
+		return dto.TokenResponseDTO{}, err
+	}
+	access_token_claims := make(map[string]interface{})
+	access_token_claims["iss"] = issuer
+	access_token_claims["sub"] = subClaim(user, client)
+	access_token_claims["azp"] = client.Id()
+	access_token_claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
+	access_token_claims["iat"] = time.Now().Unix()
+	access_token_claims["typ"] = "Bearer"
+	for k, v := range access_claims {
+		access_token_claims[k] = v
+	}
+	for k, v := range extraClaims {
+		access_token_claims[k] = v
+	}
+	access_token, err := keyService.Sign(access_token_claims)
+	if err != nil {
+		return dto.TokenResponseDTO{}, err
+	}
+	tokenResponse.AccessToken = string(access_token)
+
+	// refresh token
+	refresh_claims, err := userOrClientClaims(claimSvc, user, client, scopes, "refresh")
+	if err != nil {
+		return dto.TokenResponseDTO{}, err
+	}
+	refresh_token_claims := make(map[string]interface{})
+	refresh_token_claims["iss"] = issuer
+	refresh_token_claims["sub"] = subClaim(user, client)
+	refresh_token_claims["azp"] = client.Id()
+	refresh_token_claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
+	refresh_token_claims["iat"] = time.Now().Unix()
+	refresh_token_claims["typ"] = "Refresh"
+	for k, v := range refresh_claims {
+		refresh_token_claims[k] = v
+	}
+	for k, v := range extraClaims {
+		refresh_token_claims[k] = v
+	}
+	refresh_token, err := keyService.Sign(refresh_token_claims)
+	if err != nil {
+		return dto.TokenResponseDTO{}, err
+	}
+	tokenResponse.RefreshToken = string(refresh_token)
+
+	// refresh token
+	id_claims, err := userOrClientClaims(claimSvc, user, client, scopes, "id")
+	if err != nil {
+		return dto.TokenResponseDTO{}, err
+	}
+	id_token_claims := make(map[string]interface{})
+	id_token_claims["iss"] = issuer
+	id_token_claims["sub"] = subClaim(user, client)
+	id_token_claims["aud"] = client.Id()
+	id_token_claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
+	id_token_claims["iat"] = time.Now().Unix()
+	id_token_claims["typ"] = "ID"
+	for k, v := range id_claims {
+		id_token_claims[k] = v
+	}
+	for k, v := range extraClaims {
+		id_token_claims[k] = v
+	}
+	id_token, err := keyService.Sign(id_token_claims)
+	if err != nil {
+		return dto.TokenResponseDTO{}, err
+	}
+	tokenResponse.IDToken = string(id_token)
+
+	return tokenResponse, nil
+}
 
 func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientSvc clientservice.Service, consentSvc consentservice.Service, authCodeSvc authorizationservice.Service, claimSvc claimservice.Service, keySvc signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -72,15 +165,10 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 
 		subject := authorizationRequest.GetUser()
 		scopes := authorizationRequest.GetScopes()
-		claims, err := claimSvc.GetUserClaims(subject, client, scopes, "access")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			slog.Error("failed to construct user claims", "error", err)
-			return
-		}
 
+		extraClaims := make(map[string]interface{})
 		if authorizationRequest.GetNonce() != "" {
-			claims["nonce"] = authorizationRequest.GetNonce()
+			extraClaims["nonce"] = authorizationRequest.GetNonce()
 		}
 
 		issuer := openidConfig.Issuer
@@ -88,7 +176,7 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 			issuer = getOriginFromRequest(r)
 		}
 
-		tokenResponse, err := auth.NewTokenReponse(issuer, subject, client, claims, keySvc)
+		tokenResponse, err := tokenReponse(issuer, subject, client, scopes, extraClaims, claimSvc, keySvc)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			slog.Error("failed to construct token response")
@@ -140,18 +228,12 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 		if len(requstDTO.Scope) > 0 {
 			scope = strings.Split(requstDTO.Scope, " ")
 		}
-		claims, err := claimsDB.GetClientClaims(client, scope, "access")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
 		issuer := openidConfig.Issuer
 		if openidConfig.UseOrigin {
 			issuer = getOriginFromRequest(r)
 		}
-
-		tokenResponse, err := auth.NewTokenReponse(issuer, nil, client, claims, keyService)
+		extraClaims := make(map[string]interface{})
+		tokenResponse, err := tokenReponse(issuer, nil, client, scope, extraClaims, claimsDB, keyService)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -211,18 +293,13 @@ func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientSvc clien
 		if len(requstDTO.Scope) > 0 {
 			scope = strings.Split(requstDTO.Scope, " ")
 		}
-		claims, err := claimSvc.GetUserClaims(user, client, scope, "access")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
 
 		issuer := openidConfig.Issuer
 		if openidConfig.UseOrigin {
 			issuer = getOriginFromRequest(r)
 		}
-
-		tokenResponse, err := auth.NewTokenReponse(issuer, user, client, claims, keySvc)
+		extraClaims := make(map[string]interface{})
+		tokenResponse, err := tokenReponse(issuer, user, client, scope, extraClaims, claimSvc, keySvc)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

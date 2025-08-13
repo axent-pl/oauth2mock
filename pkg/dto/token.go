@@ -1,5 +1,13 @@
 package dto
 
+type TokenResponseDTO struct {
+	TokenType    string `json:"token_type"`
+	Expires      int    `json:"expires_in"`
+	RefreshToken string `json:"refresh_token"`
+	AccessToken  string `json:"access_token"`
+	IDToken      string `json:"id_token"`
+}
+
 type TokenRequestDTO struct {
 	GrantType    string `formField:"grant_type" validate:"required"`
 	ClientId     string `formField:"client_id"`
