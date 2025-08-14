@@ -117,10 +117,12 @@
 							"pm.test(\"Payload has `access_token`\", function () {",
 							"    var jsonData = pm.response.json();",
 							"    pm.expect(jsonData).to.have.property(\"access_token\")",
+							"    pm.collectionVariables.set(\"ACCESS_TOKEN\", jsonData.access_token);",
 							"});",
 							"pm.test(\"Payload has `refresh_token`\", function () {",
 							"    var jsonData = pm.response.json();",
-							"    pm.expect(jsonData).to.have.property(\"refresh_token\")",
+							"    pm.expect(jsonData).to.have.property(\"refresh_token\");",
+							"    pm.collectionVariables.set(\"REFRESH_TOKEN\", jsonData.refresh_token);",
 							"});",
 							"pm.test(\"Payload `token_type` is `Bearer` \", function () {",
 							"    var jsonData = pm.response.json();",
@@ -219,6 +221,47 @@
 					],
 					"path": [
 						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "userinfo",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{ACCESS_TOKEN}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{SERVER_URL}}/userinfo",
+					"host": [
+						"{{SERVER_URL}}"
+					],
+					"path": [
+						"userinfo"
 					]
 				}
 			},
@@ -602,6 +645,14 @@
 			"key": "AUTH_STATE",
 			"value": "my-state",
 			"type": "string"
+		},
+		{
+			"key": "ACCESS_TOKEN",
+			"value": "xxx"
+		},
+		{
+			"key": "REFRESH_TOKEN",
+			"value": "xxx"
 		}
 	]
 }
