@@ -106,6 +106,7 @@
                     }
                 },
                 "consents": {
+                    "openid": true,
                     "profile": true,
                     "email": true,
                     "products::read": false
