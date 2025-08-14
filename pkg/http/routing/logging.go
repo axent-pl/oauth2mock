@@ -8,6 +8,14 @@ import (
 	"strings"
 )
 
+func RequestIDLogValue(r *http.Request) slog.Value {
+	requestID := ""
+	if id, ok := r.Context().Value(CTX_REQUEST_ID).(string); ok {
+		requestID = id
+	}
+	return slog.GroupValue(slog.String("RequestID", requestID))
+}
+
 func RequestLogValue(r *http.Request) slog.Value {
 	requestID := ""
 	if id, ok := r.Context().Value(CTX_REQUEST_ID).(string); ok {
@@ -28,12 +36,21 @@ func RequestLogValue(r *http.Request) slog.Value {
 		mediaType = contentType // fallback to original if parsing fails
 	}
 
+	queryMap := make(map[string]string)
+	for k, v := range r.URL.Query() {
+		if len(v) > 0 {
+			queryMap[k] = v[0]
+		} else {
+			queryMap[k] = ""
+		}
+	}
+
 	return slog.GroupValue(
 		slog.String("RequestID", requestID),
 		slog.String("RemoteAddr", r.RemoteAddr),
 		slog.String("Method", r.Method),
 		slog.String("Path", r.URL.Path),
-		slog.String("Query", r.URL.RawQuery),
+		slog.Any("Query", queryMap),
 		slog.String("Host", r.Host),
 		slog.String("UserAgent", r.UserAgent()),
 		slog.String("Referer", r.Referer()),

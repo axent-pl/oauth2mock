@@ -40,7 +40,7 @@ func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		slog.Info("request handler AuthorizePostHandler started")
+		slog.Info("request handler AuthorizePostHandler started", "request", routing.RequestIDLogValue(r))
 
 		templateData := tpl.AuthorizeTemplateData{
 			FormAction: r.URL.String(),
@@ -49,7 +49,7 @@ func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 		// authorization request DTO
 		authorizeRequestDTO := &dto.AuthorizeRequestDTO{}
 		if valid, validator := request.UnmarshalAndValidate(r, authorizeRequestDTO); !valid {
-			slog.Error("invalid authorize request", "validationErrors", validator.Errors)
+			slog.Error("invalid authorize request", "request", routing.RequestIDLogValue(r), "validationErrors", validator.Errors)
 			templateData.FormErrorMessage = "invalid authorize request"
 			templateDB.Render(w, "login", templateData)
 			return
@@ -58,7 +58,7 @@ func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 		// client
 		client, err := clientSrv.GetClient(authorizeRequestDTO.ClientId)
 		if err != nil {
-			slog.Error("invalid client", "error", err)
+			slog.Error("invalid client", "request", routing.RequestIDLogValue(r), "error", err)
 			templateData.FormErrorMessage = "invalid client"
 			templateDB.Render(w, "login", templateData)
 			return
@@ -81,12 +81,12 @@ func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 			authorizationservice.WithNonce(authorizeRequestDTO.Nonce),
 			authorizationservice.WithUser(user))
 		if err != nil {
-			slog.Error("invalid authorize request", "error", err)
+			slog.Error("invalid authorize request", "request", routing.RequestIDLogValue(r), "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		if err := authZSrv.Validate(authorizationRequest); err != nil {
-			slog.Error("invalid authorize request", "error", err)
+			slog.Error("invalid authorize request", "request", routing.RequestIDLogValue(r), "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -94,7 +94,7 @@ func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 		// authorization request response
 		code, err := authZSrv.Store(authorizationRequest)
 		if err != nil {
-			slog.Error("AuthorizePostHandler authorization code generation failed", "RequestID", r.Context().Value("RequestID"), "error", err)
+			slog.Error("AuthorizePostHandler authorization code generation failed", "request", routing.RequestIDLogValue(r), "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -108,7 +108,7 @@ func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 		redirectURLQuery.Add("code", code)
 		redirectURLQuery.Add("state", authorizationRequest.GetState())
 		redirectURL.RawQuery = redirectURLQuery.Encode()
-		slog.Info("AuthorizePostHandler redirecting", "RequestID", r.Context().Value("RequestID"), "redirectURL", redirectURL.String())
+		slog.Info("AuthorizePostHandler redirecting", "request", routing.RequestIDLogValue(r), "redirectURL", redirectURL.String())
 		http.Redirect(w, r, redirectURL.String(), http.StatusSeeOther)
 	}
 }

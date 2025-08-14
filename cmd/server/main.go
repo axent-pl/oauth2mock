@@ -51,11 +51,13 @@ var (
 
 // Configure logger
 func init() {
-	jsonHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	})
-	jsonLogger := slog.New(jsonHandler)
-	slog.SetDefault(jsonLogger)
+	if value, exists := os.LookupEnv("LOG_FORMAT"); exists && value == "json" {
+		jsonHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})
+		jsonLogger := slog.New(jsonHandler)
+		slog.SetDefault(jsonLogger)
+	}
 }
 
 // Load config settings

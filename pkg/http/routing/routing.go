@@ -114,6 +114,7 @@ func (h *Router) ServeHTTP(w http.ResponseWriter, routedRequest *http.Request) {
 	slog.Debug(string(dump))
 
 	requestLogValue := RequestLogValue(routedRequest)
+	RequestIDLogValue := RequestIDLogValue(routedRequest)
 
 	slog.Info("request routing started", "request", requestLogValue)
 	for _, route := range h.routes {
@@ -121,24 +122,24 @@ func (h *Router) ServeHTTP(w http.ResponseWriter, routedRequest *http.Request) {
 			handler := route.handler
 
 			if len(route.middlewares) > 0 {
-				slog.Info("request routing middlewares started", "request", requestLogValue)
+				slog.Info("request routing middlewares started", "request", RequestIDLogValue)
 				middlewareStartTime := time.Now()
 
 				for i := len(route.middlewares) - 1; i >= 0; i-- {
 					handler = route.middlewares[i](handler)
 				}
 
-				slog.Info("request routing middlewares done", "request", requestLogValue, "took", time.Since(middlewareStartTime))
+				slog.Info("request routing middlewares done", "request", RequestIDLogValue, "took", time.Since(middlewareStartTime))
 			}
 
-			slog.Info("request routing handler started", "request", requestLogValue)
+			slog.Info("request routing handler started", "request", RequestIDLogValue)
 			handlerStartTime := time.Now()
 			handler(w, routedRequest)
-			slog.Info("request routing handler done", "request", requestLogValue, "took", time.Since(handlerStartTime))
+			slog.Info("request routing handler done", "request", RequestIDLogValue, "took", time.Since(handlerStartTime))
 
 			return
 		}
 	}
-	slog.Warn("request routing not found", "request", requestLogValue)
+	slog.Warn("request routing not found", "request", RequestIDLogValue)
 	http.NotFound(w, routedRequest)
 }

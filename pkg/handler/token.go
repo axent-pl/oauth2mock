@@ -114,18 +114,18 @@ func tokenReponse(issuer string, user userservice.Entity, client clientservice.E
 
 func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, clientSvc clientservice.Service, consentSvc consentservice.Service, authCodeSvc authorizationservice.Service, claimSvc claimservice.Service, keySvc signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		slog.Info("request handler TokenAuthorizationCodeHandler started")
+		slog.Info("request handler TokenAuthorizationCodeHandler started", "request", routing.RequestIDLogValue(r))
 		requstDTO := &dto.TokenAuthorizationCodeRequestDTO{}
 		requestValidator := request.NewValidator()
 		request.Unmarshal(r, requstDTO)
 		if !requestValidator.Validate(requstDTO) {
 			http.Error(w, "bad request", http.StatusBadRequest)
-			slog.Warn("request validation failed", "validationErrors", requestValidator.Errors)
+			slog.Error("request validation failed", "request", routing.RequestIDLogValue(r), "validationErrors", requestValidator.Errors)
 			return
 		}
 		if requstDTO.GrantType != "authorization_code" {
 			http.Error(w, "invalid grant type", http.StatusBadRequest)
-			slog.Warn("invalid grant_type")
+			slog.Error("invalid grant type", "request", routing.RequestIDLogValue(r))
 			return
 		}
 
@@ -133,13 +133,13 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 		credentials, err := authentication.NewCredentials(authentication.FromCliendIdAndSecret(requstDTO.ClientId, requstDTO.ClientSecret))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			slog.Warn("could not read client credentials", "ClientId", requstDTO.ClientId)
+			slog.Error("could not read client credentials", "request", routing.RequestIDLogValue(r), "ClientId", requstDTO.ClientId, "error", err)
 			return
 		}
 		client, err := clientSvc.Authenticate(credentials)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			slog.Warn("invalid client credentials", "ClientId", requstDTO.ClientId)
+			slog.Error("invalid client credentials", "request", routing.RequestIDLogValue(r), "ClientId", requstDTO.ClientId, "error", err)
 			return
 		}
 
@@ -147,19 +147,19 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 		authorizationRequest, err := authCodeSvc.Get(requstDTO.Code)
 		if err != nil {
 			http.Error(w, "invalid code", http.StatusBadRequest)
-			slog.Warn("invalid authorization code", "ClientId", requstDTO.Code)
+			slog.Error("invalid authorization code", "request", routing.RequestIDLogValue(r), "ClientId", requstDTO.Code, "error", err)
 			return
 		}
 
 		// Validate request DTO with authCodeData
 		if requstDTO.ClientId != authorizationRequest.GetClient().Id() {
 			http.Error(w, "invalid code", http.StatusBadRequest)
-			slog.Warn("authorization code client does not match", "ClientId", requstDTO.Code)
+			slog.Error("authorization code client does not match", "request", routing.RequestIDLogValue(r), "ClientId", requstDTO.Code)
 			return
 		}
 		if requstDTO.RedirectURI != authorizationRequest.GetRedirectURI() {
 			http.Error(w, "invalid code", http.StatusBadRequest)
-			slog.Warn("authorization code redirect URI does not match", "ClientId", requstDTO.Code)
+			slog.Error("authorization code redirect URI does not match", "request", routing.RequestIDLogValue(r), "ClientId", requstDTO.Code)
 			return
 		}
 
@@ -179,13 +179,13 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 		tokenResponse, err := tokenReponse(issuer, subject, client, scopes, extraClaims, claimSvc, keySvc)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			slog.Error("failed to construct token response")
+			slog.Error("failed to construct token response", "request", routing.RequestIDLogValue(r), "error", err)
 			return
 		}
 		tokenResponseBytes, err := json.Marshal(tokenResponse)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			slog.Error("failed to marshal token response")
+			slog.Error("failed to marshal token response", "request", routing.RequestIDLogValue(r), "error", err)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -193,22 +193,24 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 		w.Header().Set("Pragma", "no-cache")
 		w.Write(tokenResponseBytes)
 
-		slog.Info("token response successful")
+		slog.Info("token response successful", "request", routing.RequestIDLogValue(r))
 	}
 }
 
 func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, clientDB clientservice.Service, claimsDB claimservice.Service, keyService signing.SigningServicer) routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		slog.Info("request handler TokenClientCredentialsHandler started")
+		slog.Info("request handler TokenClientCredentialsHandler started", "request", routing.RequestIDLogValue(r))
 		requstDTO := &dto.TokenClientCredentialsHandlerRequestDTO{}
 		requestValidator := request.NewValidator()
 		request.Unmarshal(r, requstDTO)
 		if !requestValidator.Validate(requstDTO) {
 			http.Error(w, "bad request", http.StatusBadRequest)
+			slog.Error("request validation failed", "request", routing.RequestIDLogValue(r), "validationErrors", requestValidator.Errors)
 			return
 		}
 		if requstDTO.GrantType != "client_credentials" {
 			http.Error(w, "invalid grant type", http.StatusBadRequest)
+			slog.Error("invalid grant type", "request", routing.RequestIDLogValue(r))
 			return
 		}
 
@@ -216,11 +218,13 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 		credentials, err := authentication.NewCredentials(authentication.FromCliendIdAndSecret(requstDTO.ClientId, requstDTO.ClientSecret))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Error("could not read client credentials", "request", routing.RequestIDLogValue(r), "ClientId", requstDTO.ClientId, "error", err)
 			return
 		}
 		client, err := clientDB.Authenticate(credentials)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Error("invalid client credentials", "request", routing.RequestIDLogValue(r), "ClientId", requstDTO.ClientId, "error", err)
 			return
 		}
 
@@ -236,17 +240,21 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 		tokenResponse, err := tokenReponse(issuer, nil, client, scope, extraClaims, claimsDB, keyService)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Error("failed to construct token response", "request", routing.RequestIDLogValue(r), "error", err)
 			return
 		}
 		tokenResponseBytes, err := json.Marshal(tokenResponse)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Error("failed to marshal token response", "request", routing.RequestIDLogValue(r), "error", err)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("Pragma", "no-cache")
 		w.Write(tokenResponseBytes)
+
+		slog.Info("token response successful", "request", routing.RequestIDLogValue(r))
 	}
 }
 
@@ -258,10 +266,12 @@ func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientSvc clien
 		request.Unmarshal(r, requstDTO)
 		if !requestValidator.Validate(requstDTO) {
 			http.Error(w, "bad request", http.StatusBadRequest)
+			slog.Error("request validation failed", "request", routing.RequestIDLogValue(r), "validationErrors", requestValidator.Errors)
 			return
 		}
 		if requstDTO.GrantType != "password" {
 			http.Error(w, "invalid grant type", http.StatusBadRequest)
+			slog.Error("invalid grant type", "request", routing.RequestIDLogValue(r))
 			return
 		}
 
@@ -269,11 +279,13 @@ func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientSvc clien
 		clientCredentials, err := authentication.NewCredentials(authentication.FromCliendIdAndSecret(requstDTO.ClientId, requstDTO.ClientSecret))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Error("could not read client credentials", "request", routing.RequestIDLogValue(r), "ClientId", requstDTO.ClientId, "error", err)
 			return
 		}
 		client, err := clientSvc.Authenticate(clientCredentials)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Error("invalid client credentials", "request", routing.RequestIDLogValue(r), "ClientId", requstDTO.ClientId, "error", err)
 			return
 		}
 
@@ -281,11 +293,13 @@ func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientSvc clien
 		userCredenmtials, err := authentication.NewCredentials(authentication.FromUsernameAndPassword(requstDTO.Username, requstDTO.Password))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Error("could not read user credentials", "request", routing.RequestIDLogValue(r), "Username", requstDTO.Username, "error", err)
 			return
 		}
 		user, err := userSvc.Authenticate(userCredenmtials)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Error("invalid client credentials", "request", routing.RequestIDLogValue(r), "Username", requstDTO.Username, "error", err)
 			return
 		}
 
@@ -302,16 +316,20 @@ func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientSvc clien
 		tokenResponse, err := tokenReponse(issuer, user, client, scope, extraClaims, claimSvc, keySvc)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Error("failed to construct token response", "request", routing.RequestIDLogValue(r), "error", err)
 			return
 		}
 		tokenResponseBytes, err := json.Marshal(tokenResponse)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			slog.Error("failed to marshal token response", "request", routing.RequestIDLogValue(r), "error", err)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("Pragma", "no-cache")
 		w.Write(tokenResponseBytes)
+
+		slog.Info("token response successful", "request", routing.RequestIDLogValue(r))
 	}
 }
