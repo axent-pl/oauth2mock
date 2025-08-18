@@ -4,13 +4,16 @@ import (
 	"bytes"
 	"compress/flate"
 	"compress/zlib"
+	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/xml"
 	"errors"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
@@ -48,6 +51,30 @@ type SAMLNameIDPolicy struct {
 	AllowCreate *bool    `xml:"AllowCreate,attr,omitempty"`
 }
 
+type SAMLResponseDTO struct {
+	XMLName      xml.Name `xml:"urn:oasis:names:tc:SAML:2.0:protocol Response"`
+	XMLNSsamlp   string   `xml:"xmlns:samlp,attr,omitempty"`
+	XMLNSsaml    string   `xml:"xmlns:saml,attr,omitempty"`
+	ID           string   `xml:"ID,attr"`
+	Version      string   `xml:"Version,attr"`
+	IssueInstant string   `xml:"IssueInstant,attr"`
+	Destination  string   `xml:"Destination,attr,omitempty"`
+	InResponseTo string   `xml:"InResponseTo,attr,omitempty"`
+
+	Issuer *SAMLIssuer `xml:"urn:oasis:names:tc:SAML:2.0:assertion Issuer,omitempty"`
+	Status SAMLStatus  `xml:"urn:oasis:names:tc:SAML:2.0:protocol Status"`
+
+	// You can add Assertion later if needed.
+}
+
+type SAMLStatus struct {
+	StatusCode SAMLStatusCode `xml:"urn:oasis:names:tc:SAML:2.0:protocol StatusCode"`
+}
+
+type SAMLStatusCode struct {
+	Value string `xml:"Value,attr"`
+}
+
 // SAMLHandler handles SAML authentication requests.
 func SAMLHandler() routing.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -67,13 +94,28 @@ func SAMLHandler() routing.HandlerFunc {
 			return
 		}
 
-		// In a real implementation, decode and validate the SAMLRequest, extract ACS URL, etc.
-		// Here, we just simulate a successful SAML response.
+		samlResponse := SAMLResponseDTO{
+			XMLNSsamlp:   "urn:oasis:names:tc:SAML:2.0:protocol",
+			XMLNSsaml:    "urn:oasis:names:tc:SAML:2.0:assertion",
+			ID:           randomSAMLID(),
+			Version:      "2.0",
+			IssueInstant: time.Now().UTC().Format(time.RFC3339),
+			Destination:  samlRequest.AssertionConsumerServiceURL,
+			InResponseTo: samlRequest.ID,
+			Issuer:       &SAMLIssuer{Value: "axent"},
+			Status: SAMLStatus{
+				StatusCode: SAMLStatusCode{
+					Value: "urn:oasis:names:tc:SAML:2.0:status:Success",
+				},
+			},
+		}
+		samlResponseBytes, err := xml.Marshal(samlResponse)
+		if err != nil {
+			http.Error(w, "bad request", http.StatusInternalServerError)
+			slog.Error("response marshaling failed", "request", routing.RequestIDLogValue(r), "error", err)
+		}
+		samlResponseString := base64.StdEncoding.EncodeToString(samlResponseBytes)
 
-		// Placeholder SAMLResponse (base64-encoded XML string)
-		samlResponse := base64.StdEncoding.EncodeToString([]byte(`<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" ID="_placeholder" Version="2.0" IssueInstant="2025-08-14T12:00:00Z"><saml:Issuer xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">MockIssuer</saml:Issuer></samlp:Response>`))
-
-		// Build redirect with SAMLResponse and RelayState as POST (or GET, here we use GET for simplicity)
 		redirectURL, err := url.Parse(samlRequest.AssertionConsumerServiceURL)
 		if err != nil {
 			http.Error(w, "invalid ACSUrl", http.StatusBadRequest)
@@ -81,7 +123,7 @@ func SAMLHandler() routing.HandlerFunc {
 			return
 		}
 		q := redirectURL.Query()
-		q.Set("SAMLResponse", samlResponse)
+		q.Set("SAMLResponse", samlResponseString)
 		if requstDTO.RelayState != "" {
 			q.Set("RelayState", requstDTO.RelayState)
 		}
@@ -148,4 +190,10 @@ func looksLikeXML(b []byte) bool {
 		i++
 	}
 	return i < len(b) && b[i] == '<'
+}
+
+func randomSAMLID() string {
+	var b [16]byte
+	_, _ = rand.Read(b[:])
+	return "_" + hex.EncodeToString(b[:])
 }
