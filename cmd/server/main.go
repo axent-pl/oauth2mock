@@ -211,9 +211,20 @@ func init() {
 	)
 
 	router.RegisterHandler(
+		handler.SAMLHandler(),
+		routing.WithMethod(http.MethodPost),
+		routing.WithPath("/saml"))
+
+	router.RegisterHandler(
+		handler.SAMLHandler(),
+		routing.WithMethod(http.MethodGet),
+		routing.WithPath("/saml"))
+
+	router.RegisterHandler(
 		handler.SCIMGetHandler(),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath("/beta/scim/users"))
+
 	router.RegisterHandler(
 		handler.SCIMPostHandler(),
 		routing.WithMethod(http.MethodPost),
