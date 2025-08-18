@@ -14,8 +14,8 @@ import xml.etree.ElementTree as ET
 import requests  # pip install requests (widely available)
 
 IDP_SSO_URL = os.getenv("IDP_SSO_URL", "http://localhost:8222/saml")  # IdP SSO endpoint
-SP_ENTITY_ID = os.getenv("SP_ENTITY_ID", "urn:example:sp")            # Your SP entityID
-ACS_URL = os.getenv("ACS_URL", "http://localhost:8000/acs")           # Your Assertion Consumer Service URL
+SP_ENTITY_ID = os.getenv("SP_ENTITY_ID", "ACME")            # Your SP entityID
+ACS_URL = os.getenv("ACS_URL", "http://localhost:1234/acs")           # Your Assertion Consumer Service URL
 RELAY_STATE = os.getenv("RELAY_STATE", "opaque-relay-state")
 BINDING = os.getenv("BINDING", "redirect").lower()                    # 'redirect' or 'post'
 

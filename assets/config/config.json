@@ -177,6 +177,7 @@
     "consents": {
         "provider": "json",
         "scopes": {
+            "saml": { "requireConsent": false },
             "openid": { "requireConsent": false },
             "profile": { "requireConsent": false },
             "email": { "requireConsent": true },

@@ -213,12 +213,16 @@ func init() {
 	router.RegisterHandler(
 		handler.SAMLHandler(),
 		routing.WithMethod(http.MethodPost),
-		routing.WithPath("/saml"))
+		routing.WithPath("/saml"),
+		routing.WithMiddleware(routing.SessionMiddleware()),
+		routing.WithMiddleware(routing.UserAuthenticationMiddleware()))
 
 	router.RegisterHandler(
 		handler.SAMLHandler(),
 		routing.WithMethod(http.MethodGet),
-		routing.WithPath("/saml"))
+		routing.WithPath("/saml"),
+		routing.WithMiddleware(routing.SessionMiddleware()),
+		routing.WithMiddleware(routing.UserAuthenticationMiddleware()))
 
 	router.RegisterHandler(
 		handler.SCIMGetHandler(),
