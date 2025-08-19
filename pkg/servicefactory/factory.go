@@ -9,9 +9,6 @@ import (
 	"sync"
 )
 
-type ServiceConfig struct {
-	Provider string `json:"provider"`
-}
 type ConstructorFunction[S any] func(globalConfigJSON json.RawMessage, serviceConfigJSON json.RawMessage) (S, error)
 type ConfigExtractFunction func(globalConfigJSON json.RawMessage) (string, json.RawMessage, error)
 
