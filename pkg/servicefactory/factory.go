@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"reflect"
 	"strings"
 	"sync"
 )
@@ -39,7 +40,7 @@ type Registry[S any] struct {
 }
 
 func (r *Registry[S]) Register(name string, f ConstructorFunction[S], c ConfigExtractFunction) {
-	slog.Info(fmt.Sprintf("Registering provider %s", name))
+	slog.Info("registering service provider", "provider", name, "service", reflect.TypeFor[S]())
 	r.constructorMapMU.Lock()
 	defer r.constructorMapMU.Unlock()
 	r.constructorMap[name] = f
@@ -47,6 +48,7 @@ func (r *Registry[S]) Register(name string, f ConstructorFunction[S], c ConfigEx
 }
 
 func (r *Registry[S]) Factory(globalConfigJSONBytes []byte) (S, error) {
+	slog.Info("factoring service", "service", reflect.TypeFor[S](), "struct", reflect.TypeOf(r))
 	var emptyService S
 	globalConfigJSON := json.RawMessage(globalConfigJSONBytes)
 	r.constructorMapMU.RLock()
@@ -54,11 +56,13 @@ func (r *Registry[S]) Factory(globalConfigJSONBytes []byte) (S, error) {
 
 	provider, serviceConfigJSON, err := r.configExtractor(globalConfigJSON)
 	if err != nil {
+		slog.Error("could not extract provider and service config from JSON", "service", reflect.TypeFor[S](), "error", err)
 		return emptyService, fmt.Errorf("could not extract provider and service config from JSON: %v", err)
 	}
 
 	factory, ok := r.constructorMap[provider]
 	if !ok {
+		slog.Error("unknown service provider", "provider", provider, "service", reflect.TypeFor[S](), "error", err)
 		return emptyService, fmt.Errorf("unknown service provider: %s", provider)
 	}
 
@@ -66,7 +70,7 @@ func (r *Registry[S]) Factory(globalConfigJSONBytes []byte) (S, error) {
 	if err != nil {
 		return emptyService, fmt.Errorf("could not initialize service: %v", err)
 	}
-
+	slog.Info("factoring service done", "provider", provider, "service", reflect.TypeFor[S]())
 	return service, nil
 }
 
