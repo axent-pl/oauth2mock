@@ -70,7 +70,7 @@ type jsonClaimService struct {
 	clientClaimsMU sync.RWMutex
 }
 
-func NewJSONClaimsService(rawClaimsConfig json.RawMessage, rawConfig json.RawMessage) (Service, error) {
+func NewJSONClaimsService(rawConfig json.RawMessage, rawClaimsConfig json.RawMessage) (Service, error) {
 	slog.Info("claimservice factory NewJSONClaimsService started")
 	config := jsonClaimServiceConfig{}
 	service := &jsonClaimService{

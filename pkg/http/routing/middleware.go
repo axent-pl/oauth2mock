@@ -110,17 +110,20 @@ func UserAuthenticationMiddleware() Middleware {
 			sessionID, ok := r.Context().Value(CTX_SESSION_ID).(string)
 			if !ok {
 				http.Error(w, "user session not initialized", http.StatusInternalServerError)
+				slog.Error("user session not initialized", "request", RequestIDLogValue(r))
 				return
 			}
 			sessionData, ok := sessionSrv.Get(sessionID)
 			if !ok {
 				http.Error(w, "user session not initialized", http.StatusInternalServerError)
+				slog.Error("user session not initialized", "request", RequestIDLogValue(r))
 				return
 			}
 			if userRaw, ok := sessionData["user"]; ok {
 				user, casted := userRaw.(userservice.Entity)
 				if !casted {
 					http.Error(w, "could not fetch user from session", http.StatusInternalServerError)
+					slog.Error("could not fetch user from session", "request", RequestIDLogValue(r))
 					return
 				}
 				ctx := context.WithValue(r.Context(), CTX_USER, user)

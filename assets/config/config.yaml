@@ -32,6 +32,8 @@ consents:
             requireConsent: true
         profile:
             requireConsent: false
+        saml:
+            requireConsent: false
 interfaces:
     authorization:
         enabled: true
@@ -135,6 +137,7 @@ users:
                                 - B
             consents:
                 email: true
+                openid: true
                 products::read: false
                 profile: true
             password: demo

@@ -61,7 +61,6 @@ type SAMLResponseDTO struct {
 	XMLName    xml.Name `xml:"urn:oasis:names:tc:SAML:2.0:protocol Response"`
 	XMLNSsamlp string   `xml:"xmlns:samlp,attr,omitempty"`
 	XMLNSsaml  string   `xml:"xmlns:saml,attr,omitempty"`
-	// If you want xsi types on AttributeValue, uncomment the next line.
 	// XMLNSxsi     string   `xml:"xmlns:xsi,attr,omitempty"`
 	ID           string `xml:"ID,attr"`
 	Version      string `xml:"Version,attr"`
