@@ -81,7 +81,7 @@ func (s *jsonConsentService) GetConsents(user userservice.Entity, client clients
 
 	for _, scope := range scopes {
 		if _, ok := s.scopes[scope]; !ok {
-			return consents, fmt.Errorf("undefined scope %s", scope)
+			return consents, fmt.Errorf("invalid scope '%s'", scope)
 		}
 		consent, err := NewConsent(scope, WithRequired(s.scopes[scope].requireConsent))
 		if err != nil {

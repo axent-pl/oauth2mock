@@ -1,5 +1,7 @@
 package tpl
 
+import "github.com/axent-pl/oauth2mock/pkg/consentservice"
+
 type LoginTemplateData struct {
 	FormAction       string
 	FormErrorMessage string
@@ -14,4 +16,5 @@ type AuthorizeTemplateData struct {
 	Username         string
 	UsernameError    string
 	PasswordError    string
+	Consents         map[string]consentservice.Entity
 }

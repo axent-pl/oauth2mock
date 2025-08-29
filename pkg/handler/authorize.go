@@ -8,6 +8,7 @@ import (
 
 	"github.com/axent-pl/oauth2mock/pkg/authorizationservice"
 	"github.com/axent-pl/oauth2mock/pkg/clientservice"
+	"github.com/axent-pl/oauth2mock/pkg/consentservice"
 	"github.com/axent-pl/oauth2mock/pkg/di"
 	"github.com/axent-pl/oauth2mock/pkg/dto"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
@@ -19,11 +20,12 @@ import (
 
 func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 	var wired bool
-	var templateDB template.Service
+	var templateSrv template.Service
 	var clientSrv clientservice.Service
 	var authZSrv authorizationservice.Service
+	var consentSrv consentservice.Service
 
-	templateDB, wired = di.GiveMeInterface(templateDB)
+	templateSrv, wired = di.GiveMeInterface(templateSrv)
 	if !wired {
 		slog.Error("could not wire template service")
 		return nil
@@ -36,6 +38,11 @@ func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 	authZSrv, wired = di.GiveMeInterface(authZSrv)
 	if !wired {
 		slog.Error("could not wire authorization service")
+		return nil
+	}
+	consentSrv, wired = di.GiveMeInterface(consentSrv)
+	if !wired {
+		slog.Error("could not wire consent service")
 		return nil
 	}
 
@@ -51,7 +58,7 @@ func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 		if valid, validator := request.UnmarshalAndValidate(r, authorizeRequestDTO); !valid {
 			slog.Error("invalid authorize request", "request", routing.RequestIDLogValue(r), "validationErrors", validator.Errors)
 			templateData.FormErrorMessage = "invalid authorize request"
-			templateDB.Render(w, "login", templateData)
+			templateSrv.Render(w, "login", templateData)
 			return
 		}
 
@@ -59,8 +66,7 @@ func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 		client, err := clientSrv.GetClient(authorizeRequestDTO.ClientId)
 		if err != nil {
 			slog.Error("invalid client", "request", routing.RequestIDLogValue(r), "error", err)
-			templateData.FormErrorMessage = "invalid client"
-			templateDB.Render(w, "login", templateData)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -70,6 +76,16 @@ func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 			http.Error(w, "authentication failure", http.StatusInternalServerError)
 			return
 		}
+
+		// validate scopes
+		scopes := strings.Split(authorizeRequestDTO.Scope, " ")
+		consents, err := consentSrv.GetConsents(user, client, scopes)
+		if err != nil {
+			slog.Error("invalid scope", "request", routing.RequestIDLogValue(r), "error", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		templateData.Consents = consents
 
 		// authorization request
 		authorizationRequest, err := authorizationservice.NewAuthorizationRequest(

@@ -44,7 +44,7 @@ var (
 	ErrMissingResponseType      = &PkgError{"missing response_type", Err}
 	ErrInvalidResponseType      = &PkgError{"invalid response_type, allowed values [code]", Err}
 	ErrInvalidClientId          = &PkgError{"invalid client_id", Err}
-	ErrInvalidClientRedirectURI = &PkgError{"invalid rediurect_uri", Err}
+	ErrInvalidClientRedirectURI = &PkgError{"invalid redirect_uri", Err}
 
 	ErrUnsupportedFeature = &PkgError{"feature unsupported", Err}
 )

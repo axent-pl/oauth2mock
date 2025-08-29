@@ -7,6 +7,179 @@
 	},
 	"item": [
 		{
+			"name": "errors",
+			"item": [
+				{
+					"name": "Authorize (user:demo) - invalid scope",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Response text to have 'invalid scope'\", function () {",
+									"    pm.expect(pm.response.text().toLowerCase()).to.have.string(\"invalid scope\");",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"followRedirects": false
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "demo",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "demo",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{SERVER_URL}}/authorize?response_type=code&client_id=ACME&redirect_uri={{REDIRECT_URL}}&scope=openid email profile products::read badscope&nonce={{AUTH_NONCE}}&state={{AUTH_STATE}}",
+							"host": [
+								"{{SERVER_URL}}"
+							],
+							"path": [
+								"authorize"
+							],
+							"query": [
+								{
+									"key": "response_type",
+									"value": "code"
+								},
+								{
+									"key": "client_id",
+									"value": "ACME"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "{{REDIRECT_URL}}"
+								},
+								{
+									"key": "scope",
+									"value": "openid email profile products::read badscope"
+								},
+								{
+									"key": "nonce",
+									"value": "{{AUTH_NONCE}}"
+								},
+								{
+									"key": "state",
+									"value": "{{AUTH_STATE}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Authorize (user:demo) - invalid redirect_uri",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Response text to have 'invalid redirect_uri'\", function () {",
+									"    pm.expect(pm.response.text().toLowerCase()).to.have.string(\"invalid redirect_uri\");",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"followRedirects": false
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "demo",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "demo",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{SERVER_URL}}/authorize?response_type=code&client_id=ACME&redirect_uri=http://wrong-redirect-url.com&scope=openid email profile products::read&nonce={{AUTH_NONCE}}&state={{AUTH_STATE}}",
+							"host": [
+								"{{SERVER_URL}}"
+							],
+							"path": [
+								"authorize"
+							],
+							"query": [
+								{
+									"key": "response_type",
+									"value": "code"
+								},
+								{
+									"key": "client_id",
+									"value": "ACME"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "http://wrong-redirect-url.com"
+								},
+								{
+									"key": "scope",
+									"value": "openid email profile products::read"
+								},
+								{
+									"key": "nonce",
+									"value": "{{AUTH_NONCE}}"
+								},
+								{
+									"key": "state",
+									"value": "{{AUTH_STATE}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Authorize (user:demo)",
 			"event": [
 				{
@@ -60,7 +233,7 @@
 					]
 				},
 				"url": {
-					"raw": "{{SERVER_URL}}/authorize?response_type=code&client_id=ACME&redirect_uri={{REDIRECT_URL}}&scope=email profile products::read&nonce={{AUTH_NONCE}}&state={{AUTH_STATE}}",
+					"raw": "{{SERVER_URL}}/authorize?response_type=code&client_id=ACME&redirect_uri={{REDIRECT_URL}}&scope=openid email profile products::read&nonce={{AUTH_NONCE}}&state={{AUTH_STATE}}",
 					"host": [
 						"{{SERVER_URL}}"
 					],
@@ -82,7 +255,7 @@
 						},
 						{
 							"key": "scope",
-							"value": "email profile products::read"
+							"value": "openid email profile products::read"
 						},
 						{
 							"key": "nonce",
@@ -274,6 +447,8 @@
 					"listen": "test",
 					"script": {
 						"exec": [
+							"var atob = require('atob');",
+							"",
 							"pm.test(\"Status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
 							"});",
