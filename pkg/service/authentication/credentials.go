@@ -35,10 +35,10 @@ func NewCredentials(option CredentialsOption) (CredentialsHandler, error) {
 func FromUsernameAndPassword(username string, password string) CredentialsOption {
 	return func(c *credentialsHandler) error {
 		if username == "" {
-			return errs.ErrUserCredsMissingUsername
+			return errs.New("missing username", errs.ErrInvalidArgument)
 		}
 		if password == "" {
-			return errs.ErrUserCredsMissingPassword
+			return errs.New("missing password", errs.ErrInvalidArgument)
 		}
 		c.username = username
 		c.password = password
@@ -50,10 +50,10 @@ func FromUsernameAndPassword(username string, password string) CredentialsOption
 func FromCliendIdAndSecret(clientId string, clientSecret string) CredentialsOption {
 	return func(c *credentialsHandler) error {
 		if clientId == "" {
-			return errs.ErrClientCredsMissingClientId
+			return errs.New("missing client_id", errs.ErrInvalidArgument)
 		}
 		if clientSecret == "" {
-			return errs.ErrClientCredsMissingClientSecret
+			return errs.New("missing client_secret", errs.ErrInvalidArgument)
 		}
 		c.clientId = clientId
 		c.clientSecret = clientSecret
@@ -65,10 +65,10 @@ func FromCliendIdAndSecret(clientId string, clientSecret string) CredentialsOpti
 func FromClientAssertion(assertionType, assertion string) CredentialsOption {
 	return func(c *credentialsHandler) error {
 		if assertionType == "" {
-			return errs.ErrClientCredsMissingMissingAssertionType
+			return errs.New("missing assertion_type", errs.ErrInvalidArgument)
 		}
 		if assertionType != "urn:ietf:params:oauth:client-assertion-type:jwt-bearer" {
-			return errs.ErrClientCredsMissingInvalidAssertionType
+			return errs.New("invalid assertion_type", errs.ErrInvalidArgument).WithDetailsf("invalid assertion type '%s'", assertionType)
 		}
 		c.assertionType = assertionType
 		c.assertion = assertion
@@ -88,7 +88,7 @@ func (c *credentialsHandler) IdentityName() (string, error) {
 	if len(c.clientId) > 0 {
 		return c.clientId, nil
 	}
-	return "", errs.ErrCredsMissingIdentity
+	return "", errs.New("internal error", errs.ErrInternal).WithDetails("credentials missing both username and client_id")
 }
 
 func (c *credentialsHandler) Credentials() (string, error) {
@@ -100,6 +100,6 @@ func (c *credentialsHandler) Credentials() (string, error) {
 	case ClientAssertion:
 		return c.assertion, nil
 	default:
-		return "", errs.ErrCredsUndefinedAuthMethod
+		return "", errs.New("internal error", errs.ErrInternal).WithDetailsf("invalid authentication method '%s'", c.method)
 	}
 }

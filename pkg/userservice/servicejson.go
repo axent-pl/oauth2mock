@@ -68,13 +68,13 @@ func (s *jsonUserService) Authenticate(inputCredentials authentication.Credentia
 	// get user name from input credentials
 	username, err := inputCredentials.IdentityName()
 	if err != nil {
-		return nil, err
+		return nil, errs.Wrap("invalid credentials", err)
 	}
 
 	// find user
 	user, ok := s.users[username]
 	if !ok {
-		return nil, errs.ErrUserCredsInvalid
+		return nil, errs.New("invalid credentials", errs.ErrInvalidArgument).WithDetailsf("user '%s' not found", username)
 	}
 
 	// check if credentials match
@@ -82,7 +82,7 @@ func (s *jsonUserService) Authenticate(inputCredentials authentication.Credentia
 		return &user, nil
 	}
 
-	return nil, errs.ErrUserCredsInvalid
+	return nil, errs.Wrap("invalid credentials", errs.ErrInvalidArgument).WithDetailsf("could not authenticate user '%s'", username)
 }
 
 func (s *jsonUserService) GetUsers() ([]Entity, error) {
