@@ -2,49 +2,130 @@ package errs
 
 import (
 	"errors"
+	"fmt"
+	"runtime"
+	"strings"
 )
 
-type PkgError struct {
-	msg  string
-	kind error
+var (
+	ErrInvalidArgument  = errors.New("invalid argument")
+	ErrNotFound         = errors.New("resource not found")
+	ErrAlreadyExists    = errors.New("resource already exists")
+	ErrUnauthenticated  = errors.New("unauthenticated")
+	ErrPermissionDenied = errors.New("permission denied")
+	ErrInternal         = errors.New("internal error")
+)
+
+type Option func(*Err)
+
+type Err struct {
+	text    string
+	details string
+	kind    error
+	causes  []error
+	caller  string
 }
 
-func (e *PkgError) Error() string {
-	return e.msg
+func New(msg string, kind error, details ...string) *Err {
+	e := &Err{text: msg, kind: kind, causes: make([]error, 0)}
+	if len(details) > 0 {
+		e.details = details[0]
+	}
+	pc, _, _, ok := runtime.Caller(1)
+	caller := runtime.FuncForPC(pc)
+	if ok && caller != nil {
+		e.caller = caller.Name()[5:]
+	}
+	return e
 }
 
-func (e *PkgError) Unwrap() error {
-	return e.kind
+func Wrap(public string, causes ...error) *Err {
+	e := &Err{text: public, details: "", causes: causes}
+	pc, _, _, ok := runtime.Caller(1)
+	caller := runtime.FuncForPC(pc)
+	if ok && caller != nil {
+		e.caller = caller.Name()[5:]
+	}
+	return e
 }
 
-func (e *PkgError) Is(target error) bool {
+func (e *Err) Unwrap() []error {
+	var next []error
+	if e.kind != nil {
+		next = append(next, e.kind)
+	}
+	if len(e.causes) > 0 {
+		next = append(next, e.causes...)
+	}
+	if len(next) == 0 {
+		return nil
+	}
+	return next
+}
+
+func (e *Err) Is(target error) bool {
 	return errors.Is(e.kind, target)
 }
 
-func New(msg string, kind *PkgError) *PkgError {
-	return &PkgError{msg, kind}
+func (e *Err) Error() string {
+	return e.text
 }
 
-var (
-	Err                                   = errors.New("undefined error")
-	ErrUserCredsInvalid                   = &PkgError{"invalid user credentials", Err}
-	ErrUserCredsMissingUsernameOrPassword = &PkgError{"missing username or password", ErrUserCredsInvalid}
-	ErrUserCredsMissingUsername           = &PkgError{"missing username", ErrUserCredsMissingUsernameOrPassword}
-	ErrUserCredsMissingPassword           = &PkgError{"missing password", ErrUserCredsMissingUsernameOrPassword}
+func (e *Err) WithDetails(details string) *Err {
+	e.details = details
+	return e
+}
 
-	ErrClientCredsMissingClientIdOrSecret     = &PkgError{"missing client_id or client_secret", Err}
-	ErrClientCredsMissingClientId             = &PkgError{"missing client_id", ErrClientCredsMissingClientIdOrSecret}
-	ErrClientCredsMissingClientSecret         = &PkgError{"missing client_secret", ErrClientCredsMissingClientIdOrSecret}
-	ErrClientCredsMissingMissingAssertionType = &PkgError{"assertionType must not be empty", Err}
-	ErrClientCredsMissingInvalidAssertionType = &PkgError{"unsupported assertionType, allowed values [`urn:ietf:params:oauth:client-assertion-type:jwt-bearer`]", Err}
+func (e *Err) WithDetailsf(format string, args ...any) *Err {
+	e.details = fmt.Sprintf(format, args...)
+	return e
+}
 
-	ErrCredsMissingIdentity     = &PkgError{"missing identity in credentials (client_id or username)", Err}
-	ErrCredsUndefinedAuthMethod = &PkgError{"undefined authentication method (password, client_secret, ...)", Err}
+func (e *Err) WithKind(err error) *Err {
+	e.kind = err
+	return e
+}
 
-	ErrMissingResponseType      = &PkgError{"missing response_type", Err}
-	ErrInvalidResponseType      = &PkgError{"invalid response_type, allowed values [code]", Err}
-	ErrInvalidClientId          = &PkgError{"invalid client_id", Err}
-	ErrInvalidClientRedirectURI = &PkgError{"invalid redirect_uri", Err}
+func (e *Err) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		if s.Flag('+') {
+			// Verbose, multi-line format
+			fmt.Fprintf(s, "error: %s", e.text)
+			if e.kind != nil {
+				fmt.Fprintf(s, "\nkind:   %s", e.kind)
+			}
+			if e.details != "" {
+				fmt.Fprintf(s, "\ndetails:%s", maybeIndent(e.details))
+			}
+			if e.caller != "" {
+				fmt.Fprintf(s, "\ncaller: %s", e.caller)
+			}
+			if len(e.causes) > 0 {
+				fmt.Fprint(s, "\ncauses:")
+				for i, c := range e.causes {
+					fmt.Fprintf(s, "\n  %d) %T: %v", i+1, c, c)
+				}
+			}
+			return
+		}
+		// Default %v: just the public text
+		fallthrough
+	case 's':
+		fmt.Fprint(s, e.Error())
+	case 'q':
+		fmt.Fprintf(s, "%q", e.Error())
+	default:
+		fmt.Fprint(s, e.Error())
+	}
+}
 
-	ErrUnsupportedFeature = &PkgError{"feature unsupported", Err}
-)
+func maybeIndent(s string) string {
+	for i := 0; i < len(s); i++ {
+		if s[i] == '\n' {
+			indented := "\n  " + s[i+1:]
+			return " " + s[:i] + strings.ReplaceAll(indented, "\n", "\n  ")
+		}
+	}
+	return " " + s
+}

@@ -57,7 +57,7 @@ func NewClientService(jsonFilepath string) (Service, error) {
 func (s *clientService) GetClient(client_id string) (Entity, error) {
 	client, ok := s.clients[client_id]
 	if !ok {
-		return nil, errs.ErrInvalidClientId
+		return nil, errs.New("invalid client_id", errs.ErrNotFound).WithDetailsf("client_id '%s' not found", client_id)
 	}
 	return &client, nil
 }
@@ -65,17 +65,17 @@ func (s *clientService) GetClient(client_id string) (Entity, error) {
 func (s *clientService) Authenticate(credentials authentication.CredentialsHandler) (Entity, error) {
 	clientId, err := credentials.IdentityName()
 	if err != nil {
-		return nil, errs.ErrUserCredsInvalid
+		return nil, errs.Wrap("invalid client credentials", err)
 	}
 
 	client, ok := s.clients[clientId]
 	if !ok {
-		return nil, errs.ErrUserCredsInvalid
+		return nil, errs.New("invalid client_id", errs.ErrNotFound).WithDetailsf("client_id '%s' not found", clientId)
 	}
 
 	authenticated := client.authScheme.Matches(credentials)
 	if !authenticated {
-		return nil, errs.ErrUserCredsInvalid
+		return nil, errs.New("invalid client credentials", errs.ErrInvalidArgument).WithDetails("client authentication failed")
 	}
 
 	return &client, nil

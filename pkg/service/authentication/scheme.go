@@ -37,14 +37,14 @@ func NewScheme(options ...SchemeOption) (SchemeHandler, error) {
 func WithClientIdAndSecret(clientId, clientSecret string) SchemeOption {
 	return func(s *schemeHandler) error {
 		if clientId == "" {
-			return errs.ErrClientCredsMissingClientId
+			return errs.New("missing client_id", errs.ErrInvalidArgument)
 		}
 		if clientSecret == "" {
-			return errs.ErrClientCredsMissingClientSecret
+			return errs.New("missing client_secret", errs.ErrInvalidArgument)
 		}
 		clientSecretHash, err := HashPassword(clientSecret)
 		if err != nil {
-			return err
+			return errs.Wrap("internal error", err).WithKind(errs.ErrInternal).WithDetails("failed to hash client secret")
 		}
 		s.ClientId = clientId
 		s.ClientSecret = clientSecretHash
@@ -55,14 +55,14 @@ func WithClientIdAndSecret(clientId, clientSecret string) SchemeOption {
 func WithUsernameAndPassword(username, password string) SchemeOption {
 	return func(s *schemeHandler) error {
 		if username == "" {
-			return errs.ErrUserCredsMissingUsername
+			return errs.New("missing username", errs.ErrInvalidArgument)
 		}
 		if password == "" {
-			return errs.ErrUserCredsMissingPassword
+			return errs.New("missing password", errs.ErrInvalidArgument)
 		}
 		passwordHash, err := HashPassword(password)
 		if err != nil {
-			return err
+			return errs.Wrap("internal error", err).WithKind(errs.ErrInternal).WithDetails("failed to hash user password")
 		}
 		s.Username = username
 		s.Password = passwordHash
@@ -73,15 +73,15 @@ func WithUsernameAndPassword(username, password string) SchemeOption {
 func WithClientAssertion(assertionType, assertionClaim string, assertionJWKS string) SchemeOption {
 	return func(s *schemeHandler) error {
 		if assertionType == "" {
-			return errs.ErrClientCredsMissingMissingAssertionType
+			return errs.New("missing assertion_type", errs.ErrInvalidArgument)
 		}
 		if assertionType != "urn:ietf:params:oauth:client-assertion-type:jwt-bearer" {
-			return errs.ErrClientCredsMissingInvalidAssertionType
+			return errs.New("invalid assertion_type", errs.ErrInvalidArgument).WithDetailsf("invalid assertion type '%s'", assertionType)
 		}
 		s.AssertionType = assertionType
 		s.AssertionClaim = assertionClaim
 		s.AssertionJWKS = assertionJWKS
-		return errs.New("client assertion is not supported", errs.ErrUnsupportedFeature)
+		return errs.New("client assertion is not supported", errs.ErrInternal)
 	}
 }
 

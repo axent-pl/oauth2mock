@@ -54,11 +54,11 @@ func NewMemoryAuthorizationService(rawAuthorizationConfig json.RawMessage, rawCo
 
 func (s *memoryAuthorizationService) Validate(authRequest AuthorizationRequester) error {
 	if len(authRequest.GetResponseType()) == 0 {
-		return errs.ErrMissingResponseType
+		return errs.New("missing response_type", errs.ErrInvalidArgument)
 	}
 
 	if !MatchesWildcard(authRequest.GetRedirectURI(), authRequest.GetClient().RedirectURIPattern()) {
-		return errs.ErrInvalidClientRedirectURI
+		return errs.New("invalid redirect_uri", errs.ErrInvalidArgument).WithDetailsf("got '%s' want '%s'", authRequest.GetRedirectURI(), authRequest.GetClient().RedirectURIPattern())
 	}
 
 	return nil

@@ -95,18 +95,18 @@ func (s *databaseUserService) Authenticate(creds authentication.CredentialsHandl
 	err = s.db.QueryRowContext(context.Background(), s.queries.GetUser, username).Scan(&password, &active, &attributesBytes)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errs.ErrUserCredsInvalid
+			return nil, errs.Wrap("invalid credentials", err).WithDetailsf("user '%s' not found", username)
 		}
-		return nil, err
+		return nil, errs.Wrap("invalid credentials", err).WithDetailsf("could not fetch user '%s' from database", username)
 	}
 
 	authScheme, err := authentication.NewScheme(authentication.WithUsernameAndPassword(username, password))
 	if err != nil {
-		return nil, fmt.Errorf("invalid stored credentials: %w", err)
+		return nil, errs.Wrap("invalid credentials", err)
 	}
 
 	if !authScheme.Matches(creds) {
-		return nil, errs.ErrUserCredsInvalid
+		return nil, errs.New("invalid credentials", errs.ErrInvalidArgument)
 	}
 
 	user := databaseUserHandler{
