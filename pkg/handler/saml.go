@@ -20,6 +20,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/claimservice"
 	"github.com/axent-pl/oauth2mock/pkg/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/di"
+	"github.com/axent-pl/oauth2mock/pkg/errs"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/userservice"
@@ -160,7 +161,7 @@ func SAMLHandler() routing.HandlerFunc {
 		// user
 		user, ok := r.Context().Value(routing.CTX_USER).(userservice.Entity)
 		if !ok {
-			http.Error(w, "authentication failure", http.StatusInternalServerError)
+			routing.WriteError(w, r, errs.New("unauthenticated", errs.ErrUnauthenticated).WithDetails("user not found in contextr"))
 			return
 		}
 

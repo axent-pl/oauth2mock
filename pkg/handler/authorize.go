@@ -11,6 +11,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/consentservice"
 	"github.com/axent-pl/oauth2mock/pkg/di"
 	"github.com/axent-pl/oauth2mock/pkg/dto"
+	"github.com/axent-pl/oauth2mock/pkg/errs"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/service/template"
@@ -65,14 +66,14 @@ func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 		// client
 		client, err := clientSrv.GetClient(authorizeRequestDTO.ClientId)
 		if err != nil {
-			routing.WriteError(w, r, err)
+			routing.WriteError(w, r, errs.Wrap("invalid client_id", err).WithKind(errs.ErrInvalidArgument))
 			return
 		}
 
 		// user
 		user, ok := r.Context().Value(routing.CTX_USER).(userservice.Entity)
 		if !ok {
-			http.Error(w, "authentication failure", http.StatusInternalServerError)
+			routing.WriteError(w, r, errs.New("unauthenticated", errs.ErrUnauthenticated).WithDetails("user not found in contextr"))
 			return
 		}
 
