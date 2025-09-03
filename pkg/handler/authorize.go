@@ -65,8 +65,7 @@ func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 		// client
 		client, err := clientSrv.GetClient(authorizeRequestDTO.ClientId)
 		if err != nil {
-			slog.Error("invalid client", "request", routing.RequestIDLogValue(r), "error", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			routing.WriteError(w, r, err)
 			return
 		}
 
@@ -81,8 +80,7 @@ func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 		scopes := strings.Split(authorizeRequestDTO.Scope, " ")
 		consents, err := consentSrv.GetConsents(user, client, scopes)
 		if err != nil {
-			slog.Error("invalid scope", "request", routing.RequestIDLogValue(r), "error", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			routing.WriteError(w, r, err)
 			return
 		}
 		templateData.Consents = consents
@@ -97,27 +95,23 @@ func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 			authorizationservice.WithNonce(authorizeRequestDTO.Nonce),
 			authorizationservice.WithUser(user))
 		if err != nil {
-			slog.Error("invalid authorize request", "request", routing.RequestIDLogValue(r), "error", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			routing.WriteError(w, r, err)
 			return
 		}
 		if err := authZSrv.Validate(authorizationRequest); err != nil {
-			slog.Error("invalid authorize request", "request", routing.RequestIDLogValue(r), "error", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			routing.WriteError(w, r, err)
 			return
 		}
 
 		// authorization request response
 		code, err := authZSrv.Store(authorizationRequest)
 		if err != nil {
-			slog.Error("AuthorizePostHandler authorization code generation failed", "request", routing.RequestIDLogValue(r), "error", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			routing.WriteError(w, r, err)
 			return
 		}
 		redirectURL, err := url.Parse(authorizationRequest.GetRedirectURI())
 		if err != nil {
-			slog.Error("invalid redirect uel format", "error", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			routing.WriteError(w, r, err)
 			return
 		}
 		redirectURLQuery := redirectURL.Query()

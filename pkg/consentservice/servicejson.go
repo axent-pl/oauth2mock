@@ -8,6 +8,7 @@ import (
 
 	"github.com/axent-pl/oauth2mock/pkg/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/di"
+	"github.com/axent-pl/oauth2mock/pkg/errs"
 	"github.com/axent-pl/oauth2mock/pkg/userservice"
 )
 
@@ -81,7 +82,7 @@ func (s *jsonConsentService) GetConsents(user userservice.Entity, client clients
 
 	for _, scope := range scopes {
 		if _, ok := s.scopes[scope]; !ok {
-			return consents, fmt.Errorf("invalid scope '%s'", scope)
+			return consents, errs.New(fmt.Sprintf("invalid scope '%s'", scope), errs.ErrInvalidArgument)
 		}
 		consent, err := NewConsent(scope, WithRequired(s.scopes[scope].requireConsent))
 		if err != nil {
