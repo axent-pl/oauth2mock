@@ -10,6 +10,10 @@ type ValidationError struct {
 	ErrorMessage string
 }
 
+func (ve ValidationError) Error() string {
+	return ve.ErrorMessage
+}
+
 type Validator struct {
 	Errors map[string]ValidationError
 }
@@ -19,6 +23,14 @@ func NewValidator() *Validator {
 		Errors: make(map[string]ValidationError),
 	}
 	return &v
+}
+
+func (v *Validator) ErrorsList() []error {
+	errs := make([]error, 0)
+	for _, err := range v.Errors {
+		errs = append(errs, err)
+	}
+	return errs
 }
 
 func (v *Validator) Validate(s interface{}) bool {

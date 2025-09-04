@@ -167,29 +167,25 @@ func SAMLHandler() routing.HandlerFunc {
 
 		requstDTO := &SAMLRequestDTO{}
 		if valid, requestValidator := request.UnmarshalAndValidate(r, requstDTO); !valid {
-			http.Error(w, "bad request", http.StatusBadRequest)
-			slog.Error("request validation failed", "request", routing.RequestIDLogValue(r), "validationErrors", requestValidator.Errors)
+			routing.WriteError(w, r, errs.Wrap("invalid request", requestValidator.ErrorsList()...).WithKind(errs.ErrInvalidArgument))
 			return
 		}
 
 		samlRequest, _, err := ParseSAMLRequest(requstDTO.SAMLRequest)
 		if err != nil {
-			http.Error(w, "bad request", http.StatusBadRequest)
-			slog.Error("request unmarshaling failed", "request", routing.RequestIDLogValue(r), "error", err)
+			routing.WriteError(w, r, errs.Wrap("invalid request", err).WithKind(errs.ErrInvalidArgument))
 			return
 		}
 
 		client, err := clientSrv.GetClient(samlRequest.Issuer.Value)
 		if err != nil {
-			http.Error(w, "invalid issuer", http.StatusBadRequest)
-			slog.Error("invalid client", "request", routing.RequestIDLogValue(r), "error", err)
+			routing.WriteError(w, r, errs.Wrap("invalid client", err).WithKind(errs.ErrInvalidArgument))
 			return
 		}
 
 		claims, err := claimSrv.GetUserClaims(user, client, []string{"saml"}, "saml")
 		if err != nil {
-			http.Error(w, "failed to get assertions", http.StatusInternalServerError)
-			slog.Error("failed to get assertions", "request", routing.RequestIDLogValue(r), "error", err)
+			routing.WriteError(w, r, errs.Wrap("internal error", err).WithKind(errs.ErrInternal))
 			return
 		}
 
@@ -289,16 +285,14 @@ func SAMLHandler() routing.HandlerFunc {
 
 		samlResponseBytes, err := xml.Marshal(samlResponse)
 		if err != nil {
-			http.Error(w, "bad request", http.StatusInternalServerError)
-			slog.Error("response marshaling failed", "request", routing.RequestIDLogValue(r), "error", err)
+			routing.WriteError(w, r, errs.Wrap("internal error", err).WithKind(errs.ErrInternal))
 			return
 		}
 		samlResponseString := base64.StdEncoding.EncodeToString(samlResponseBytes)
 
 		redirectURL, err := url.Parse(samlRequest.AssertionConsumerServiceURL)
 		if err != nil {
-			http.Error(w, "invalid ACSUrl", http.StatusBadRequest)
-			slog.Error("Invalid ACSUrl", "error", err)
+			routing.WriteError(w, r, errs.Wrap("invalid ACSUrl", err).WithKind(errs.ErrInvalidArgument))
 			return
 		}
 		q := redirectURL.Query()
