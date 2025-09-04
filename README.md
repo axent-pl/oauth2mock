@@ -17,12 +17,12 @@ OAuth2Mock (codename Axes) is your friendly neighborhood OAuth2 authorization se
 
 ### For Go Developers
 ```sh
-make run-all    # That's it. Really.
+make run    # That's it. Really.
 ```
 
 ### For Docker Enthusiasts
 ```sh
-docker run -p 8080:8080 prond/axes:nightly    # Easy peasy! 🐳
+docker run -p 8222:8222 prond/axes:nightly    # Easy peasy! 🐳
 ```
 
 ## 📊 The Numbers Don't Lie
@@ -44,21 +44,21 @@ Spot the difference? That's right - Axes is like a tiny espresso shot compared t
 | ENV | Default | What's this? |
 |-----|---------|-------------|
 | `DATAFILE_PATH` | assets/config/config.json | Your configuration JSON file |
-| `SERVER_ADDRESS` | :8080 | Where the magic happens |
+| `SERVER_ADDRESS` | :8222 | Where the magic happens |
 | `TEMPLATES_PATH` | assets/template | HTML templates location |
 | `OAUTH2_ISSUER` | empty | Your issuer URL (optional) |
 | `OAUTH2_ISSUER_FROM_ORIGIN` | TRUE | Auto-magic issuer detection |
 
 ### OpenID Connect Configuration
 
-When running locally (with `OAUTH2_ISSUER=http://localhost:8080` or `OAUTH2_ISSUER_FROM_ORIGIN=TRUE`), you'll get this tasty OIDC config:
+When running locally (with `OAUTH2_ISSUER=http://localhost:8222` or `OAUTH2_ISSUER_FROM_ORIGIN=TRUE`), you'll get this tasty OIDC config:
 
 ```json
 {
-    "issuer": "http://localhost:8080",
-    "authorization_endpoint": "http://localhost:8080/authorize",
-    "token_endpoint": "http://localhost:8080/token",
-    "jwks_uri": "http://localhost:8080/.well-known/jwks.json",
+    "issuer": "http://localhost:8222",
+    "authorization_endpoint": "http://localhost:8222/authorize",
+    "token_endpoint": "http://localhost:8222/token",
+    "jwks_uri": "http://localhost:8222/.well-known/jwks.json",
     "grant_types_supported": ["authorization_code", "client_credentials", "password"],
     "response_types_supported": ["code"],
     "subject_types_supported": ["public"],
@@ -77,50 +77,107 @@ Place this in your `DATAFILE_PATH` to define users and clients:
     "signing": {
         "keys": [
             {
-                "source": {
+                "provider": {
                     "fromPEM": {
                         "path": "assets/key/key.rsa256.pem"
                     }
                 },
-                "type": "RSA256",
-                "method": "PS256",
-                "active": false
-            },
-            {
-                "source": {
-                    "fromPEM": {
-                        "path": "assets/key/key.rsa256.pem"
-                    }
-                },
-                "type": "RSA256",
                 "method": "RS256",
                 "active": false
             },
             {
-                "source": {
+                "provider": {
                     "fromRandom": {
+                        "type": "P-256",
                         "deterministic": true,
                         "seed": "abc"
                     }
                 },
-                "type": "P-256",
                 "method": "ES256",
                 "active": true
+            },
+            {
+                "provider": {
+                    "fromCertPEM": {
+                        "keyPath": "assets/key/cert.key.rsa512.pem",
+                        "certPath": "assets/key/cert.cert.rsa512.pem"
+                    }
+                },
+                "method": "RS256",
+                "active": false
             }
         ]
     },
     "users": {
-        "demo": {
-            "username": "demo",
-            "password": "demo",
-            "claims": {
-                "base": {
-                    "sub": "Demo",
-                    "preferred_username": "John.Demo@acme.com",
-                    "realm_roles": ["DEMO"]
+        "provider": "json",
+        "users": {
+            "demo": {
+                "username": "demo",
+                "password": "demo",
+                "claims": {
+                    "default" : {
+                        "base": {
+                            "preferred_username": "John.Demo@acme.com",
+                            "realm_roles": [
+                                "DEMO"
+                            ]
+                        },
+                        "scopeOverrides": {
+                            "email": {
+                                "email": "John.Demo@acme.com"
+                            },
+                            "products::read": {
+                                "products": ["A", "B"]
+                            }
+                        }
+                    }
+                },
+                "consents": {
+                    "openid": true,
+                    "profile": true,
+                    "email": true,
+                    "products::read": false
+                }
+            },
+            "admin": {
+                "username": "admin",
+                "password": "admin",
+                "claims": {
+                    "default": {
+                        "base": {
+                            "preferred_username": "John.Demo@acme.com",
+                            "realm_roles": [
+                                "ADMIN"
+                            ]
+                        },
+                        "clientOverrides": {
+                            "ACME": {
+                                "client_roles": [
+                                    "DEMO",
+                                    "ADMIN"
+                                ]
+                            }
+                        },
+                        "scopeOverrides": {
+                            "email": {
+                                "email": "John.Demo@acme.com"
+                            },
+                            "products::read": {
+                                "products": ["A", "B","C"]
+                            }
+                        }
+                    }
+                },
+                "consents": {
+                    "profile": true,
+                    "email": true,
+                    "products::read": true
                 }
             }
         }
+    },
+    "claims": {
+        "provider": "json"
     },
     "clients": {
         "ACME": {
@@ -128,8 +185,31 @@ Place this in your `DATAFILE_PATH` to define users and clients:
             "client_secret": "acme-secret",
             "redirect_uri": "http*//localhost*",
             "claims": {
-                "azp": "ACME"
+                "default": {
+                    "azp": "ACME"
+                }
             }
+        }
+    },
+    "consents": {
+        "provider": "json",
+        "scopes": {
+            "openid": { "requireConsent": false },
+            "profile": { "requireConsent": false },
+            "email": { "requireConsent": true },
+            "products::read": { "requireConsent": true },
+            "avatar": { "requireConsent": false }
+        }
+    },
+    "authorization": {
+        "provider": "memory",
+        "authorizationCodeLength": 16,
+        "authorizationRequestTTLSeconds": 60
+    },
+    "session": {
+        "provider": "memory",
+        "config": {
+            "ttlSeconds": 60
         }
     }
 }
