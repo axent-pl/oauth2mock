@@ -1,4 +1,5 @@
 TAG=nightly
+PWD := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 
 build:
 	go mod download
@@ -61,3 +62,14 @@ container-push:
 
 documentation:
 	docker run -it --rm -p 8088:8080 -v ./docs:/usr/local/structurizr structurizr/lite:2025.03.28
+
+sast-gosec:
+	docker run --rm -it \
+	-v "$(PWD)":/workspace -w /workspace \
+	securego/gosec:latest \
+	-fmt=json -out gosec-report.json ./...
+
+sast-govulncheck:
+	docker run --rm -v "$(PWD)":/app -w /app golang:1.25 \
+	go mod download && go install golang.org/x/vuln/cmd/govulncheck@latest && \
+	govulncheck -json ./... > govulncheck-report.json

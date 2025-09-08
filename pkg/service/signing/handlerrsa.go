@@ -4,12 +4,12 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
-	"encoding/binary"
 	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
+	"math/big"
 	"os"
 )
 
@@ -157,7 +157,11 @@ func (kh *rsaSigningKey) GetJWK() JSONWebKey {
 
 	// exponent
 	raw.E = &byteBuffer{data: make([]byte, 8)}
-	binary.BigEndian.PutUint64(raw.E.data, uint64(kh.privateKey.PublicKey.E))
+	eBytes := new(big.Int).SetInt64(int64(kh.privateKey.PublicKey.E)).Bytes()
+	if len(eBytes) == 0 {
+		eBytes = []byte{0x00}
+	}
+	raw.E = &byteBuffer{data: eBytes}
 
 	return raw
 }

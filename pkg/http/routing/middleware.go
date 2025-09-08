@@ -134,7 +134,7 @@ func UserAuthenticationMiddleware() Middleware {
 
 			// login form
 			if r.Method == http.MethodGet {
-				templateSrv.Render(w, "login", templateData)
+				templateSrv.Render(w, r, "login", templateData)
 				return
 			}
 
@@ -152,7 +152,7 @@ func UserAuthenticationMiddleware() Middleware {
 			if !valid {
 				templateData.FormErrorMessage = "invalid credentials"
 				templateData.Username = username
-				templateSrv.Render(w, "login", templateData)
+				templateSrv.Render(w, r, "login", templateData)
 				return
 			}
 
@@ -161,7 +161,7 @@ func UserAuthenticationMiddleware() Middleware {
 			if err != nil {
 				templateData.FormErrorMessage = "invalid credentials"
 				templateData.Username = username
-				templateSrv.Render(w, "login", templateData)
+				templateSrv.Render(w, r, "login", templateData)
 				return
 			}
 
@@ -170,7 +170,7 @@ func UserAuthenticationMiddleware() Middleware {
 			if err != nil {
 				templateData.FormErrorMessage = "invalid credentials"
 				templateData.Username = username
-				templateSrv.Render(w, "login", templateData)
+				templateSrv.Render(w, r, "login", templateData)
 				return
 			}
 

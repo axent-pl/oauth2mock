@@ -13,6 +13,7 @@ import (
 	"github.com/axent-pl/oauth2mock/pkg/clientservice"
 	"github.com/axent-pl/oauth2mock/pkg/consentservice"
 	"github.com/axent-pl/oauth2mock/pkg/dto"
+	"github.com/axent-pl/oauth2mock/pkg/errs"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
@@ -328,7 +329,9 @@ func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientSvc clien
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("Pragma", "no-cache")
-		w.Write(tokenResponseBytes)
+		if _, err = w.Write(tokenResponseBytes); err != nil {
+			routing.WriteError(w, r, errs.Wrap("internal error", err).WithKind(errs.ErrInternal))
+		}
 
 		slog.Info("token response successful", "request", routing.RequestIDLogValue(r))
 	}

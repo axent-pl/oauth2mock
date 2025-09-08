@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 )
@@ -27,8 +28,13 @@ func NewServer(address string, router routing.Router) (Serverer, error) {
 
 func (s *server) Start(ctx context.Context) error {
 	httpServer := &http.Server{
-		Addr:    s.Addr,
-		Handler: &s.Router,
+		Addr:              s.Addr,
+		Handler:           &s.Router,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       2 * time.Minute,
+		MaxHeaderBytes:    1 << 20,
 	}
 
 	done := make(chan error, 1)

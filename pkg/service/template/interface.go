@@ -1,7 +1,7 @@
 package template
 
-import "io"
+import "net/http"
 
 type Service interface {
-	Render(w io.Writer, templateName string, data any) error
+	Render(w http.ResponseWriter, r *http.Request, templateName string, data any)
 }

@@ -2,7 +2,7 @@ package template
 
 import (
 	"fmt"
-	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -59,11 +59,13 @@ func NewDefaultTemplateService(templatesPath string) (Service, error) {
 	return ts, nil
 }
 
-func (ts *DefaultTemplateService) Render(w io.Writer, templateName string, data any) error {
+func (ts *DefaultTemplateService) Render(w http.ResponseWriter, r *http.Request, templateName string, data any) {
 	tmpl, ok := ts.templates[templateName]
 	if !ok {
-		return fmt.Errorf("template %s not found", templateName)
+		http.Error(w, "internal error", http.StatusInternalServerError)
 	}
-
-	return tmpl.Execute(w, data)
+	err := tmpl.Execute(w, data)
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+	}
 }

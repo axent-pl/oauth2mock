@@ -145,6 +145,8 @@ func init() {
 
 // Configure HTTP router and server
 func init() {
+	var err error
+
 	openidConfiguration := auth.OpenIDConfiguration{
 		Issuer:                           settings.Issuer,
 		UseOrigin:                        settings.UseOrigin,
@@ -161,80 +163,132 @@ func init() {
 
 	router = routing.Router{}
 
-	router.RegisterHandler(
+	err = router.RegisterHandler(
 		handler.WellKnownHandler(openidConfiguration),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath("/"))
+	if err != nil {
+		slog.Error("failed register WellKnownHandler", "error", err)
+		os.Exit(1)
+	}
 
-	router.RegisterHandler(
+	err = router.RegisterHandler(
 		handler.WellKnownHandler(openidConfiguration),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath(openidConfiguration.WellKnownEndpoint))
+	if err != nil {
+		slog.Error("failed register WellKnownHandler", "error", err)
+		os.Exit(1)
+	}
 
-	router.RegisterHandler(
+	err = router.RegisterHandler(
 		handler.JWKSGetHandler(),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath(openidConfiguration.JWKSEndpoint))
+	if err != nil {
+		slog.Error("failed register JWKSGetHandler", "error", err)
+		os.Exit(1)
+	}
 
-	router.RegisterHandler(
+	err = router.RegisterHandler(
 		handler.AuthorizeResponseTypeCodeHandler(),
 		routing.WithPath(openidConfiguration.AuthorizationEndpoint),
 		routing.ForQueryValue("response_type", "code"),
 		routing.WithMiddleware(routing.SessionMiddleware()),
 		routing.WithMiddleware(routing.UserAuthenticationMiddleware()))
+	if err != nil {
+		slog.Error("failed register AuthorizeResponseTypeCodeHandler", "error", err)
+		os.Exit(1)
+	}
 
-	router.RegisterHandler(
+	err = router.RegisterHandler(
 		handler.TokenAuthorizationCodeHandler(openidConfiguration, clientService, consentService, authorizationService, claimService, signingService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "authorization_code"),
 		routing.WithMiddleware(routing.RateLimitMiddleware(100, 20)))
+	if err != nil {
+		slog.Error("failed register TokenAuthorizationCodeHandler", "error", err)
+		os.Exit(1)
+	}
 
-	router.RegisterHandler(
+	err = router.RegisterHandler(
 		handler.TokenClientCredentialsHandler(openidConfiguration, clientService, claimService, signingService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "client_credentials"),
 		routing.WithMiddleware(routing.RateLimitMiddleware(100, 20)))
+	if err != nil {
+		slog.Error("failed register TokenClientCredentialsHandler", "error", err)
+		os.Exit(1)
+	}
 
-	router.RegisterHandler(
+	err = router.RegisterHandler(
 		handler.TokenPasswordHandler(openidConfiguration, clientService, userService, claimService, consentService, signingService),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath(openidConfiguration.TokenEndpoint),
 		routing.ForPostFormValue("grant_type", "password"),
 		routing.WithMiddleware(routing.RateLimitMiddleware(100, 20)))
+	if err != nil {
+		slog.Error("failed register TokenPasswordHandler", "error", err)
+		os.Exit(1)
+	}
 
-	router.RegisterHandler(
+	err = router.RegisterHandler(
 		handler.UserinfoHandler(userService, clientService, claimService, signingService),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath(openidConfiguration.UserInfoEndpoint),
 	)
+	if err != nil {
+		slog.Error("failed register UserinfoHandler", "error", err)
+		os.Exit(1)
+	}
 
-	router.RegisterHandler(
+	err = router.RegisterHandler(
 		handler.SAMLHandler(),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath("/saml"),
 		routing.WithMiddleware(routing.SessionMiddleware()),
 		routing.WithMiddleware(routing.UserAuthenticationMiddleware()))
+	if err != nil {
+		slog.Error("failed register SAMLHandler", "error", err)
+		os.Exit(1)
+	}
 
-	router.RegisterHandler(
+	err = router.RegisterHandler(
 		handler.SAMLHandler(),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath("/saml"),
 		routing.WithMiddleware(routing.SessionMiddleware()),
 		routing.WithMiddleware(routing.UserAuthenticationMiddleware()))
+	if err != nil {
+		slog.Error("failed register SAMLHandler", "error", err)
+		os.Exit(1)
+	}
 
-	router.RegisterHandler(
+	err = router.RegisterHandler(
 		handler.SCIMGetHandler(),
 		routing.WithMethod(http.MethodGet),
 		routing.WithPath("/beta/scim/users"))
+	if err != nil {
+		slog.Error("failed register SCIMGetHandler", "error", err)
+		os.Exit(1)
+	}
 
-	router.RegisterHandler(
+	err = router.RegisterHandler(
 		handler.SCIMPostHandler(),
 		routing.WithMethod(http.MethodPost),
 		routing.WithPath("/beta/scim/users"))
+	if err != nil {
+		slog.Error("failed register SCIMPostHandler", "error", err)
+		os.Exit(1)
+	}
 
-	httpServer, _ = server.NewServer(settings.ServerAddress, router)
+	httpServer, err = server.NewServer(settings.ServerAddress, router)
+	if err != nil {
+		slog.Error("failed start server", "error", err)
+		os.Exit(1)
+	}
 }
 
 func main() {

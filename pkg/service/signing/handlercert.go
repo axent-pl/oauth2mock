@@ -8,7 +8,6 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -225,7 +224,11 @@ func (kh *certSigningKey) GetJWK() JSONWebKey {
 
 	raw.N = &byteBuffer{data: rsaPub.N.Bytes()}
 	raw.E = &byteBuffer{data: make([]byte, 8)}
-	binary.BigEndian.PutUint64(raw.E.data, uint64(rsaPub.E))
+	eBytes := new(big.Int).SetInt64(int64(rsaPub.E)).Bytes()
+	if len(eBytes) == 0 {
+		eBytes = []byte{0x00}
+	}
+	raw.E = &byteBuffer{data: eBytes}
 
 	raw.X5c = []string{base64.StdEncoding.EncodeToString(kh.certificate.Raw)}
 

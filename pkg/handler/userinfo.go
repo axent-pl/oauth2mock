@@ -79,6 +79,9 @@ func UserinfoHandler(userSvc userservice.Service, clientSvc clientservice.Servic
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(userinfo)
+		err = json.NewEncoder(w).Encode(userinfo)
+		if err != nil {
+			routing.WriteError(w, r, errs.Wrap("internal error", err).WithKind(errs.ErrInternal))
+		}
 	}
 }

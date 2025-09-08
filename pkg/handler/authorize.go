@@ -59,7 +59,7 @@ func AuthorizeResponseTypeCodeHandler() routing.HandlerFunc {
 		if valid, validator := request.UnmarshalAndValidate(r, authorizeRequestDTO); !valid {
 			slog.Error("invalid authorize request", "request", routing.RequestIDLogValue(r), "validationErrors", validator.Errors)
 			templateData.FormErrorMessage = "invalid authorize request"
-			templateSrv.Render(w, "login", templateData)
+			templateSrv.Render(w, r, "login", templateData)
 			return
 		}
 
