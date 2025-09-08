@@ -14,7 +14,6 @@ import (
 	"io"
 	"log/slog"
 	"math/big"
-	"os"
 	"time"
 
 	"github.com/axent-pl/oauth2mock/pkg/utils"
@@ -179,7 +178,7 @@ func (kh *certSigningKey) Save(paths ...string) error {
 	certPath, keyPath := paths[0], paths[1]
 
 	// Save the certificate to the specified path
-	certOut, err := os.OpenFile(certPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	certOut, err := utils.OpenCreateWithin(".", certPath, []string{".pem", ".crt"}, 0o600)
 	if err != nil {
 		return fmt.Errorf("creating cert file: %w", err)
 	}
@@ -191,7 +190,7 @@ func (kh *certSigningKey) Save(paths ...string) error {
 	}
 
 	// Save the private key to the specified path
-	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	keyOut, err := utils.OpenCreateWithin(".", keyPath, []string{".pem", ".crt"}, 0o600)
 	if err != nil {
 		return fmt.Errorf("creating key file: %w", err)
 	}

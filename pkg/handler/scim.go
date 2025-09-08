@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/axent-pl/oauth2mock/pkg/di"
+	"github.com/axent-pl/oauth2mock/pkg/errs"
 	"github.com/axent-pl/oauth2mock/pkg/http/request"
 	"github.com/axent-pl/oauth2mock/pkg/http/routing"
 	"github.com/axent-pl/oauth2mock/pkg/service/authentication"
@@ -117,7 +118,10 @@ func SCIMPostHandler() routing.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		w.Write(responseBytes)
+		if _, err := w.Write(responseBytes); err != nil {
+			routing.WriteError(w, r, errs.Wrap("internal error", err).WithKind(errs.ErrInternal))
+			return
+		}
 	}
 }
 
@@ -171,7 +175,10 @@ func SCIMGetHandler() routing.HandlerFunc {
 		// Write response
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write(responseBytes)
+		if _, err := w.Write(responseBytes); err != nil {
+			routing.WriteError(w, r, errs.Wrap("internal error", err).WithKind(errs.ErrInternal))
+			return
+		}
 	}
 }
 

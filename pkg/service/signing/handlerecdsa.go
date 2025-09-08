@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"os"
 
 	"github.com/axent-pl/oauth2mock/pkg/utils"
 )
@@ -142,7 +141,7 @@ func (kh *ecdsaSigningKey) Save(paths ...string) error {
 		Bytes: privateKeyBytes,
 	}
 
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	file, err := utils.OpenCreateWithin(".", path, []string{".pem"}, 0o600)
 	if err != nil {
 		return err
 	}

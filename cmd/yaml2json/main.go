@@ -43,12 +43,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	os.Stdout.Write(out)
-	os.Stdout.Write([]byte("\n"))
+	if _, err := os.Stdout.Write(append(out, '\n')); err != nil {
+		fmt.Fprintf(os.Stderr, "stdout write error: %v\n", err)
+		os.Exit(1)
+	}
 }
 
-// toJSONable converts YAML-decoded data into JSON-marshallable types.
-// It ensures map keys are strings and recurses through arrays and maps.
 func toJSONable(v any) any {
 	switch x := v.(type) {
 	case map[string]any:

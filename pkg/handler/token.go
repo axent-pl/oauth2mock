@@ -189,10 +189,15 @@ func TokenAuthorizationCodeHandler(openidConfig auth.OpenIDConfiguration, client
 			slog.Error("failed to marshal token response", "request", routing.RequestIDLogValue(r), "error", err)
 			return
 		}
+
+		_, err = w.Write(tokenResponseBytes)
+		if err != nil {
+			routing.WriteError(w, r, errs.Wrap("internal error", err).WithKind(errs.ErrInternal))
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("Pragma", "no-cache")
-		w.Write(tokenResponseBytes)
 
 		slog.Info("token response successful", "request", routing.RequestIDLogValue(r))
 	}
@@ -250,10 +255,15 @@ func TokenClientCredentialsHandler(openidConfig auth.OpenIDConfiguration, client
 			slog.Error("failed to marshal token response", "request", routing.RequestIDLogValue(r), "error", err)
 			return
 		}
+
+		_, err = w.Write(tokenResponseBytes)
+		if err != nil {
+			routing.WriteError(w, r, errs.Wrap("internal error", err).WithKind(errs.ErrInternal))
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("Pragma", "no-cache")
-		w.Write(tokenResponseBytes)
 
 		slog.Info("token response successful", "request", routing.RequestIDLogValue(r))
 	}
@@ -326,12 +336,15 @@ func TokenPasswordHandler(openidConfig auth.OpenIDConfiguration, clientSvc clien
 			slog.Error("failed to marshal token response", "request", routing.RequestIDLogValue(r), "error", err)
 			return
 		}
+
+		_, err = w.Write(tokenResponseBytes)
+		if err != nil {
+			routing.WriteError(w, r, errs.Wrap("internal error", err).WithKind(errs.ErrInternal))
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("Pragma", "no-cache")
-		if _, err = w.Write(tokenResponseBytes); err != nil {
-			routing.WriteError(w, r, errs.Wrap("internal error", err).WithKind(errs.ErrInternal))
-		}
 
 		slog.Info("token response successful", "request", routing.RequestIDLogValue(r))
 	}

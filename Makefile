@@ -73,3 +73,6 @@ sast-govulncheck:
 	docker run --rm -v "$(PWD)":/app -w /app golang:1.25 \
 	go mod download && go install golang.org/x/vuln/cmd/govulncheck@latest && \
 	govulncheck -json ./... > govulncheck-report.json
+
+sast: sast-gosec sast-govulncheck
+	@echo "SAST completed: reports saved to gosec-report.json and govulncheck-report.json"
