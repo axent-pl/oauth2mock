@@ -11,6 +11,8 @@ import (
 	"log/slog"
 	"math/big"
 	"os"
+
+	"github.com/axent-pl/oauth2mock/pkg/utils"
 )
 
 type rsaSigningKey struct {
@@ -23,7 +25,7 @@ func NewRSASigningKeyFromFile(path string) (SigningKeyHandler, error) {
 	slog.Info("loading RSA key from file", "path", path)
 	kh := &rsaSigningKey{}
 	// read
-	data, err := os.ReadFile(path)
+	data, err := utils.ReadFileWithin(".", path, []string{}, false, 10<<20)
 	if err != nil {
 		return nil, err
 	}

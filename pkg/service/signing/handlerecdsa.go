@@ -11,6 +11,8 @@ import (
 	"io"
 	"log/slog"
 	"os"
+
+	"github.com/axent-pl/oauth2mock/pkg/utils"
 )
 
 type ecdsaSigningKey struct {
@@ -22,7 +24,7 @@ type ecdsaSigningKey struct {
 func NewECDSASigningKeyFromFile(path string) (SigningKeyHandler, error) {
 	slog.Info("loading ECDSA key from file", "path", path)
 	kh := &ecdsaSigningKey{}
-	data, err := os.ReadFile(path)
+	data, err := utils.ReadFileWithin(".", path, []string{}, false, 10<<20)
 	if err != nil {
 		return nil, err
 	}

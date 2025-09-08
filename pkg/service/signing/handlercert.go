@@ -16,6 +16,8 @@ import (
 	"math/big"
 	"os"
 	"time"
+
+	"github.com/axent-pl/oauth2mock/pkg/utils"
 )
 
 type certSigningKey struct {
@@ -29,11 +31,11 @@ type certSigningKey struct {
 func NewCertSigningKeyFromFiles(certPath, keyPath string) (SigningKeyHandler, error) {
 	slog.Info("loading cert and key from files", "certPath", certPath, "keyPath", keyPath)
 
-	certPEM, err := os.ReadFile(certPath)
+	certPEM, err := utils.ReadFileWithin(".", certPath, []string{}, false, 10<<20)
 	if err != nil {
 		return nil, fmt.Errorf("reading cert file: %w", err)
 	}
-	keyPEM, err := os.ReadFile(keyPath)
+	keyPEM, err := utils.ReadFileWithin(".", keyPath, []string{}, false, 10<<20)
 	if err != nil {
 		return nil, fmt.Errorf("reading key file: %w", err)
 	}
